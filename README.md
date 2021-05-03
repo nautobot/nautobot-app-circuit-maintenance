@@ -88,7 +88,7 @@ Attributes:
 - Status: current state of the maintenance.
 - Start time: defined start time of the maintenance work.
 - End time: defined end time of the maintenance work.
-- Acknowledged: boolean to show if the maintenance has been properly handled by the operator.
+- Ack: boolean to show if the maintenance has been properly handled by the operator.
 - Circuits: list of circuits and its specific impact linked to this maintenance.
 - Notes: list of internal notes linked to this maintenance.
 - Notifications: list of all the parsed notifications that have been processed for this maintenance.
@@ -102,11 +102,8 @@ Attributes:
 The plugin includes 6 API endpoints to manage its related objects, complete info in the Swagger section.
 
 - Circuit Maintenance: `/api/plugins​/circuit-maintenance​/maintenance`
-- Circuit Impact: `/api/plugins​/circuit-maintenance​/maintenance-circuitimpact`
-- Circuit Note: `/api/plugins​/circuit-maintenance​/maintenance-note`
-- Raw Notification: `/api/plugins​/circuit-maintenance​/raw-notification`
-- Parsed Notification: `/api/plugins​/circuit-maintenance​/parsed-notification`
-- Settings: `/api/plugins​/circuit-maintenance​/settings`
+- Circuit Impact: `/api/plugins​/circuit-maintenance​/circuitimpact`
+- Note: `/api/plugins​/circuit-maintenance​/note`
 
 ### GraphQL API
 
