@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+
+{% block title %}{{ object }}{% endblock%}
+{% block header %}
+
+
+<h1>{{ object.title }}</h1>
+
+{% include 'inc/created_updated.html' with obj=object %}
+
+<div class="pull-right noprint">{% custom_links object %}</div>
+
+{% endblock %} {% block content %}
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <strong>Info</strong>
+      </div>
+      <table class="table table-hover panel-body attr-table">
+        <td>Email</td>
+        <td>
+          <span class="">{{ object.email }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td>Url</td>
+        <td>{{ object.url }}</td>
+      </tr>
+      <tr>
+          <td>Server Type</td>
+          <td>{{ object.server_type }}</td>
+      </tr>
+      {% for provider in providers %}
+      <tr>
+          <td>
+              <a href="{% url 'circuits:provider' pk=provider.id %}">{{ provider.name }}</a>
+          </td>
+      </tr>
+      {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

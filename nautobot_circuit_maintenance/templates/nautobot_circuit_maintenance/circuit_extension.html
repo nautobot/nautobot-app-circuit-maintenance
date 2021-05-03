@@ -1,0 +1,39 @@
+{% block content %}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <strong>Circuit Maintenances</strong>
+    </div>
+    {% if not circuitimpacts %}
+    <div class="panel-body">
+        <span class="text-muted">None</span>
+    </div>
+    {% else %}
+    <table class="table table-hover panel-body">
+        <tbody>
+            <tr>
+                <th>Maintenance</th>
+                <th>Impact</th>
+                <th>Status</th>
+                <th>Acknowledged</th>
+            </tr>
+            {% for circuitimpact in circuitimpacts %}
+            <tr>
+                <td>
+                    <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance' pk=circuitimpact.maintenance.id %}"></a>{{ circuitimpact.maintenance.name }}</a>
+                </td>
+                <td>
+                    {{ circuitimpact.impact }}
+                </td>
+                <td>
+                    {{ circuitimpact.maintenance.status }}
+                </td>
+                <td>
+                    {{ circuitimpact.maintenance.ack }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

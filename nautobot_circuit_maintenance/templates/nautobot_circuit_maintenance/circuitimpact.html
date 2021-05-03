@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+
+{% block title %}{{ object }}{% endblock %}
+
+{% block header %}
+
+    <div class="row noprint">
+        <div class="col-sm-8 col-md-9">
+            <ol class="breadcrumb">
+                <li><a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_list' %}">Circuit Impact</a></li>
+                <li><a>{{ object }}</a></li>
+            </ol>
+        </div>
+    </div>
+
+    <h1>{{ object }}</h1>
+        {% include 'inc/created_updated.html' with obj=object %}
+    <div class="pull-right noprint">
+        {% custom_links object %}
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
+            <a href="{{ object.get_absolute_url }}">Circuit Impact</a>
+        </li>
+        <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_changelog' pk=object.pk %}">Change Log</a>
+        </li>
+    </ul>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>Info</strong>
+                </div>
+                <table class="table table-hover panel-body attr-table">
+                    <tr>
+                        <td>Maintenance</td>
+                        <td>{{ object.maintenance.name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Circuit</td>
+                        <td>{{ object.circuit.name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Impact</td>
+                        <td>{{ object.impact }}</td>
+                    </tr>
+                    <td class="text-right text-nowrap noprint">
+                        {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_edit' pk=object.pk %}?return_url={{ object.get_absolute_url }}" class="btn btn-warning btn-xs">
+                                <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                        {% if perms.nautobot_circuit_maintenance.delete_circuitmaintenance %}
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_delete' pk=object.pk %}?return_url={{ object.get_absolute_url }}" class="btn btn-danger btn-xs">
+                                <i class="glyphicon glyphicon-trash" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
