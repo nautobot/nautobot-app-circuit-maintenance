@@ -18,6 +18,7 @@ env:
   # under development/nautobot_<NAUTOBOT_VER>/configuration.py
   matrix:
     - "INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_VER=1.0.0"
+
 # Add your encrypted secret below, you can encrypt secret using "travis encrypt"
 # https://docs.travis-ci.com/user/environment-variables/#defining-encrypted-variables-in-travisyml
 # global:
