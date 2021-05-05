@@ -4,7 +4,7 @@ import datetime
 import email
 import imaplib
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, Dict
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
@@ -166,3 +166,61 @@ class IMAP(BaseModel):
 
         self.close_session()
         return received_emails
+
+
+def get_notifications_from_email(
+    logger, email_boxes: Iterable[Dict], since: int = None
+) -> Iterable[MaintenanceNotification]:
+    """Method to fetch email from multiple sources and return MaintenanceNotification objects."""
+    received_notifications = []
+
+    for email_box in email_boxes:
+        try:
+            if since:
+                since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
+            else:
+                since_txt = "always"
+
+            restrict_emails = []
+            providers_in = []
+            providers_out = []
+            for provider in email_box.providers.all():
+                for custom_field, value in provider.get_custom_fields().items():
+                    if custom_field.name == "emails_circuit_maintenances" and value:
+                        restrict_emails.extend(value.split(","))
+                        providers_in.append(provider.name)
+                    else:
+                        providers_out.append(provider.name)
+
+            if providers_out:
+                logger.log_warning(
+                    message=f"Skipping {', '.join(providers_out)} because these providers has no email configured",
+                )
+
+            if not providers_in:
+                break
+
+            logger.log_info(
+                message=f"Retrieving notifications from {email_box.email} for {', '.join(providers_in)} since {since_txt}",
+            )
+            imap_conn = IMAP(
+                service=email_box.server_type.lower(),
+                user=email_box.email,
+                # How to setup GMAIL APP password
+                # https://support.google.com/accounts/answer/185833
+                password=email_box._password,  # pylint: disable=protected-access
+                imap_url=email_box.url,
+            )
+            rawnotification = imap_conn.receive_emails(logger, restrict_emails, since)
+            received_notifications.extend(rawnotification)
+
+            if not received_notifications:
+                logger.log_info(
+                    message=f"No notifications received for {', '.join(providers_in)} since {since_txt} from {email_box.email}",
+                )
+        except Exception as error:
+            logger.log_warning(
+                message=f"Issue fetching notifications from {email_box.email}: {error}",
+            )
+
+    return received_notifications
