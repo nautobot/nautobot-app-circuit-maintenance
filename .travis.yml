@@ -67,7 +67,6 @@ jobs:
         skip_cleanup: true
         "on":
           tags: true
-          branch: "main"
           python: 3.7
 
     - stage: "deploy-pypi"
@@ -82,5 +81,4 @@ jobs:
         password: "$PYPI_TOKEN"
         "on":
           tags: true
-          branch: "main"
           python: 3.7
