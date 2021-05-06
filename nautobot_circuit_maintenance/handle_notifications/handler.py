@@ -151,6 +151,7 @@ def process_raw_notification(logger, notification: MaintenanceNotification) -> U
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
     """
     parser = init_parser(**notification.__dict__)
+    logger.log_warning(parser.__dict__, "parser")
 
     if not parser:
         logger.log_warning(message="Notification Parser not found for {notification.provider}")
@@ -186,8 +187,9 @@ def process_raw_notification(logger, notification: MaintenanceNotification) -> U
         # Update raw notification as properly parsed
         raw_entry.parsed = True
         raw_entry.save()
-    except ParsingError:
-        logger.log_warning(raw_entry, message=f"Parsing failed for notification {raw_entry.id}.")
+    except ParsingError as exc:
+        tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+        logger.log_warning(raw_entry, message=f"Parsing failed for notification {raw_entry.id}:.\n{tb_str}")
     except Exception as exc:
         tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
         logger.log_warning(
@@ -231,9 +233,8 @@ class HandleCircuitMaintenanceNotifications(Job):
                 email_boxes=email_boxes,
                 since=last_time_processed,
             )
-
             if not notifications:
-                self.log_debug(message=f"No notifications received.")
+                self.log_debug(message="No notifications received.")
                 return raw_notification_ids
 
             for notification in notifications:
