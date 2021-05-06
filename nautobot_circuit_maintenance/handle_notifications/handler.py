@@ -21,8 +21,10 @@ from .email_helper import get_notifications_from_email
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]
 
 
-def create_circuit_maintenance(logger, maintenance_id, parsed_notification, provider):
+def create_circuit_maintenance(logger, maintenance_id, parsed_notification):
     """Handles the creation of a new circuit maintenance."""
+    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
+
     circuit_maintenance_entry = CircuitMaintenance.objects.create(
         name=maintenance_id,
         start_time=datetime.datetime.fromtimestamp(parsed_notification.start),
@@ -62,9 +64,11 @@ def create_circuit_maintenance(logger, maintenance_id, parsed_notification, prov
 
 
 def update_circuit_maintenance(
-    logger, circuit_maintenance_entry, maintenance_id, parsed_notification, provider
+    logger, circuit_maintenance_entry, maintenance_id, parsed_notification
 ):  # pylint: disable=too-many-locals
     """Handles the update of an existent circuit maintenance."""
+    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
+
     circuit_maintenance_entry.description = parsed_notification.summary
     circuit_maintenance_entry.status = parsed_notification.status
     circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(parsed_notification.start)
@@ -97,8 +101,15 @@ def update_circuit_maintenance(
                 message=f"Circuit ID {circuit.circuit_id} linked to Maintenance {maintenance_id}",
             )
         else:
+            note_entry = Note.objects.create(
+                maintenance=circuit_maintenance_entry,
+                title=f"Nonexistent circuit ID {circuit.circuit_id}",
+                comment=f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the maintenance.",
+                level="WARNING",
+            )
             logger.log_warning(
-                message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database"
+                note_entry,
+                message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a note",
             )
 
     for cid in cids_to_update:
@@ -132,9 +143,9 @@ def process_parsed_notification(logger, parsed_notification, raw_entry):
         return
 
     if circuit_maintenance_entry:
-        update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification, provider)
+        update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification)
     else:
-        circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parsed_notification, provider)
+        circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parsed_notification)
 
     # Insert parsed notification in DB
     parsed_entry = ParsedNotification.objects.create(
@@ -151,24 +162,23 @@ def process_raw_notification(logger, notification: MaintenanceNotification) -> U
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
     """
     parser = init_parser(**notification.__dict__)
-    logger.log_warning(parser.__dict__, "parser")
 
     if not parser:
-        logger.log_warning(message="Notification Parser not found for {notification.provider}")
+        logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
         return None
 
-    provider_type = Provider.objects.filter(slug=parser.provider_type).last()
+    provider = Provider.objects.filter(slug=parser.provider_type).last()
 
-    if not provider_type:
+    if not provider:
         logger.log_warning(
-            message=f"Raw notification not created beacuse is referencing to a provider not existent {parser.provider_type}"
+            message=f"Raw notification not created because is referencing to a provider not existent {parser.provider_type}"
         )
         return None
 
     # Insert raw notification in DB
     raw_entry, created = RawNotification.objects.get_or_create(
         subject=parser.subject,
-        provider=provider_type,
+        provider=provider,
         raw=parser.raw,
         sender=parser.sender,
         source=parser.source,
@@ -234,7 +244,7 @@ class HandleCircuitMaintenanceNotifications(Job):
                 since=last_time_processed,
             )
             if not notifications:
-                self.log_debug(message="No notifications received.")
+                self.log_info(message="No notifications received.")
                 return raw_notification_ids
 
             for notification in notifications:
