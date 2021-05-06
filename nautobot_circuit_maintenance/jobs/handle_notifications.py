@@ -231,11 +231,17 @@ class HandleCircuitMaintenanceNotifications(Job):
                 email_boxes=email_boxes,
                 since=last_time_processed,
             )
+
+            if not notifications:
+                self.log_debug(message=f"No notifications received.")
+                return raw_notification_ids
+
             for notification in notifications:
                 self.log_info(message=f"Processing notification {notification.subject}.")
                 raw_id = process_raw_notification(self, notification)
                 if raw_id:
                     raw_notification_ids.append(raw_id)
+
         except Exception as error:
             self.log_failure(message=f"Unexpected exception in Handle Notifications Job: {error}")
 
