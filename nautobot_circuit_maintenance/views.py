@@ -211,62 +211,62 @@ class ParsedNotificationView(generic.ObjectView):
     queryset = models.ParsedNotification.objects.all()
 
 
-class EmailSettingsListView(generic.ObjectListView):
-    """View for email settings."""
+class NotificationSourceListView(generic.ObjectListView):
+    """View for Notification Source."""
 
-    table = tables.EmailSettingsTable
-    queryset = models.EmailSettings.objects.all()
-    filterset = filters.EmailSettingsFilterSet
-    filterset_form = forms.EmailSettingsFilterSetForm
+    table = tables.NotificationSourceTable
+    queryset = models.NotificationSource.objects.all()
+    filterset = filters.NotificationSourceFilterSet
+    filterset_form = forms.NotificationSourceFilterSetForm
 
 
-class EmailSettingsView(generic.ObjectView):
-    """View for EmailSettings."""
+class NotificationSourceView(generic.ObjectView):
+    """View for NotificationSource."""
 
-    queryset = models.EmailSettings.objects.all()
+    queryset = models.NotificationSource.objects.all()
 
 
 def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
-    """Extend content of detailed view for EmailSettings."""
+    """Extend content of detailed view for NotificationSource."""
     providers = instance.objects.prefetch_related("providers")
     return {
         "providers": providers,
     }
 
 
-class EmailSettingsEditView(generic.ObjectEditView):
-    """View for editting EmailSettings."""
+class NotificationSourceEditView(generic.ObjectEditView):
+    """View for editting NotificationSource."""
 
-    model = models.EmailSettings
-    queryset = models.EmailSettings.objects.all()
-    model_form = forms.EmailSettingsForm
+    model = models.NotificationSource
+    queryset = models.NotificationSource.objects.all()
+    model_form = forms.NotificationSourceForm
 
 
-class EmailSettingsDeleteView(generic.ObjectDeleteView):
+class NotificationSourceDeleteView(generic.ObjectDeleteView):
     """View for deleting circuit maintenances."""
 
-    model = models.EmailSettings
-    queryset = models.EmailSettings.objects.all()
+    model = models.NotificationSource
+    queryset = models.NotificationSource.objects.all()
 
 
-class EmailSettingsBulkDeleteView(generic.BulkDeleteView):
+class NotificationSourceBulkDeleteView(generic.BulkDeleteView):
     """View for bulk deleting Settings entries."""
 
-    queryset = models.EmailSettings.objects.all()
-    table = tables.EmailSettingsTable
+    queryset = models.NotificationSource.objects.all()
+    table = tables.NotificationSourceTable
 
 
-class EmailSettingsBulkImportView(generic.BulkImportView):
-    """View for bulk of EmailSettings."""
+class NotificationSourceBulkImportView(generic.BulkImportView):
+    """View for bulk of NotificationSource."""
 
-    queryset = models.EmailSettings.objects.all()
-    model_form = forms.EmailSettingsCSVForm
-    table = tables.EmailSettingsTable
+    queryset = models.NotificationSource.objects.all()
+    model_form = forms.NotificationSourceCSVForm
+    table = tables.NotificationSourceTable
 
 
-class EmailSettingsBulkEditView(generic.BulkEditView):
-    """View for bulk editing EmailSettings."""
+class NotificationSourceBulkEditView(generic.BulkEditView):
+    """View for bulk editing NotificationSource."""
 
-    queryset = models.EmailSettings.objects.all()
-    table = tables.EmailSettingsTable
-    form = forms.EmailSettingsBulkEditForm
+    queryset = models.NotificationSource.objects.all()
+    table = tables.NotificationSourceTable
+    form = forms.NotificationSourceBulkEditForm

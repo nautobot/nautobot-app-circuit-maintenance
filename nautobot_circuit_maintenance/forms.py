@@ -18,7 +18,7 @@ from .models import (
     CircuitImpact,
     CircuitMaintenance,
     Note,
-    EmailSettings,
+    NotificationSource,
     RawNotification,
 )
 
@@ -147,40 +147,40 @@ class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldFilterForm):
     since = forms.DateTimeField(required=False, widget=DateTimePicker())
 
 
-class EmailSettingsForm(BootstrapMixin, forms.ModelForm):
-    """Form for creating new maintenance email source."""
+class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
+    """Form for creating new NotificationSource."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        """Metaclass attributes for EmailSettingsmodel_form = forms.EmailSettingsForm."""
+        """Metaclass attributes for NotificationSourcemodel_form = forms.NotificationSourceForm."""
 
-        model = EmailSettings
-        fields = ["email", "_password", "url", "server_type", "providers"]
+        model = NotificationSource
+        fields = ["source_id", "_password", "url", "source_type", "providers"]
         widgets = {"_password": forms.PasswordInput()}
 
 
-class EmailSettingsCSVForm(CustomFieldModelCSVForm):
-    """Form for creating bulk EmailSettings."""
+class NotificationSourceCSVForm(CustomFieldModelCSVForm):
+    """Form for creating bulk NotificationSource."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = EmailSettings
-        fields = EmailSettings.csv_headers
+        model = NotificationSource
+        fields = NotificationSource.csv_headers
 
 
-class EmailSettingsBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
+class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     """Form for bulk editing Notes."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        nullable_fields = ["server_type", "providers"]
+        nullable_fields = ["source_type", "providers"]
 
 
-class EmailSettingsFilterSetForm(BootstrapMixin, forms.ModelForm):
+class NotificationSourceFilterSetForm(BootstrapMixin, forms.ModelForm):
     """Form for filtering CircuitMaintenance settings."""
 
     q = forms.CharField(required=False, label="Search")
     url = forms.CharField(required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = EmailSettings
-        fields = ["q", "url", "server_type"]
+        model = NotificationSource
+        fields = ["q", "url", "source_type"]

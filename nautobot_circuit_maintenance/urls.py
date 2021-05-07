@@ -3,7 +3,7 @@ from django.urls import path
 from nautobot.extras.views import ObjectChangeLogView
 
 from . import views
-from .models import CircuitMaintenance, CircuitImpact, Note, EmailSettings
+from .models import CircuitMaintenance, CircuitImpact, Note, NotificationSource
 
 urlpatterns = [
     #
@@ -99,23 +99,23 @@ urlpatterns = [
         views.ParsedNotificationView.as_view(),
         name="parsednotification",
     ),
-    # Email Settings
-    path("settings/", views.EmailSettingsListView.as_view(), name="emailsettings_list"),
-    path("settings/add/", views.EmailSettingsEditView.as_view(), name="emailsettings_add"),
-    path("settings/<uuid:pk>/edit/", views.EmailSettingsEditView.as_view(), name="emailsettings_edit"),
-    path("settings/<uuid:pk>/delete/", views.EmailSettingsDeleteView.as_view(), name="emailsettings_delete"),
+    # Notification Source
+    path("settings/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
+    path("settings/add/", views.NotificationSourceEditView.as_view(), name="notificationsource_add"),
+    path("settings/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
+    path("settings/<uuid:pk>/delete/", views.NotificationSourceDeleteView.as_view(), name="notificationsource_delete"),
     path(
         "settings/delete/",
-        views.EmailSettingsBulkDeleteView.as_view(),
-        name="emailsettings_bulk_delete",
+        views.NotificationSourceBulkDeleteView.as_view(),
+        name="notificationsource_bulk_delete",
     ),
-    path("settings/<uuid:pk>/", views.EmailSettingsView.as_view(), name="emailsettings"),
-    path("settings/edit/", views.EmailSettingsBulkEditView.as_view(), name="emailsettings_bulk_edit"),
-    path("settings/import/", views.EmailSettingsBulkImportView.as_view(), name="emailsettings_import"),
+    path("settings/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
+    path("settings/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
+    path("settings/import/", views.NotificationSourceBulkImportView.as_view(), name="notificationsource_import"),
     path(
         "settings/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
-        name="emailsettings_changelog",
-        kwargs={"model": EmailSettings},
+        name="notificationsource_changelog",
+        kwargs={"model": NotificationSource},
     ),
 ]

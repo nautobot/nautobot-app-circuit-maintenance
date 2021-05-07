@@ -6,7 +6,7 @@ from parameterized import parameterized
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 from nautobot.circuits.models import Provider
 
-from nautobot_circuit_maintenance.models import EmailSettings
+from nautobot_circuit_maintenance.models import NotificationSource
 
 from nautobot_circuit_maintenance.handle_notifications.email_helper import IMAP, get_notifications_from_email
 from .test_handler import get_base_notification_data, generate_raw_notification
@@ -23,10 +23,10 @@ class TestEmailHelper(TestCase):
 
     def test_get_notifications_from_email_without_providers(self):
         """Test get_notifications_from_email when there are no Providers defined."""
-        email_settings = EmailSettings.objects.all().first()
+        email_settings = NotificationSource.objects.all().first()
         email_settings.providers.set([])
 
-        res = get_notifications_from_email(self.logger, EmailSettings.objects.all())
+        res = get_notifications_from_email(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
         self.logger.log_warning.assert_called_with(message="Skipping this email account no providers were defined.")
 
@@ -36,17 +36,17 @@ class TestEmailHelper(TestCase):
         mock_receive_emails.return_value = []
         original_provider = Provider.objects.all().first()
         new_provider = Provider.objects.create(name="something", slug="something")
-        email_settings = EmailSettings.objects.all().first()
+        email_settings = NotificationSource.objects.all().first()
         email_settings.providers.add(new_provider)
 
-        res = get_notifications_from_email(self.logger, EmailSettings.objects.all())
+        res = get_notifications_from_email(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
 
         self.logger.log_warning.assert_called_with(
             message=f"Skipping {new_provider.name} because these providers has no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {email_settings.email}"
+            message=f"No notifications received for {original_provider} since always from {email_settings.source_id}"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.email_helper.IMAP.receive_emails")
@@ -58,7 +58,7 @@ class TestEmailHelper(TestCase):
 
         mock_receive_emails.return_value = [notification]
 
-        res = get_notifications_from_email(self.logger, EmailSettings.objects.all())
+        res = get_notifications_from_email(self.logger, NotificationSource.objects.all())
 
         self.assertEqual(1, len(res))
         self.logger.log_warning.assert_not_called()
@@ -72,7 +72,7 @@ class TestEmailHelper(TestCase):
 
         mock_receive_emails.return_value = [notification, notification]
 
-        res = get_notifications_from_email(self.logger, EmailSettings.objects.all())
+        res = get_notifications_from_email(self.logger, NotificationSource.objects.all())
 
         self.assertEqual(2, len(res))
         self.logger.log_warning.assert_not_called()
