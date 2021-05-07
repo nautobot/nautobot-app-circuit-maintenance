@@ -155,7 +155,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
 
         model = NotificationSource
         fields = ["source_id", "_password", "url", "source_type", "providers"]
-        widgets = {"_password": forms.PasswordInput()}
+        widgets = {"_password": forms.PasswordInput(render_value=True)}
 
 
 class NotificationSourceCSVForm(CustomFieldModelCSVForm):
