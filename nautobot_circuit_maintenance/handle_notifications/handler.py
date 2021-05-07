@@ -101,16 +101,17 @@ def update_circuit_maintenance(
                 message=f"Circuit ID {circuit.circuit_id} linked to Maintenance {maintenance_id}",
             )
         else:
-            note_entry = Note.objects.create(
+            note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
                 title=f"Nonexistent circuit ID {circuit.circuit_id}",
                 comment=f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the maintenance.",
                 level="WARNING",
             )
-            logger.log_warning(
-                note_entry,
-                message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a note",
-            )
+            if created:
+                logger.log_warning(
+                    note_entry,
+                    message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a note",
+                )
 
     for cid in cids_to_update:
         circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()

@@ -5,7 +5,7 @@
     created: 2021-04-30
     last_updated: 2021-04-30 07:43:14.510402+00:00
     _custom_field_data:
-      emails_circuit_maintenances: christian@netbcn.cat
+      emails_circuit_maintenances: sender@example.com
     name: ntt
     slug: ntt
     asn: null
@@ -63,4 +63,5 @@
     email: whatever1@validemail.com
     url: whatever
     server_type: unknown
-    providers: []
+    providers:
+      - 0ec89992-0de0-483f-8f53-bdcd179eaecd

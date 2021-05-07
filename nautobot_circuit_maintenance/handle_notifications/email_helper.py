@@ -4,11 +4,12 @@ import datetime
 import email
 import imaplib
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, Union, Dict
+from typing import Iterable, Optional, Union
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
 from nautobot.circuits.models import Provider
+from nautobot_circuit_maintenance.models import EmailSettings
 
 # pylint: disable=broad-except
 
@@ -124,7 +125,6 @@ class IMAP(BaseModel):
             provider_type=provider_type,
         )
 
-    # pylint: disable=too-many-locals
     def receive_emails(
         self, logger, senders: Iterable[str] = None, since: int = None
     ) -> Iterable[MaintenanceNotification]:
@@ -143,11 +143,9 @@ class IMAP(BaseModel):
             since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
             since_date = f'SINCE "{since_txt}"'
 
-        sender_txt = ""
         if senders:
             for sender in senders:
-                sender_txt = f'FROM "{sender}"'
-                search_items = (sender_txt, since_date)
+                search_items = (f'FROM "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
@@ -169,7 +167,7 @@ class IMAP(BaseModel):
 
 
 def get_notifications_from_email(
-    logger, email_boxes: Iterable[Dict], since: int = None
+    logger, email_boxes: Iterable[EmailSettings], since: int = None
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch email from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
@@ -182,26 +180,36 @@ def get_notifications_from_email(
                 since_txt = "always"
 
             restrict_emails = []
-            providers_in = []
-            providers_out = []
+
+            providers_with_email = []
+            providers_without_email = []
+            if not email_box.providers.all():
+                logger.log_warning(
+                    message="Skipping this email account no providers were defined.",
+                )
+                continue
+
             for provider in email_box.providers.all():
                 for custom_field, value in provider.get_custom_fields().items():
                     if custom_field.name == "emails_circuit_maintenances" and value:
                         restrict_emails.extend(value.split(","))
-                        providers_in.append(provider.name)
+                        providers_with_email.append(provider.name)
                     else:
-                        providers_out.append(provider.name)
+                        providers_without_email.append(provider.name)
 
-            if providers_out:
+            if providers_without_email:
                 logger.log_warning(
-                    message=f"Skipping {', '.join(providers_out)} because these providers has no email configured",
+                    message=f"Skipping {', '.join(providers_without_email)} because these providers has no email configured.",
                 )
 
-            if not providers_in:
-                break
+            if not providers_with_email:
+                logger.log_warning(
+                    message=f"Skipping this email account because none of the providers ({', '.join(providers_with_email)}) have at least one email defined.",
+                )
+                continue
 
             logger.log_info(
-                message=f"Retrieving notifications from {email_box.email} for {', '.join(providers_in)} since {since_txt}",
+                message=f"Retrieving notifications from {email_box.email} for {', '.join(providers_with_email)} since {since_txt}",
             )
             imap_conn = IMAP(
                 service=email_box.server_type.lower(),
@@ -216,7 +224,7 @@ def get_notifications_from_email(
 
             if not received_notifications:
                 logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_in)} since {since_txt} from {email_box.email}",
+                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.email}",
                 )
         except Exception as error:
             logger.log_warning(
