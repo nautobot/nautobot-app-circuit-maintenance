@@ -6,7 +6,7 @@ from nautobot_circuit_maintenance.models import (
     CircuitMaintenance,
     CircuitImpact,
     Note,
-    EmailSettings,
+    NotificationSource,
     ParsedNotification,
     RawNotification,
 )
@@ -158,10 +158,10 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
 
 
-class EmailSettingsTest(ViewTestCases.OrganizationalObjectViewTestCase):
-    """View tests for EmailSettings."""
+class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
+    """View tests for NotificationSource."""
 
-    model = EmailSettings
+    model = NotificationSource
 
     def _get_base_url(self):
         return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
@@ -178,30 +178,30 @@ class EmailSettingsTest(ViewTestCases.OrganizationalObjectViewTestCase):
         )
         Provider.objects.bulk_create(providers)
 
-        email_settings_1 = EmailSettings.objects.create(
-            email="whatever1@validemail.com", _password="password", url="whatever"
+        notificationsource_1 = NotificationSource.objects.create(
+            source_id="whatever1@validemail.com", _password="password", url="whatever"
         )
-        email_settings_2 = EmailSettings.objects.create(
-            email="whatever2@validemail.com", _password="password", url="whatever"
+        notificationsource_2 = NotificationSource.objects.create(
+            source_id="whatever2@validemail.com", _password="password", url="whatever"
         )
 
-        email_settings_1.providers.set(providers)
-        email_settings_2.providers.set(providers)
+        notificationsource_1.providers.set(providers)
+        notificationsource_2.providers.set(providers)
 
         cls.form_data = {
-            "email": "whatever3@validemail.com",
+            "source_id": "whatever3@validemail.com",
             "_password": "password",
             "url": "whatever",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "email,_password,url",
+            "source_id,_password,url",
             "whatever4@validemail.com, password, whatever",
             "whatever5@validemail.com, password, whatever",
         )
 
-        cls.bulk_edit_data = {"server_type": "GMAIL"}
+        cls.bulk_edit_data = {"source_type": "GMAIL"}
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
@@ -283,7 +283,7 @@ class ParsedNotificationTest(
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
         )
-        ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification)
+        ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
 
         raw_notification_2 = RawNotification.objects.create(
             subject="whatever", provider=providers[0], sender="whatever", source="whatever", raw="whatever 2"
@@ -291,4 +291,6 @@ class ParsedNotificationTest(
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
         )
-        ParsedNotification.objects.create(maintenance=circuit_maintenance_2, raw_notification=raw_notification_2)
+        ParsedNotification.objects.create(
+            maintenance=circuit_maintenance_2, raw_notification=raw_notification_2, json="{}"
+        )

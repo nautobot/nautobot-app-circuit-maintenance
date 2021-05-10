@@ -16,7 +16,7 @@ from nautobot_circuit_maintenance.handle_notifications.handler import (
 from nautobot_circuit_maintenance.models import (
     CircuitMaintenance,
     CircuitImpact,
-    EmailSettings,
+    NotificationSource,
     Note,
     RawNotification,
     ParsedNotification,
@@ -152,13 +152,15 @@ class TestHandleNotificationsJob(TestCase):
             self.assertEqual(0, len(Note.objects.all()))
             self.job.log_info.assert_called_with(message="No notifications received.")
 
-    def test_run_nonemailsettings(self):
+    def test_run_nonnotificationsource(self):
         """Test when a there are no Email Settings."""
 
-        EmailSettings.objects.all().delete()
+        NotificationSource.objects.all().delete()
         processed_notifications = self.job.run(commit=True)
         self.assertEqual(0, len(processed_notifications))
-        self.job.log_warning.assert_called_with(message="No email boxes configured to retrieve notifications from.")
+        self.job.log_warning.assert_called_with(
+            message="No notification sources configured to retrieve notifications from."
+        )
 
     def test_run_invalid_notification(self):
         """Test when a there is an invalid notification."""

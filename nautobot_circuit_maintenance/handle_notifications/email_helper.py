@@ -9,7 +9,7 @@ from typing import Iterable, Optional, Union
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
 from nautobot.circuits.models import Provider
-from nautobot_circuit_maintenance.models import EmailSettings
+from nautobot_circuit_maintenance.models import NotificationSource
 
 # pylint: disable=broad-except
 
@@ -167,7 +167,7 @@ class IMAP(BaseModel):
 
 
 def get_notifications_from_email(
-    logger, email_boxes: Iterable[EmailSettings], since: int = None
+    logger, email_boxes: Iterable[NotificationSource], since: int = None
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch email from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
@@ -209,11 +209,11 @@ def get_notifications_from_email(
                 continue
 
             logger.log_info(
-                message=f"Retrieving notifications from {email_box.email} for {', '.join(providers_with_email)} since {since_txt}",
+                message=f"Retrieving notifications from {email_box.source_id} for {', '.join(providers_with_email)} since {since_txt}",
             )
             imap_conn = IMAP(
-                service=email_box.server_type.lower(),
-                user=email_box.email,
+                service=email_box.source_type.lower(),
+                user=email_box.source_id,
                 # How to setup GMAIL APP password
                 # https://support.google.com/accounts/answer/185833
                 password=email_box._password,  # pylint: disable=protected-access
@@ -224,11 +224,11 @@ def get_notifications_from_email(
 
             if not received_notifications:
                 logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.email}",
+                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.source_id}",
                 )
         except Exception as error:
             logger.log_warning(
-                message=f"Issue fetching notifications from {email_box.email}: {error}",
+                message=f"Issue fetching notifications from {email_box.source_id}: {error}",
             )
 
     return received_notifications

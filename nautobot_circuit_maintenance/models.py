@@ -12,7 +12,7 @@ from .choices import (
     CircuitImpactChoices,
     CircuitMaintenanceStatusChoices,
     NoteLevelChoices,
-    EmailSettingsServerChoices,
+    NotificationSourceServerChoices,
 )
 
 
@@ -171,9 +171,9 @@ class RawNotification(OrganizationalModel):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200)
     source = models.CharField(
-        default=EmailSettingsServerChoices.UNKNOWN,
+        default=NotificationSourceServerChoices.UNKNOWN,
         max_length=50,
-        choices=EmailSettingsServerChoices,
+        choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
     )
@@ -209,7 +209,7 @@ class ParsedNotification(OrganizationalModel):
 
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
     raw_notification = models.ForeignKey(RawNotification, on_delete=models.CASCADE, default=None)
-    json = models.TextField(default="", null=True, blank=True)
+    json = models.JSONField()
     date = models.DateTimeField(default=now)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
@@ -236,40 +236,41 @@ class ParsedNotification(OrganizationalModel):
     "relationships",
     "webhooks",
 )
-class EmailSettings(OrganizationalModel):
-    """Model for email configuration."""
+class NotificationSource(OrganizationalModel):
+    """Model for Notification Source configuration."""
 
     # Mark field as private so that it doesn't get included in ChangeLogging records!
     _password = encrypt(models.CharField(max_length=100))
-    email = models.EmailField(max_length=100, unique=True)
+    source_id = models.EmailField(max_length=100, unique=True, help_text="Email address used as identifier.")
     url = models.CharField(max_length=200)
-    server_type = models.CharField(
-        default=EmailSettingsServerChoices.UNKNOWN,
+    source_type = models.CharField(
+        default=NotificationSourceServerChoices.UNKNOWN,
         max_length=50,
-        choices=EmailSettingsServerChoices,
+        choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
+        help_text="Type of source integration to retrieve the notifications.",
     )
 
     providers = models.ManyToManyField(
         Provider,
-        help_text="The Provider(s) to which this Email settings applies.",
+        help_text="The Provider(s) to which this notification source applies.",
         blank=True,
     )
 
-    csv_headers = ["email", "_password", "url"]
+    csv_headers = ["source_id", "_password", "url"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["email"]
+        ordering = ["source_id"]
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.email}"
+        return f"{self.source_id}"
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:emailsettings", args=[self.pk])
+        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.email, self.url, self.server_type, self.providers)
+        return (self.source_id, self.url, self.source_type, self.providers)

@@ -12,7 +12,7 @@ from nautobot_circuit_maintenance.models import (
     Note,
     ParsedNotification,
     RawNotification,
-    EmailSettings,
+    NotificationSource,
 )
 from .email_helper import get_notifications_from_email
 
@@ -128,7 +128,7 @@ def update_circuit_maintenance(
         circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
         CircuitImpact.objects.filter(circuit=circuit_entry, maintenance=circuit_maintenance_entry).delete()
 
-    logger.log_info(obj=circuit_maintenance_entry, message="Updated Circuit Maintenance {maintenance_id}")
+    logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")
 
 
 def process_parsed_notification(logger, parsed_notification, raw_entry):
@@ -225,9 +225,9 @@ class HandleCircuitMaintenanceNotifications(Job):
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
         self.log_debug("Starting Handle Notifications job.")
         raw_notification_ids = []
-        email_boxes = EmailSettings.objects.all()
-        if not email_boxes:
-            self.log_warning(message="No email boxes configured to retrieve notifications from.")
+        notification_sources = NotificationSource.objects.all()
+        if not notification_sources:
+            self.log_warning(message="No notification sources configured to retrieve notifications from.")
             return raw_notification_ids
 
         # Latest retrieved notification will limit the scope of notifications to retrieve
@@ -241,7 +241,7 @@ class HandleCircuitMaintenanceNotifications(Job):
         try:
             notifications = get_notifications_from_email(
                 logger=self,
-                email_boxes=email_boxes,
+                email_boxes=notification_sources,
                 since=last_time_processed,
             )
             if not notifications:

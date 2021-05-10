@@ -53,15 +53,15 @@
     commit_rate: null
     description: ""
     comments: ""
-- model: nautobot_circuit_maintenance.emailsettings
-  pk: 71488b52-5ccc-4c09-9ec3-5709f7ff6d78
+- model: nautobot_circuit_maintenance.notificationsource
+  pk: eb82df7e-6df6-405a-a798-d12e16cc1a50
   fields:
     created: 2021-05-06
     last_updated: 2021-05-06 05:19:11.314056+00:00
     _custom_field_data: {}
     _password: password
-    email: whatever1@validemail.com
+    source_id: source1@example.com
     url: whatever
-    server_type: unknown
+    source_type: unknown
     providers:
       - 0ec89992-0de0-483f-8f53-bdcd179eaecd
