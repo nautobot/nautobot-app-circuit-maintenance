@@ -53,21 +53,20 @@ jobs:
         - "invoke flake8"
         - "invoke pylint"
 
-    - stage: "deploy-github"
-      before_script:
-        - "pip install poetry"
-      script:
-        - "poetry version $TRAVIS_TAG"
-        - "poetry build"
-      deploy:
-        provider: "releases"
-        api_key: "$GITHUB_AUTH_TOKEN"
-        file_glob: true
-        file: "dist/*"
-        skip_cleanup: true
-        "on":
-          tags: true
-          python: 3.7
+    # - stage: "deploy-github"
+    #   before_script:
+    #     - "pip install poetry"
+    #   script:
+    #     - "poetry version $TRAVIS_TAG"
+    #     - "poetry build"
+    #   deploy:
+    #     provider: "releases"
+    #     api_key: "$GITHUB_AUTH_TOKEN"
+    #     file_glob: true
+    #     file: "dist/*"
+    #     skip_cleanup: true
+    #     "on":
+    #       tags: true
 
     - stage: "deploy-pypi"
       before_script:
@@ -79,6 +78,6 @@ jobs:
         provider: "pypi"
         username: "__token__"
         password: "$PYPI_TOKEN"
+        skip_cleanup: true
         "on":
           tags: true
-          python: 3.7
