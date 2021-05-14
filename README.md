@@ -49,7 +49,7 @@ These are the source email addresses that the plugin will check and use to class
 In the Circuit Maintenance plugin UI section, there is a **settings** button (yellow) where you can configure multiple email sources to track for new circuit maintenance notifications.
 
 <p align="center">
-<img src="./docs/images/email_config.png" width="500">
+<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/email_config.png" width="500">
 </p>
 
 Attributes:
@@ -94,7 +94,7 @@ Attributes:
 - Notifications: list of all the parsed notifications that have been processed for this maintenance.
 
 <p align="center">
-<img src="./docs/images/circuit_maintenance.png" width="800" class="center">
+<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_maintenance.png" width="800" class="center">
 </p>
 
 ### Rest API
