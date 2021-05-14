@@ -4,7 +4,7 @@ from django_tables2.utils import Accessor
 
 from nautobot.utilities.tables import BaseTable, ToggleColumn
 
-from .models import CircuitMaintenance, RawNotification, CircuitImpact, EmailSettings, Note
+from .models import CircuitMaintenance, RawNotification, CircuitImpact, NotificationSource, Note
 
 
 class CircuitMaintenanceTable(BaseTable):
@@ -59,15 +59,17 @@ class NoteTable(BaseTable):
         fields = ("pk", "maintenance", "title", "level", "comment", "date")
 
 
-class EmailSettingsTable(BaseTable):
+class NotificationSourceTable(BaseTable):
     """Table to display Circuit Impact model."""
 
-    email = tables.LinkColumn(viewname="plugins:nautobot_circuit_maintenance:emailsettings_edit", args=[Accessor("id")])
+    source_id = tables.LinkColumn(
+        viewname="plugins:nautobot_circuit_maintenance:notificationsource_edit", args=[Accessor("id")]
+    )
 
     pk = ToggleColumn()
 
     class Meta(BaseTable.Meta):
         """Meta for class CircuitImpactTable."""
 
-        model = EmailSettings
-        fields = ("pk", "email", "url", "server_type", "providers")
+        model = NotificationSource
+        fields = ("pk", "source_id", "url", "source_type", "providers")

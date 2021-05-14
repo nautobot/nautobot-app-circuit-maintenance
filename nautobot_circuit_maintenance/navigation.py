@@ -23,8 +23,8 @@ menu_items = (
         permissions=["nautobot_circuit_maintenance.view_circuitmaintenance"],
         buttons=(
             PluginMenuButton(
-                link="plugins:nautobot_circuit_maintenance:emailsettings_list",
-                title="settings",
+                link="plugins:nautobot_circuit_maintenance:notificationsource_list",
+                title="Settings",
                 icon_class="mdi mdi-tune",
                 color=ButtonColorChoices.YELLOW,
                 permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],

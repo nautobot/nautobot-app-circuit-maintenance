@@ -59,8 +59,8 @@ class NoteLevelChoices(ChoiceSet):
     )
 
 
-class EmailSettingsServerChoices(ChoiceSet):
-    """Valid values for Circuit Maintenance Email server type."""
+class NotificationSourceServerChoices(ChoiceSet):
+    """Valid values for NotificationSource type."""
 
     UNKNOWN = "unknown"
     GMAIL = "gmail"

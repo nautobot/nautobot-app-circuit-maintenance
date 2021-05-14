@@ -23,9 +23,9 @@
         <strong>Info</strong>
       </div>
       <table class="table table-hover panel-body attr-table">
-        <td>Email</td>
+        <td>Source ID</td>
         <td>
-          <span class="">{{ object.email }}</span>
+          <span class="">{{ object.source_id }}</span>
         </td>
       </tr>
       <tr>
@@ -34,7 +34,7 @@
       </tr>
       <tr>
           <td>Server Type</td>
-          <td>{{ object.server_type }}</td>
+          <td>{{ object.source_type }}</td>
       </tr>
       {% for provider in providers %}
       <tr>

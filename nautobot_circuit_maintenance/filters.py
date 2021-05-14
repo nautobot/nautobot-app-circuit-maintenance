@@ -5,7 +5,7 @@ import django_filters
 from django.db.models import Q
 
 from nautobot.utilities.filters import BaseFilterSet
-from .models import CircuitMaintenance, CircuitImpact, RawNotification, EmailSettings
+from .models import CircuitMaintenance, CircuitImpact, RawNotification, NotificationSource
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +91,8 @@ class RawNotificationFilterSet(BaseFilterSet):
         return queryset.filter(qs_filter)
 
 
-class EmailSettingsFilterSet(BaseFilterSet):
-    """Filter capabilities for Email Settings."""
+class NotificationSourceFilterSet(BaseFilterSet):
+    """Filter capabilities for Notifiaction Source."""
 
     q = django_filters.CharFilter(
         method="search",
@@ -100,12 +100,12 @@ class EmailSettingsFilterSet(BaseFilterSet):
     )
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = EmailSettings
-        fields = ["url", "server_type"]
+        model = NotificationSource
+        fields = ["url", "source_type"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""
         if not value.strip():
             return queryset
-        qs_filter = Q(email__icontains=value)
+        qs_filter = Q(source_id__icontains=value)
         return queryset.filter(qs_filter)
