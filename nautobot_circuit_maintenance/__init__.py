@@ -1,5 +1,5 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 from django.db.models.signals import post_migrate
 from nautobot.extras.plugins import PluginConfig
 
