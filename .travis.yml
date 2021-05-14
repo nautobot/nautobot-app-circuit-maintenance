@@ -78,5 +78,6 @@ jobs:
         provider: "pypi"
         username: "__token__"
         password: "$PYPI_TOKEN"
+        skip_cleanup: true
         "on":
           tags: true
