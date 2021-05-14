@@ -67,7 +67,6 @@ jobs:
         skip_cleanup: true
         "on":
           tags: true
-          python: 3.7
 
     - stage: "deploy-pypi"
       before_script:
@@ -81,4 +80,3 @@ jobs:
         password: "$PYPI_TOKEN"
         "on":
           tags: true
-          python: 3.7
