@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.2
+
+### Fixed
+
+- Fix images links from PyPI
+
 ## v0.1.1 - 2021-05-14
 
 ### Fixed
