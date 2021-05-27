@@ -62,10 +62,6 @@ class NoteLevelChoices(ChoiceSet):
 class NotificationSourceServerChoices(ChoiceSet):
     """Valid values for NotificationSource type."""
 
-    UNKNOWN = "unknown"
-    GMAIL = "gmail"
+    IMAP = "imap"
 
-    CHOICES = (
-        (UNKNOWN, "Unknown"),
-        (GMAIL, "Gmail"),
-    )
+    CHOICES = ((IMAP, "IMAP"),)

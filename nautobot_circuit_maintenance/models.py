@@ -171,7 +171,7 @@ class RawNotification(OrganizationalModel):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200)
     source = models.CharField(
-        default=NotificationSourceServerChoices.UNKNOWN,
+        default=NotificationSourceServerChoices.IMAP,
         max_length=50,
         choices=NotificationSourceServerChoices,
         null=True,
@@ -241,20 +241,25 @@ class NotificationSource(OrganizationalModel):
 
     # Mark field as private so that it doesn't get included in ChangeLogging records!
     _password = encrypt(models.CharField(max_length=100))
-    source_id = models.EmailField(max_length=100, unique=True, help_text="Email address used as identifier.")
-    url = models.CharField(max_length=200)
+    source_id = models.EmailField(
+        max_length=100, unique=True, help_text="Identifier (i.e. email address) to use to authenticate."
+    )
+    url = models.CharField(
+        max_length=200,
+        help_text="URL to reach the Notification Source.",
+    )
     source_type = models.CharField(
-        default=NotificationSourceServerChoices.UNKNOWN,
+        default=NotificationSourceServerChoices.IMAP,
         max_length=50,
         choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
-        help_text="Type of source integration to retrieve the notifications.",
+        help_text="Type of Notification Source integration.",
     )
 
     providers = models.ManyToManyField(
         Provider,
-        help_text="The Provider(s) to which this notification source applies.",
+        help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
     )
 
@@ -262,6 +267,7 @@ class NotificationSource(OrganizationalModel):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["source_id"]
+        unique_together = ["source_id", "url"]
 
     def __str__(self):
         """String value for HTML rendering."""

@@ -53,7 +53,7 @@ END:VCALENDAR
     return MaintenanceNotification(
         subject="Test subject",
         sender="sender@example.com",
-        source="gmail",
+        source="imap",
         raw=template.render(obj=notification_data),
         provider_type=notification_data["provider"],
     )

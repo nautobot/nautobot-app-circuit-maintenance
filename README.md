@@ -44,23 +44,23 @@ All the plugin configuration is done via UI, under the **Plugins** tab, in the *
 Each Circuit **Provider**, that we would like to track via the Circuit Maintenance plugin, requires at least one email address under the `Custom Fields -> Emails for Circuit Maintenance plugin` section.
 These are the source email addresses that the plugin will check and use to classify each notification for each specific provider.
 
-### 2. Configure Email settings
+### 2. Configure Notification Sources
 
-In the Circuit Maintenance plugin UI section, there is a **settings** button (yellow) where you can configure multiple email sources to track for new circuit maintenance notifications.
+In the Circuit Maintenance plugin UI section, there is a **settings** button (yellow) where you can configure multiple Notification Sources to track new circuit maintenance notifications.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/email_config.png" width="500">
+<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/notification_source.png" width="500">
 </p>
 
 Attributes:
 
-- Email: email address
-- Password: password to access the email service API for this service
-- URL: email service URL
-- Server Type: type of email service. Currently, only GMAIL is supported.
-- Providers: list of Ciruit Providers that will be tracked.
+- Source ID: Identifier (i.e. email address) to use to authenticate.
+- Password: password to authenticate.
+- URL: URL to reach the Notification Source.
+- Server Type: Type of Notification Source integration (See note below)
+- Providers: The Provider(s) that this Notification Source applies to.
 
-> [How to setup Gmail with App Passwords](https://support.google.com/accounts/answer/185833)
+> Note: Currently only IMAP email box integration is supported as Server Type. Gmail example: [How to setup Gmail with App Passwords](https://support.google.com/accounts/answer/185833)
 
 ### 3. Run Handle Notifications Job
 

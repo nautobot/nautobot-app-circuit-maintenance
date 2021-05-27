@@ -39,17 +39,11 @@ class IMAP(BaseModel):
     def __post_init__(self):
         """Post init validation."""
         if self.user is None:
-            raise AssertionError(
-                f"User for {self.service} is not present as environmental variable {self.service}_USER"
-            )
+            raise AssertionError(f"User for {self.service} is not present.")
         if self.password is None:
-            raise AssertionError(
-                f"Password for {self.service} is not present as environmental variable {self.service}_PWD"
-            )
+            raise AssertionError(f"Password for {self.service} is not present.")
         if self.imap_url is None:
-            raise AssertionError(
-                f"IMAP URL for {self.service} is not present as environmental variable {self.service}_IMAP"
-            )
+            raise AssertionError(f"URL for {self.service} is not present.")
 
     def open_session(self):
         """Open session to IMAP server."""
