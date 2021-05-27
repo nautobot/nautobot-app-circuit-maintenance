@@ -72,4 +72,4 @@ class NotificationSourceTable(BaseTable):
         """Meta for class CircuitImpactTable."""
 
         model = NotificationSource
-        fields = ("pk", "source_id", "url", "source_type", "providers")
+        fields = ("pk", "source_id", "server", "port", "source_type", "providers")

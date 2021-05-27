@@ -61,7 +61,8 @@
     _custom_field_data: {}
     _password: password
     source_id: source1@example.com
-    url: whatever
+    server: whatever
+    port: 993
     source_type: unknown
     providers:
       - 0ec89992-0de0-483f-8f53-bdcd179eaecd
