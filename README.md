@@ -56,11 +56,10 @@ Attributes:
 
 - Source ID: Identifier (i.e. email address) to use to authenticate.
 - Password: password to authenticate.
-- URL: URL to reach the Notification Source.
-- Server Type: Type of Notification Source integration (See note below)
+- URL: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 - Providers: The Provider(s) that this Notification Source applies to.
 
-> Note: Currently only IMAP email box integration is supported as Server Type. Gmail example: [How to setup Gmail with App Passwords](https://support.google.com/accounts/answer/185833)
+> Note: Currently only IMAP email box integration is supported as URL scheme. Gmail example: [How to setup Gmail with App Passwords](https://support.google.com/accounts/answer/185833)
 
 ### 3. Run Handle Notifications Job
 

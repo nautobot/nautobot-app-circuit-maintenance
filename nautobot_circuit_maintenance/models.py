@@ -1,4 +1,5 @@
 """Models for Circuit Maintenance."""
+from urllib.parse import urlparse, ParseResult
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -12,8 +13,8 @@ from .choices import (
     CircuitImpactChoices,
     CircuitMaintenanceStatusChoices,
     NoteLevelChoices,
-    NotificationSourceServerChoices,
 )
+from .fields import CustomURLField
 
 
 @extras_features(
@@ -171,9 +172,7 @@ class RawNotification(OrganizationalModel):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200)
     source = models.CharField(
-        default=NotificationSourceServerChoices.IMAP,
         max_length=50,
-        choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
     )
@@ -240,23 +239,18 @@ class NotificationSource(OrganizationalModel):
     """Model for Notification Source configuration."""
 
     # Mark field as private so that it doesn't get included in ChangeLogging records!
-    _password = encrypt(models.CharField(max_length=100))
+    _password = encrypt(models.CharField(max_length=100, verbose_name="Password"))
     source_id = models.EmailField(
-        max_length=100, unique=True, help_text="Identifier (i.e. email address) to use to authenticate."
+        max_length=100,
+        unique=True,
+        verbose_name="Source ID",
+        help_text="Identifier (i.e. email address) to use to authenticate.",
     )
-    url = models.CharField(
+    url = CustomURLField(
         max_length=200,
-        help_text="URL to reach the Notification Source.",
+        verbose_name="URL",
+        help_text="URL to reach the Notification Source (i.e. 'imap://imap.gmail.com:993').",
     )
-    source_type = models.CharField(
-        default=NotificationSourceServerChoices.IMAP,
-        max_length=50,
-        choices=NotificationSourceServerChoices,
-        null=True,
-        blank=True,
-        help_text="Type of Notification Source integration.",
-    )
-
     providers = models.ManyToManyField(
         Provider,
         help_text="The Provider(s) that this Notification Source applies to.",
@@ -273,10 +267,14 @@ class NotificationSource(OrganizationalModel):
         """String value for HTML rendering."""
         return f"{self.source_id}"
 
+    def get_url_components(self) -> ParseResult:
+        """Returns a ParseResult object with the URL components."""
+        return urlparse(self.url)
+
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.source_id, self.url, self.source_type, self.providers)
+        return (self.source_id, self.url, self.providers)

@@ -239,6 +239,8 @@ class HandleCircuitMaintenanceNotifications(Job):
             last_time_processed = None
 
         try:
+            # TODO: get_notifications_from_email should be replaced by get_notifications_from_source when new types
+            # are supported
             notifications = get_notifications_from_email(
                 logger=self,
                 email_boxes=notification_sources,

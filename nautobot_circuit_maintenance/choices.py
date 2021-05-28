@@ -57,11 +57,3 @@ class NoteLevelChoices(ChoiceSet):
         (INFO, "INFO"),
         (WARNING, "WARNING"),
     )
-
-
-class NotificationSourceServerChoices(ChoiceSet):
-    """Valid values for NotificationSource type."""
-
-    IMAP = "imap"
-
-    CHOICES = ((IMAP, "IMAP"),)

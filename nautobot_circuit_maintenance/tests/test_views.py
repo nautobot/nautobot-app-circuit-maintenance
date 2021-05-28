@@ -158,7 +158,16 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
 
 
-class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
+class NotificationSourceTest(
+    ViewTestCases.GetObjectViewTestCase,
+    ViewTestCases.GetObjectChangelogViewTestCase,
+    ViewTestCases.CreateObjectViewTestCase,
+    ViewTestCases.EditObjectViewTestCase,
+    ViewTestCases.DeleteObjectViewTestCase,
+    ViewTestCases.ListObjectsViewTestCase,
+    ViewTestCases.BulkImportObjectsViewTestCase,
+    ViewTestCases.BulkDeleteObjectsViewTestCase,
+):
     """View tests for NotificationSource."""
 
     model = NotificationSource
@@ -179,10 +188,10 @@ class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
         Provider.objects.bulk_create(providers)
 
         notificationsource_1 = NotificationSource.objects.create(
-            source_id="whatever1@validemail.com", _password="password", url="whatever"
+            source_id="whatever1@validemail.com", _password="password", url="imap://localhost"
         )
         notificationsource_2 = NotificationSource.objects.create(
-            source_id="whatever2@validemail.com", _password="password", url="whatever"
+            source_id="whatever2@validemail.com", _password="password", url="imap://localhost"
         )
 
         notificationsource_1.providers.set(providers)
@@ -191,17 +200,15 @@ class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
         cls.form_data = {
             "source_id": "whatever3@validemail.com",
             "_password": "password",
-            "url": "whatever",
+            "url": "imap://localhost",
             "providers": providers,
         }
 
         cls.csv_data = (
             "source_id,_password,url",
-            "whatever4@validemail.com, password, whatever",
-            "whatever5@validemail.com, password, whatever",
+            "whatever4@validemail.com, password, imap://localhost",
+            "whatever5@validemail.com, password, imap://localhost",
         )
-
-        cls.bulk_edit_data = {"source_type": "GMAIL"}
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
