@@ -2,6 +2,23 @@
 
 from django.db import migrations, models
 import nautobot_circuit_maintenance.fields
+from nautobot_circuit_maintenance.models import NotificationSource, RawNotification
+
+
+def migrate_url(apps, schema_editor):
+    """Add 'imap' scheme to URL to comply with new field URL expectations."""
+
+    for notification_source in NotificationSource.objects.all():
+        notification_source.url = "imap://" + notification_source.url
+        notification_source.save()
+
+
+def migrate_rawnotification_source(apps, schema_editor):
+    """Update the source in all the existent raw notification to 'imap'."""
+
+    for raw_notification in RawNotification.objects.all():
+        raw_notification.source = "imap"
+        raw_notification.save()
 
 
 class Migration(migrations.Migration):
@@ -11,6 +28,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(migrate_url),
         migrations.AlterField(
             model_name="notificationsource",
             name="url",
@@ -21,6 +39,7 @@ class Migration(migrations.Migration):
             name="source",
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
+        migrations.RunPython(migrate_rawnotification_source),
         migrations.AlterUniqueTogether(
             name="notificationsource",
             unique_together={("source_id", "url")},
