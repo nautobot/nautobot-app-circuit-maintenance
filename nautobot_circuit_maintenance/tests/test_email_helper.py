@@ -79,29 +79,16 @@ class TestEmailHelper(TestCase):
 
     @parameterized.expand(
         [
-            ["service_1", "user_1", "password_1", "imap_server", 993, False],
-            ["service_1", None, "password_1", "imap_server", 993, True],
-            ["service_1", "user_1", None, "imap_server", 993, True],
-            ["service_1", "user_1", "password_1", None, 993, True],
-            ["service_1", "user_1", "password_1", "imap_server", None, False],
+            ["service_1", "user_1", "password_1", "imap_url_1", False],
+            ["service_1", None, "password_1", "imap_url_1", True],
+            ["service_1", "user_1", None, "imap_url_1", True],
+            ["service_1", "user_1", "password_1", None, True],
         ]  # pylint: disable=too-many-arguments
     )
-    def test_imap_init(self, service, user, password, imap_server, imap_port, exception):
+    def test_imap_init(self, service, user, password, imap_url, exception):
         """Test IMAP class init."""
-        kwargs = {}
-        if service:
-            kwargs["service"] = service
-        if user:
-            kwargs["user"] = user
-        if password:
-            kwargs["password"] = password
-        if imap_server:
-            kwargs["imap_server"] = imap_server
-        if imap_port:
-            kwargs["imap_port"] = imap_port
-
         if exception:
             with self.assertRaises(ValidationError):
-                IMAP(**kwargs)
+                IMAP(service=service, user=user, password=password, imap_url=imap_url)
         else:
-            IMAP(**kwargs)
+            IMAP(service=service, user=user, password=password, imap_url=imap_url)

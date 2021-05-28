@@ -56,8 +56,7 @@ Attributes:
 
 - Source ID: Identifier (i.e. email address) to use to authenticate.
 - Password: password to authenticate.
-- Server: Server address to reach the Notification Source.
-- Port: TCP port for the Server (default: 993).
+- URL: URL to reach the Notification Source.
 - Server Type: Type of Notification Source integration (See note below)
 - Providers: The Provider(s) that this Notification Source applies to.
 

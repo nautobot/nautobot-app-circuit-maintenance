@@ -27,8 +27,7 @@ class IMAP(BaseModel):
     service: str
     user: str
     password: str
-    imap_server: str
-    imap_port: int = 993
+    imap_url: str
 
     session: Union[imaplib.IMAP4_SSL, None] = None
 
@@ -37,10 +36,19 @@ class IMAP(BaseModel):
 
         arbitrary_types_allowed = True
 
+    def __post_init__(self):
+        """Post init validation."""
+        if self.user is None:
+            raise AssertionError(f"User for {self.service} is not present.")
+        if self.password is None:
+            raise AssertionError(f"Password for {self.service} is not present.")
+        if self.imap_url is None:
+            raise AssertionError(f"URL for {self.service} is not present.")
+
     def open_session(self):
         """Open session to IMAP server."""
         if not self.session:
-            self.session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            self.session = imaplib.IMAP4_SSL(self.imap_url)
             self.session.login(self.user, self.password)
 
     def close_session(self):
@@ -203,8 +211,7 @@ def get_notifications_from_email(
                 # How to setup GMAIL APP password
                 # https://support.google.com/accounts/answer/185833
                 password=email_box._password,  # pylint: disable=protected-access
-                imap_server=email_box.server,
-                imap_port=email_box.port,
+                imap_url=email_box.url,
             )
             rawnotification = imap_conn.receive_emails(logger, restrict_emails, since)
             received_notifications.extend(rawnotification)

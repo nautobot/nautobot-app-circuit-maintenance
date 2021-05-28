@@ -179,10 +179,10 @@ class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
         Provider.objects.bulk_create(providers)
 
         notificationsource_1 = NotificationSource.objects.create(
-            source_id="whatever1@validemail.com", _password="password", server="whatever"
+            source_id="whatever1@validemail.com", _password="password", url="whatever"
         )
         notificationsource_2 = NotificationSource.objects.create(
-            source_id="whatever2@validemail.com", _password="password", server="whatever"
+            source_id="whatever2@validemail.com", _password="password", url="whatever"
         )
 
         notificationsource_1.providers.set(providers)
@@ -191,14 +191,14 @@ class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
         cls.form_data = {
             "source_id": "whatever3@validemail.com",
             "_password": "password",
-            "server": "whatever",
+            "url": "whatever",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "source_id,_password,server,port",
-            "whatever4@validemail.com, password, whatever, 995",
-            "whatever5@validemail.com, password, whatever, 996",
+            "source_id,_password,url",
+            "whatever4@validemail.com, password, whatever",
+            "whatever5@validemail.com, password, whatever",
         )
 
         cls.bulk_edit_data = {"source_type": "GMAIL"}

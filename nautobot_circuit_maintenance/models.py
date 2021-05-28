@@ -240,22 +240,13 @@ class NotificationSource(OrganizationalModel):
     """Model for Notification Source configuration."""
 
     # Mark field as private so that it doesn't get included in ChangeLogging records!
-    _password = encrypt(models.CharField(max_length=100, verbose_name="Password"))
+    _password = encrypt(models.CharField(max_length=100))
     source_id = models.EmailField(
-        max_length=100,
-        unique=True,
-        verbose_name="Source ID",
-        help_text="Identifier (i.e. email address) to use to authenticate.",
+        max_length=100, unique=True, help_text="Identifier (i.e. email address) to use to authenticate."
     )
-    server = models.CharField(
+    url = models.CharField(
         max_length=200,
-        help_text="Server address to reach the Notification Source (i.e. 'imap.gmail.com').",
-    )
-    port = models.IntegerField(
-        default=993,
-        null=True,
-        blank=True,
-        help_text="Server TCP port number.",
+        help_text="URL to reach the Notification Source.",
     )
     source_type = models.CharField(
         default=NotificationSourceServerChoices.IMAP,
@@ -263,7 +254,6 @@ class NotificationSource(OrganizationalModel):
         choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
-        verbose_name="Source Type",
         help_text="Type of Notification Source integration.",
     )
 
@@ -273,11 +263,11 @@ class NotificationSource(OrganizationalModel):
         blank=True,
     )
 
-    csv_headers = ["source_id", "_password", "server", "port"]
+    csv_headers = ["source_id", "_password", "url"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["source_id"]
-        unique_together = ["source_id", "server", "port"]
+        unique_together = ["source_id", "url"]
 
     def __str__(self):
         """String value for HTML rendering."""
@@ -289,4 +279,4 @@ class NotificationSource(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.source_id, self.server, self.port, self.source_type, self.providers)
+        return (self.source_id, self.url, self.source_type, self.providers)
