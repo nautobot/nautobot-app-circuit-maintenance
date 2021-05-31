@@ -54,7 +54,7 @@ In the Circuit Maintenance plugin UI section, there is a **settings** button (ye
 
 Attributes:
 
-- Source ID: Identifier (i.e. email address) to use to authenticate.
+- Account: Identifier (i.e. email address) to use to authenticate.
 - Password: password to authenticate.
 - URL: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 - Providers: The Provider(s) that this Notification Source applies to.

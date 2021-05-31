@@ -107,5 +107,5 @@ class NotificationSourceFilterSet(BaseFilterSet):
         """Perform the filtered search."""
         if not value.strip():
             return queryset
-        qs_filter = Q(source_id__icontains=value)
+        qs_filter = Q(account__icontains=value)
         return queryset.filter(qs_filter)

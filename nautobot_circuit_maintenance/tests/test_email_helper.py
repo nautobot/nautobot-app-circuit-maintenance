@@ -46,7 +46,7 @@ class TestEmailHelper(TestCase):
             message=f"Skipping {new_provider.name} because these providers has no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {email_settings.source_id}"
+            message=f"No notifications received for {original_provider} since always from {email_settings.account}"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.email_helper.IMAP.receive_emails")

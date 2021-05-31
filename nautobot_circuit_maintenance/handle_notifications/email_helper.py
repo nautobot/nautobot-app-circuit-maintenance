@@ -195,11 +195,11 @@ def get_notifications_from_email(
                 continue
 
             logger.log_info(
-                message=f"Retrieving notifications from {email_box.source_id} for {', '.join(providers_with_email)} since {since_txt}",
+                message=f"Retrieving notifications from {email_box.account} for {', '.join(providers_with_email)} since {since_txt}",
             )
             imap_conn = IMAP(
                 service=email_box.get_url_components().scheme.lower(),
-                user=email_box.source_id,
+                user=email_box.account,
                 # How to setup GMAIL APP password
                 # https://support.google.com/accounts/answer/185833
                 password=email_box._password,  # pylint: disable=protected-access
@@ -211,11 +211,11 @@ def get_notifications_from_email(
 
             if not received_notifications:
                 logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.source_id}",
+                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.account}",
                 )
         except Exception as error:
             logger.log_warning(
-                message=f"Issue fetching notifications from {email_box.source_id}: {error}",
+                message=f"Issue fetching notifications from {email_box.account}: {error}",
             )
 
     return received_notifications

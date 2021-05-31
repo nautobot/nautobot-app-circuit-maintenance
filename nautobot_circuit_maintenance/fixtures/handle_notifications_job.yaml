@@ -60,7 +60,7 @@
     last_updated: 2021-05-06 05:19:11.314056+00:00
     _custom_field_data: {}
     _password: password
-    source_id: source1@example.com
+    account: source1@example.com
     url: imap://localhost
     providers:
       - 0ec89992-0de0-483f-8f53-bdcd179eaecd

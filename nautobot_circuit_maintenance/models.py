@@ -240,14 +240,13 @@ class NotificationSource(OrganizationalModel):
 
     # Mark field as private so that it doesn't get included in ChangeLogging records!
     _password = encrypt(models.CharField(max_length=100, verbose_name="Password"))
-    source_id = models.EmailField(
-        max_length=100,
+    account = models.EmailField(
+        max_length=255,
         unique=True,
-        verbose_name="Source ID",
-        help_text="Identifier (i.e. email address) to use to authenticate.",
+        help_text="Account Identifier (i.e. email address) to authenticate.",
     )
     url = CustomURLField(
-        max_length=200,
+        max_length=500,
         verbose_name="URL",
         help_text="URL to reach the Notification Source (i.e. 'imap://imap.gmail.com:993').",
     )
@@ -257,15 +256,15 @@ class NotificationSource(OrganizationalModel):
         blank=True,
     )
 
-    csv_headers = ["source_id", "_password", "url"]
+    csv_headers = ["account", "_password", "url"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["source_id"]
-        unique_together = ["source_id", "url"]
+        ordering = ["account"]
+        unique_together = ["account", "url"]
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.source_id}"
+        return f"{self.account}"
 
     def get_url_components(self) -> ParseResult:
         """Returns a ParseResult object with the URL components."""
@@ -277,4 +276,4 @@ class NotificationSource(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.source_id, self.url, self.providers)
+        return (self.account, self.url, self.providers)

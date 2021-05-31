@@ -188,24 +188,24 @@ class NotificationSourceTest(
         Provider.objects.bulk_create(providers)
 
         notificationsource_1 = NotificationSource.objects.create(
-            source_id="whatever1@validemail.com", _password="password", url="imap://localhost"
+            account="whatever1@validemail.com", _password="password", url="imap://localhost"
         )
         notificationsource_2 = NotificationSource.objects.create(
-            source_id="whatever2@validemail.com", _password="password", url="imap://localhost"
+            account="whatever2@validemail.com", _password="password", url="imap://localhost"
         )
 
         notificationsource_1.providers.set(providers)
         notificationsource_2.providers.set(providers)
 
         cls.form_data = {
-            "source_id": "whatever3@validemail.com",
+            "account": "whatever3@validemail.com",
             "_password": "password",
             "url": "imap://localhost",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "source_id,_password,url",
+            "account,_password,url",
             "whatever4@validemail.com, password, imap://localhost",
             "whatever5@validemail.com, password, imap://localhost",
         )

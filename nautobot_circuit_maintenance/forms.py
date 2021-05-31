@@ -154,7 +154,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
         """Metaclass attributes for NotificationSourcemodel_form = forms.NotificationSourceForm."""
 
         model = NotificationSource
-        fields = ["source_id", "_password", "url", "providers"]
+        fields = ["account", "_password", "url", "providers"]
         widgets = {"_password": forms.PasswordInput(render_value=True)}
 
 
