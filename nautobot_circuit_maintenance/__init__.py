@@ -30,7 +30,8 @@ class CircuitMaintenanceConfig(PluginConfig):
     verbose_name = "Circuit Maintenance"
     version = __version__
     author = "Network to Code, LLC"
-    description = ""
+    author_email = "opensource@networktocode.com"
+    description = "Automatically handle network circuit maintenances."
     base_url = "circuit-maintenance"
     min_version = "1.0.0-beta.4"
     max_version = "1.999"
