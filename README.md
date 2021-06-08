@@ -97,7 +97,7 @@ Because the Notification Sources are defined by the configuration, you can only 
 
 ### 3. Run Handle Notifications Job
 
-There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Mainentance Notifications** that will connect to the emails sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
+There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the emails sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
 Each notification will be parsed using the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser) library, and if a valid parsing is executed, a new **Circuit Maintenance** will be created, or if it was already created, it will updated with the new data.
 
 So, for each email notification received, several objects will be created:

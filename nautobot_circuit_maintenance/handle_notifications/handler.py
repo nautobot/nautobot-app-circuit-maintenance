@@ -216,7 +216,7 @@ class HandleCircuitMaintenanceNotifications(Job):
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
-        name = "Handle Circuit Mainentance Notifications"
+        name = "Handle Circuit Maintenance Notifications"
         description = (
             "Retrieve via email latest Circuit Maintenance Notifications and create or update them accrodingly"
         )
