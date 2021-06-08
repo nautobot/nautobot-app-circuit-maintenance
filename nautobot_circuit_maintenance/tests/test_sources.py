@@ -49,8 +49,8 @@ class TestSources(TestCase):
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""
-        email_settings = NotificationSource.objects.all().first()
-        email_settings.providers.set([])
+        notification_source = NotificationSource.objects.all().first()
+        notification_source.providers.set([])
 
         res = get_notifications(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
@@ -62,8 +62,8 @@ class TestSources(TestCase):
         mock_receive_notifications.return_value = []
         original_provider = Provider.objects.all().first()
         new_provider = Provider.objects.create(name="something", slug="something")
-        email_settings = NotificationSource.objects.all().first()
-        email_settings.providers.add(new_provider)
+        notification_source = NotificationSource.objects.all().first()
+        notification_source.providers.add(new_provider)
 
         res = get_notifications(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
@@ -72,7 +72,7 @@ class TestSources(TestCase):
             message=f"Skipping {new_provider.name} because these providers has no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {email_settings.alias}"
+            message=f"No notifications received for {original_provider} since always from {notification_source.alias}"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")

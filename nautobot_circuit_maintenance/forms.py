@@ -175,7 +175,7 @@ class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFi
 
 
 class NotificationSourceFilterSetForm(BootstrapMixin, forms.ModelForm):
-    """Form for filtering CircuitMaintenance settings."""
+    """Form for filtering Notification Sources."""
 
     q = forms.CharField(required=False, label="Search")
 

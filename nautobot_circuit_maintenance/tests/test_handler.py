@@ -153,7 +153,7 @@ class TestHandleNotificationsJob(TestCase):
             self.job.log_info.assert_called_with(message="No notifications received.")
 
     def test_run_nonnotificationsource(self):
-        """Test when a there are no Email Settings."""
+        """Test when a there are no Notification Sources."""
 
         NotificationSource.objects.all().delete()
         processed_notifications = self.job.run(commit=True)

@@ -100,12 +100,12 @@ urlpatterns = [
         name="parsednotification",
     ),
     # Notification Source
-    path("settings/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
-    path("settings/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
-    path("settings/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
-    path("settings/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
+    path("source/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
+    path("source/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
+    path("source/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
+    path("source/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
     path(
-        "settings/<uuid:pk>/changelog/",
+        "source/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
         name="notificationsource_changelog",
         kwargs={"model": NotificationSource},

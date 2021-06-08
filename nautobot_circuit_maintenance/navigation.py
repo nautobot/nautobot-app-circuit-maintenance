@@ -24,7 +24,7 @@ menu_items = (
         buttons=(
             PluginMenuButton(
                 link="plugins:nautobot_circuit_maintenance:notificationsource_list",
-                title="Settings",
+                title="Notification Sources",
                 icon_class="mdi mdi-tune",
                 color=ButtonColorChoices.YELLOW,
                 permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],
