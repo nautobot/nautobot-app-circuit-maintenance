@@ -1,4 +1,4 @@
-"""Email helper functions."""
+"""Notification Source classes."""
 import re
 import datetime
 import email
@@ -10,6 +10,7 @@ from typing import Iterable, Optional, Union, TypeVar, Type
 from django.conf import settings
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
+from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
 from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance.models import NotificationSource
@@ -42,13 +43,14 @@ class Source(BaseModel):
         else:
             return None
 
-        url_components = urlparse(config["url"])
+        url = config.get("url")
+        url_components = urlparse(url)
         if url_components.scheme.lower() == "imap":
             return IMAP(
                 alias=alias,
-                url=config["url"],
-                user=config["account"],
-                password=config["secret"],
+                url=url,
+                user=config.get("account"),
+                password=config.get("secret"),
                 imap_server=url_components.netloc.split(":")[0],
                 imap_port=url_components.port or 993,
             )
@@ -230,10 +232,16 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
                 message=f"Retrieving notifications from {notification_source.alias} for {', '.join(providers_with_email)} since {since_txt}",
             )
 
-            imap_conn = Source.init(alias=notification_source.alias)
-            if not imap_conn:
+            try:
+                imap_conn = Source.init(alias=notification_source.alias)
+                if not imap_conn:
+                    logger.log_warning(
+                        message=f"No Notification Source configuration available or supported scheme for {notification_source.alias}.",
+                    )
+                    continue
+            except ValidationError as validation_error:
                 logger.log_warning(
-                    message=f"No Notification Source configuration available or supported scheme for {notification_source.alias}.",
+                    message=f"Notification Source {notification_source.alias} is not matching class expectations: {validation_error}",
                 )
                 continue
 

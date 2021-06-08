@@ -31,8 +31,7 @@ class TestSources(TestCase):
 
     def setUp(self):
         """Prepare data for tests."""
-
-        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_1]}}
+        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_1.copy()]}}
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(alias=SOURCE_1["alias"]).delete()
 
@@ -46,6 +45,41 @@ class TestSources(TestCase):
         self.assertEqual(source_instance.password, SOURCE_1["secret"])
         self.assertEqual(source_instance.imap_server, "example.com")
         self.assertEqual(source_instance.imap_port, 993)
+
+    def test_source_factory_nonexistent_alias(self):
+        """Validate Factory pattern for non existent alias."""
+        source_instance = Source.init(alias="non existent alias")
+        self.assertEqual(source_instance, None)
+
+    def test_source_factory_nonexistent_url(self):
+        """Validate Factory pattern for non existent url."""
+        del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"]
+        source_instance = Source.init(alias=SOURCE_1["alias"])
+        self.assertEqual(source_instance, None)
+
+    def test_source_factory_url_scheme_not_supported(self):
+        """Validate Factory pattern for non existent url scheme."""
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "ftp://example.com"
+        source_instance = Source.init(alias=SOURCE_1["alias"])
+        self.assertEqual(source_instance, None)
+
+    def test_source_factory_url_malformed(self):
+        """Validate Factory pattern for malformed url."""
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "wrong url"
+        source_instance = Source.init(alias=SOURCE_1["alias"])
+        self.assertEqual(source_instance, None)
+
+    def test_source_factory_imap_no_account(self):
+        """Validate Factory pattern IMAP without account settings."""
+        del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
+        with self.assertRaises(ValidationError):
+            Source.init(alias=SOURCE_1["alias"])
+
+    def test_source_factory_imap_no_secret(self):
+        """Validate Factory pattern IMAP without secret settings."""
+        del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["secret"]
+        with self.assertRaises(ValidationError):
+            Source.init(alias=SOURCE_1["alias"])
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""
@@ -73,6 +107,15 @@ class TestSources(TestCase):
         )
         self.logger.log_info.assert_called_with(
             message=f"No notifications received for {original_provider} since always from {notification_source.alias}"
+        )
+
+    def test_get_notifications_no_imap_account(self):
+        """Test get_notifications without IMAP account."""
+        del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
+        get_notifications(self.logger, NotificationSource.objects.all())
+
+        self.logger.log_warning.assert_called_with(
+            message=f"Notification Source {SOURCE_1['alias']} is not matching class expectations: 1 validation error for IMAP\nuser\n  none is not an allowed value (type=type_error.none.not_allowed)"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
