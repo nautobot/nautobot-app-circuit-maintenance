@@ -48,26 +48,27 @@ class TestSources(TestCase):
 
     def test_source_factory_nonexistent_alias(self):
         """Validate Factory pattern for non existent alias."""
-        source_instance = Source.init(alias="non existent alias")
-        self.assertEqual(source_instance, None)
+        non_existent_alias = "abc"
+        with self.assertRaisesMessage(ValueError, f"Alias {non_existent_alias} not found in PLUGINS_CONFIG."):
+            Source.init(alias=non_existent_alias)
 
     def test_source_factory_nonexistent_url(self):
         """Validate Factory pattern for non existent url."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"]
-        source_instance = Source.init(alias=SOURCE_1["alias"])
-        self.assertEqual(source_instance, None)
+        with self.assertRaisesMessage(ValueError, f"URL for {SOURCE_1['alias']} not found in PLUGINS_CONFIG"):
+            Source.init(alias=SOURCE_1["alias"])
 
     def test_source_factory_url_scheme_not_supported(self):
         """Validate Factory pattern for non existent url scheme."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "ftp://example.com"
-        source_instance = Source.init(alias=SOURCE_1["alias"])
-        self.assertEqual(source_instance, None)
+        with self.assertRaisesMessage(ValueError, "Scheme ftp not supported as Notification Source (only IMAP)."):
+            Source.init(alias=SOURCE_1["alias"])
 
     def test_source_factory_url_malformed(self):
         """Validate Factory pattern for malformed url."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "wrong url"
-        source_instance = Source.init(alias=SOURCE_1["alias"])
-        self.assertEqual(source_instance, None)
+        with self.assertRaisesMessage(ValueError, "Scheme  not supported as Notification Source (only IMAP)"):
+            Source.init(alias=SOURCE_1["alias"])
 
     def test_source_factory_imap_no_account(self):
         """Validate Factory pattern IMAP without account settings."""

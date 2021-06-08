@@ -30,6 +30,8 @@ class Source(BaseModel):
         self, logger, senders: Iterable[str] = None, since: int = None
     ) -> Iterable[MaintenanceNotification]:
         """Function to retrieve notifications."""
+        # TODO: `senders` is used to limit the scope of emails retrieved, this won't have sense depending on the
+        # Notification Source.
 
     @classmethod
     def init(cls: Type[T], alias: str) -> Optional[Type[T]]:
@@ -41,11 +43,15 @@ class Source(BaseModel):
                 config = notification_source
                 break
         else:
-            return None
+            raise ValueError(f"Alias {alias} not found in PLUGINS_CONFIG.")
 
         url = config.get("url")
+        if not url:
+            raise ValueError(f"URL for {alias} not found in PLUGINS_CONFIG.")
+
         url_components = urlparse(url)
-        if url_components.scheme.lower() == "imap":
+        scheme = url_components.scheme.lower()
+        if scheme == "imap":
             return IMAP(
                 alias=alias,
                 url=url,
@@ -54,6 +60,8 @@ class Source(BaseModel):
                 imap_server=url_components.netloc.split(":")[0],
                 imap_port=url_components.port or 993,
             )
+
+        raise ValueError(f"Scheme {scheme} not supported as Notification Source (only IMAP).")
 
 
 class IMAP(Source):
@@ -234,15 +242,13 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
 
             try:
                 imap_conn = Source.init(alias=notification_source.alias)
-                if not imap_conn:
-                    logger.log_warning(
-                        message=f"No Notification Source configuration available or supported scheme for {notification_source.alias}.",
-                    )
-                    continue
             except ValidationError as validation_error:
                 logger.log_warning(
                     message=f"Notification Source {notification_source.alias} is not matching class expectations: {validation_error}",
                 )
+                continue
+            except ValueError as value_error:
+                logger.log_warning(message=value_error)
                 continue
 
             rawnotification = imap_conn.receive_notifications(logger, restrict_emails, since)
