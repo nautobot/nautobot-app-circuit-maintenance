@@ -46,7 +46,8 @@ All the plugin configuration is done via UI, under the **Plugins** tab, in the *
 
 ### 1. Define source emails per Provider
 
-Each Circuit **Provider**, that we would like to track via the Circuit Maintenance plugin, requires at least one email address under the `Custom Fields -> Emails for Circuit Maintenance plugin` section.
+Each Circuit **Provider**, that we would like to track via the Circuit Maintenance plugin, requires at least one email address under the `Custom Fields` -> `Emails for Circuit Maintenance plugin` section.
+
 These are the source email addresses that the plugin will check and use to classify each notification for each specific provider.
 
 ### 2. Configure Notification Sources
