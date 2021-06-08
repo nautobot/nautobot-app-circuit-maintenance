@@ -154,8 +154,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
         """Metaclass attributes for NotificationSourcemodel_form = forms.NotificationSourceForm."""
 
         model = NotificationSource
-        fields = ["account", "_password", "url", "providers"]
-        widgets = {"_password": forms.PasswordInput(render_value=True)}
+        fields = ["providers"]
 
 
 class NotificationSourceCSVForm(CustomFieldModelCSVForm):
@@ -179,8 +178,7 @@ class NotificationSourceFilterSetForm(BootstrapMixin, forms.ModelForm):
     """Form for filtering CircuitMaintenance settings."""
 
     q = forms.CharField(required=False, label="Search")
-    url = forms.CharField(required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = NotificationSource
-        fields = ["q", "url"]
+        fields = ["q"]

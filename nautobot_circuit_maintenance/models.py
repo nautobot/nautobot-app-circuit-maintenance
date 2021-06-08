@@ -1,10 +1,8 @@
 """Models for Circuit Maintenance."""
-from urllib.parse import urlparse, ParseResult
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
-from django_cryptography.fields import encrypt
 from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
@@ -14,7 +12,6 @@ from .choices import (
     CircuitMaintenanceStatusChoices,
     NoteLevelChoices,
 )
-from .fields import CustomURLField
 
 
 @extras_features(
@@ -238,17 +235,10 @@ class ParsedNotification(OrganizationalModel):
 class NotificationSource(OrganizationalModel):
     """Model for Notification Source configuration."""
 
-    # Mark field as private so that it doesn't get included in ChangeLogging records!
-    _password = encrypt(models.CharField(max_length=100, verbose_name="Password"))
-    account = models.EmailField(
-        max_length=255,
+    alias = models.CharField(
+        max_length=200,
         unique=True,
-        help_text="Account Identifier (i.e. email address) to authenticate.",
-    )
-    url = CustomURLField(
-        max_length=500,
-        verbose_name="URL",
-        help_text="URL to reach the Notification Source (i.e. 'imap://imap.gmail.com:993').",
+        help_text="Notification Source Alias as defined in nautobot_configuration.py",
     )
     providers = models.ManyToManyField(
         Provider,
@@ -256,19 +246,14 @@ class NotificationSource(OrganizationalModel):
         blank=True,
     )
 
-    csv_headers = ["account", "_password", "url"]
+    csv_headers = ["alias"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["account"]
-        unique_together = ["account", "url"]
+        ordering = ["alias"]
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.account}"
-
-    def get_url_components(self) -> ParseResult:
-        """Returns a ParseResult object with the URL components."""
-        return urlparse(self.url)
+        return f"{self.alias}"
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
@@ -276,4 +261,4 @@ class NotificationSource(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.account, self.url, self.providers)
+        return (self.alias, self.providers)

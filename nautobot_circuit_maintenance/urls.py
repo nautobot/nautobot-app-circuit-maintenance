@@ -101,17 +101,9 @@ urlpatterns = [
     ),
     # Notification Source
     path("settings/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
-    path("settings/add/", views.NotificationSourceEditView.as_view(), name="notificationsource_add"),
     path("settings/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
-    path("settings/<uuid:pk>/delete/", views.NotificationSourceDeleteView.as_view(), name="notificationsource_delete"),
-    path(
-        "settings/delete/",
-        views.NotificationSourceBulkDeleteView.as_view(),
-        name="notificationsource_bulk_delete",
-    ),
     path("settings/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
     path("settings/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
-    path("settings/import/", views.NotificationSourceBulkImportView.as_view(), name="notificationsource_import"),
     path(
         "settings/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),

@@ -1,5 +1,6 @@
 """Init for Circuit Maintenance plugin."""
 __version__ = "0.1.1"
+from django.conf import settings
 from django.db.models.signals import post_migrate
 from nautobot.extras.plugins import PluginConfig
 
@@ -23,6 +24,22 @@ def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
         field.content_types.set([ContentType.objects.get_for_model(Provider)])
 
 
+def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-argument
+    """Import Notification Sources from Nautobot_configuration.py.
+
+    This is a temporary solution until a proper secrets backend is implemented.
+    For now, we create the aliases in the DB but the secrets are fetched via ENV.
+    """
+    # pylint: disable=import-outside-toplevel
+
+    from nautobot_circuit_maintenance.models import NotificationSource
+
+    for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
+        "notification_sources", []
+    ):
+        NotificationSource.objects.get_or_create(alias=notification_source["alias"])
+
+
 class CircuitMaintenanceConfig(PluginConfig):
     """Plugin configuration for the Circuit Maintenance plugin."""
 
@@ -41,6 +58,7 @@ class CircuitMaintenanceConfig(PluginConfig):
     def ready(self):
         super().ready()
         post_migrate.connect(custom_field_extension, sender=self)
+        post_migrate.connect(import_notification_sources, sender=self)
 
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name

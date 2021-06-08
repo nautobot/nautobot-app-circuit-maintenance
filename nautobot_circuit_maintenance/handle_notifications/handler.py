@@ -14,7 +14,7 @@ from nautobot_circuit_maintenance.models import (
     RawNotification,
     NotificationSource,
 )
-from .email_helper import get_notifications_from_email
+from .sources import get_notifications
 
 
 # pylint: disable=broad-except
@@ -239,11 +239,11 @@ class HandleCircuitMaintenanceNotifications(Job):
             last_time_processed = None
 
         try:
-            # TODO: get_notifications_from_email should be replaced by get_notifications_from_source when new types
+            # TODO: get_notifications should be replaced by get_notifications_from_source when new types
             # are supported
-            notifications = get_notifications_from_email(
+            notifications = get_notifications(
                 logger=self,
-                email_boxes=notification_sources,
+                notification_sources=notification_sources,
                 since=last_time_processed,
             )
             if not notifications:

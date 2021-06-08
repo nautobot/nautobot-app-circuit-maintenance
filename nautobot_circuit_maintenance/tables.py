@@ -62,14 +62,14 @@ class NoteTable(BaseTable):
 class NotificationSourceTable(BaseTable):
     """Table to display Circuit Impact model."""
 
-    account = tables.LinkColumn(
+    alias = tables.LinkColumn(
         viewname="plugins:nautobot_circuit_maintenance:notificationsource_edit", args=[Accessor("id")]
     )
 
     pk = ToggleColumn()
 
     class Meta(BaseTable.Meta):
-        """Meta for class CircuitImpactTable."""
+        """Meta for class NotificationSourceTable."""
 
         model = NotificationSource
-        fields = ("pk", "account", "url", "providers")
+        fields = ("pk", "alias", "providers")

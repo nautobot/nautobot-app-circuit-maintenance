@@ -97,12 +97,12 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_raw_notification(notification_data)
 
         with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications_from_email"
-        ) as mock_get_notifications_from_email:
-            mock_get_notifications_from_email.return_value = [test_notification]
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = [test_notification]
             processed_notifications = self.job.run(commit=True)
 
-            mock_get_notifications_from_email.assert_called_once()
+            mock_get_notifications.assert_called_once()
             self.assertEqual(1, len(processed_notifications))
             self.assertEqual(1, len(RawNotification.objects.all()))
             self.assertEqual(1, len(ParsedNotification.objects.all()))
@@ -119,12 +119,12 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_raw_notification(notification_data)
 
         with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications_from_email"
-        ) as mock_get_notifications_from_email:
-            mock_get_notifications_from_email.return_value = [test_notification]
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = [test_notification]
             processed_notifications = self.job.run(commit=True)
 
-            mock_get_notifications_from_email.assert_called_once()
+            mock_get_notifications.assert_called_once()
             self.assertEqual(1, len(processed_notifications))
             self.assertEqual(1, len(RawNotification.objects.all()))
             self.assertEqual(1, len(ParsedNotification.objects.all()))
@@ -138,12 +138,12 @@ class TestHandleNotificationsJob(TestCase):
         """Test when a there are no notifications."""
 
         with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications_from_email"
-        ) as mock_get_notifications_from_email:
-            mock_get_notifications_from_email.return_value = []
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = []
             processed_notifications = self.job.run(commit=True)
 
-            mock_get_notifications_from_email.assert_called_once()
+            mock_get_notifications.assert_called_once()
             self.assertEqual(0, len(processed_notifications))
             self.assertEqual(0, len(RawNotification.objects.all()))
             self.assertEqual(0, len(ParsedNotification.objects.all()))
@@ -170,12 +170,12 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_raw_notification(notification_data)
 
         with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications_from_email"
-        ) as mock_get_notifications_from_email:
-            mock_get_notifications_from_email.return_value = [test_notification]
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = [test_notification]
             processed_notifications = self.job.run(commit=True)
 
-            mock_get_notifications_from_email.assert_called_once()
+            mock_get_notifications.assert_called_once()
             self.assertEqual(1, len(processed_notifications))
             self.assertEqual(1, len(RawNotification.objects.all()))
             self.assertEqual(0, len(ParsedNotification.objects.all()))
@@ -278,9 +278,9 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_raw_notification(notification_data)
 
         with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications_from_email"
-        ) as mock_get_notifications_from_email:
-            mock_get_notifications_from_email.return_value = [test_notification]
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = [test_notification]
             self.job.run(commit=True)
 
         # Adding changes

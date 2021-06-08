@@ -161,12 +161,12 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 class NotificationSourceTest(
     ViewTestCases.GetObjectViewTestCase,
     ViewTestCases.GetObjectChangelogViewTestCase,
-    ViewTestCases.CreateObjectViewTestCase,
+    # ViewTestCases.CreateObjectViewTestCase,
     ViewTestCases.EditObjectViewTestCase,
-    ViewTestCases.DeleteObjectViewTestCase,
+    # ViewTestCases.DeleteObjectViewTestCase,
     ViewTestCases.ListObjectsViewTestCase,
-    ViewTestCases.BulkImportObjectsViewTestCase,
-    ViewTestCases.BulkDeleteObjectsViewTestCase,
+    # ViewTestCases.BulkImportObjectsViewTestCase,
+    # ViewTestCases.BulkDeleteObjectsViewTestCase,
 ):
     """View tests for NotificationSource."""
 
@@ -187,27 +187,21 @@ class NotificationSourceTest(
         )
         Provider.objects.bulk_create(providers)
 
-        notificationsource_1 = NotificationSource.objects.create(
-            account="whatever1@validemail.com", _password="password", url="imap://localhost"
-        )
-        notificationsource_2 = NotificationSource.objects.create(
-            account="whatever2@validemail.com", _password="password", url="imap://localhost"
-        )
+        notificationsource_1 = NotificationSource.objects.create(alias="whatever1")
+        notificationsource_2 = NotificationSource.objects.create(alias="whatever2")
 
         notificationsource_1.providers.set(providers)
         notificationsource_2.providers.set(providers)
 
         cls.form_data = {
-            "account": "whatever3@validemail.com",
-            "_password": "password",
-            "url": "imap://localhost",
+            "alias": "whatever3",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "account,_password,url",
-            "whatever4@validemail.com, password, imap://localhost",
-            "whatever5@validemail.com, password, imap://localhost",
+            "alias,",
+            "whatever4",
+            "whatever5",
         )
 
     def test_list_objects_with_constrained_permission(self):

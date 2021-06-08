@@ -3,8 +3,11 @@ import re
 import datetime
 import email
 import imaplib
+from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, TypeVar, Type
+
+from django.conf import settings
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
@@ -13,18 +16,47 @@ from nautobot_circuit_maintenance.models import NotificationSource
 
 # pylint: disable=broad-except
 
-
-class Email(BaseModel):
-    """Base class to retrieve emails. To be extended for each email protocol."""
-
-    def receive_emails(self, senders: Iterable[str] = None, since: int = None) -> Iterable[MaintenanceNotification]:
-        """Function to retrieve emails."""
+T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
 
 
-class IMAP(BaseModel):
-    """IMAP class."""
+class Source(BaseModel):
+    """Base class to retrieve notifications. To be extended for each scheme."""
 
-    service: str
+    alias: str
+    url: str
+
+    def receive_notifications(
+        self, logger, senders: Iterable[str] = None, since: int = None
+    ) -> Iterable[MaintenanceNotification]:
+        """Function to retrieve notifications."""
+
+    @classmethod
+    def init(cls: Type[T], alias: str) -> Optional[Type[T]]:
+        """Factory Pattern to get the specific Source Class depending on the scheme."""
+        for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
+            "notification_sources", []
+        ):
+            if notification_source.get("alias", "") == alias:
+                config = notification_source
+                break
+        else:
+            return None
+
+        url_components = urlparse(config["url"])
+        if url_components.scheme.lower() == "imap":
+            return IMAP(
+                alias=alias,
+                url=config["url"],
+                user=config["account"],
+                password=config["secret"],
+                imap_server=url_components.netloc.split(":")[0],
+                imap_port=url_components.port or 993,
+            )
+
+
+class IMAP(Source):
+    """IMAP class, extending Source class."""
+
     user: str
     password: str
     imap_server: str
@@ -104,14 +136,14 @@ class IMAP(BaseModel):
             return
 
         return MaintenanceNotification(
-            source=self.service,
+            source=self.__class__.__name__,
             sender=email_message["From"],
             subject=email_message["Subject"],
             raw=raw_payload,
             provider_type=provider_type,
         )
 
-    def receive_emails(
+    def receive_notifications(
         self, logger, senders: Iterable[str] = None, since: int = None
     ) -> Iterable[MaintenanceNotification]:
         """Retrieve emails from specific senders and from an specific time, if provided."""
@@ -141,24 +173,24 @@ class IMAP(BaseModel):
             messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend = messages.split()
 
-        received_emails = []
+        received_notifications = []
 
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(logger, msg_id, since)
             if raw_notification:
-                received_emails.append(raw_notification)
+                received_notifications.append(raw_notification)
 
         self.close_session()
-        return received_emails
+        return received_notifications
 
 
-def get_notifications_from_email(
-    logger, email_boxes: Iterable[NotificationSource], since: int = None
+def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
+    logger, notification_sources: Iterable[NotificationSource], since: int = None
 ) -> Iterable[MaintenanceNotification]:
-    """Method to fetch email from multiple sources and return MaintenanceNotification objects."""
+    """Method to fetch notifications from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
 
-    for email_box in email_boxes:
+    for notification_source in notification_sources:
         try:
             if since:
                 since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
@@ -169,13 +201,13 @@ def get_notifications_from_email(
 
             providers_with_email = []
             providers_without_email = []
-            if not email_box.providers.all():
+            if not notification_source.providers.all():
                 logger.log_warning(
                     message="Skipping this email account no providers were defined.",
                 )
                 continue
 
-            for provider in email_box.providers.all():
+            for provider in notification_source.providers.all():
                 for custom_field, value in provider.get_custom_fields().items():
                     if custom_field.name == "emails_circuit_maintenances" and value:
                         restrict_emails.extend(value.split(","))
@@ -195,27 +227,26 @@ def get_notifications_from_email(
                 continue
 
             logger.log_info(
-                message=f"Retrieving notifications from {email_box.account} for {', '.join(providers_with_email)} since {since_txt}",
+                message=f"Retrieving notifications from {notification_source.alias} for {', '.join(providers_with_email)} since {since_txt}",
             )
-            imap_conn = IMAP(
-                service=email_box.get_url_components().scheme.lower(),
-                user=email_box.account,
-                # How to setup GMAIL APP password
-                # https://support.google.com/accounts/answer/185833
-                password=email_box._password,  # pylint: disable=protected-access
-                imap_server=email_box.get_url_components().netloc.split(":")[0],
-                imap_port=email_box.get_url_components().port or 993,
-            )
-            rawnotification = imap_conn.receive_emails(logger, restrict_emails, since)
+
+            imap_conn = Source.init(alias=notification_source.alias)
+            if not imap_conn:
+                logger.log_warning(
+                    message=f"No Notification Source configuration available or supported scheme for {notification_source.alias}.",
+                )
+                continue
+
+            rawnotification = imap_conn.receive_notifications(logger, restrict_emails, since)
             received_notifications.extend(rawnotification)
 
             if not received_notifications:
                 logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {email_box.account}",
+                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {notification_source.alias}",
                 )
         except Exception as error:
             logger.log_warning(
-                message=f"Issue fetching notifications from {email_box.account}: {error}",
+                message=f"Issue fetching notifications from {notification_source.alias}: {error}",
             )
 
     return received_notifications
