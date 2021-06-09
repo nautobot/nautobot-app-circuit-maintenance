@@ -2,6 +2,7 @@
 __version__ = "0.1.1"
 from django.conf import settings
 from django.db.models.signals import post_migrate
+from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
 
 
@@ -27,8 +28,8 @@ def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
 def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-argument
     """Import Notification Sources from Nautobot_configuration.py.
 
-    This is a temporary solution until a proper secrets backend is implemented.
-    For now, we create the aliases in the DB but the secrets are fetched via ENV.
+    This is a temporary solution until a secrets backend is implemented.
+    For now, we create the Notification Sources in the DB but the secrets are fetched via ENV.
     """
     # pylint: disable=import-outside-toplevel
 
@@ -37,7 +38,9 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
-        NotificationSource.objects.get_or_create(alias=notification_source["alias"])
+        NotificationSource.objects.get_or_create(
+            name=notification_source["name"], slug=slugify(notification_source["name"])
+        )
 
 
 class CircuitMaintenanceConfig(PluginConfig):

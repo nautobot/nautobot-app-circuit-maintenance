@@ -101,11 +101,11 @@ class NotificationSourceFilterSet(BaseFilterSet):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = NotificationSource
-        fields = ["alias"]
+        fields = ["name", "slug"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""
         if not value.strip():
             return queryset
-        qs_filter = Q(alias__icontains=value)
+        qs_filter = Q(name__icontains=value)
         return queryset.filter(qs_filter)

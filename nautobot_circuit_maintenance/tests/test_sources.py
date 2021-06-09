@@ -13,7 +13,7 @@ from .test_handler import get_base_notification_data, generate_raw_notification
 
 
 SOURCE_1 = {
-    "alias": "example",
+    "name": "example",
     "account": "me@example.com",
     "secret": "supersecret",
     "url": "imap://example.com",
@@ -33,54 +33,54 @@ class TestSources(TestCase):
         """Prepare data for tests."""
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_1.copy()]}}
         # Deleting other NotificationSource to define a reliable state.
-        NotificationSource.objects.exclude(alias=SOURCE_1["alias"]).delete()
+        NotificationSource.objects.exclude(name=SOURCE_1["name"]).delete()
 
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
-        source_instance = Source.init(alias=SOURCE_1["alias"])
+        source_instance = Source.init(name=SOURCE_1["name"])
         self.assertIsInstance(source_instance, IMAP)
-        self.assertEqual(source_instance.alias, SOURCE_1["alias"])
+        self.assertEqual(source_instance.name, SOURCE_1["name"])
         self.assertEqual(source_instance.url, SOURCE_1["url"])
         self.assertEqual(source_instance.user, SOURCE_1["account"])
         self.assertEqual(source_instance.password, SOURCE_1["secret"])
         self.assertEqual(source_instance.imap_server, "example.com")
         self.assertEqual(source_instance.imap_port, 993)
 
-    def test_source_factory_nonexistent_alias(self):
-        """Validate Factory pattern for non existent alias."""
-        non_existent_alias = "abc"
-        with self.assertRaisesMessage(ValueError, f"Alias {non_existent_alias} not found in PLUGINS_CONFIG."):
-            Source.init(alias=non_existent_alias)
+    def test_source_factory_nonexistent_name(self):
+        """Validate Factory pattern for non existent name."""
+        non_existent_name = "abc"
+        with self.assertRaisesMessage(ValueError, f"Name {non_existent_name} not found in PLUGINS_CONFIG."):
+            Source.init(name=non_existent_name)
 
     def test_source_factory_nonexistent_url(self):
         """Validate Factory pattern for non existent url."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"]
-        with self.assertRaisesMessage(ValueError, f"URL for {SOURCE_1['alias']} not found in PLUGINS_CONFIG"):
-            Source.init(alias=SOURCE_1["alias"])
+        with self.assertRaisesMessage(ValueError, f"URL for {SOURCE_1['name']} not found in PLUGINS_CONFIG"):
+            Source.init(name=SOURCE_1["name"])
 
     def test_source_factory_url_scheme_not_supported(self):
         """Validate Factory pattern for non existent url scheme."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "ftp://example.com"
         with self.assertRaisesMessage(ValueError, "Scheme ftp not supported as Notification Source (only IMAP)."):
-            Source.init(alias=SOURCE_1["alias"])
+            Source.init(name=SOURCE_1["name"])
 
     def test_source_factory_url_malformed(self):
         """Validate Factory pattern for malformed url."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"] = "wrong url"
         with self.assertRaisesMessage(ValueError, "Scheme  not supported as Notification Source (only IMAP)"):
-            Source.init(alias=SOURCE_1["alias"])
+            Source.init(name=SOURCE_1["name"])
 
     def test_source_factory_imap_no_account(self):
         """Validate Factory pattern IMAP without account settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         with self.assertRaises(ValidationError):
-            Source.init(alias=SOURCE_1["alias"])
+            Source.init(name=SOURCE_1["name"])
 
     def test_source_factory_imap_no_secret(self):
         """Validate Factory pattern IMAP without secret settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["secret"]
         with self.assertRaises(ValidationError):
-            Source.init(alias=SOURCE_1["alias"])
+            Source.init(name=SOURCE_1["name"])
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""
@@ -107,7 +107,7 @@ class TestSources(TestCase):
             message=f"Skipping {new_provider.name} because these providers has no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {notification_source.alias}"
+            message=f"No notifications received for {original_provider} since always from {notification_source.name}"
         )
 
     def test_get_notifications_no_imap_account(self):
@@ -116,7 +116,7 @@ class TestSources(TestCase):
         get_notifications(self.logger, NotificationSource.objects.all())
 
         self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_1['alias']} is not matching class expectations: 1 validation error for IMAP\nuser\n  none is not an allowed value (type=type_error.none.not_allowed)"
+            message=f"Notification Source {SOURCE_1['name']} is not matching class expectations: 1 validation error for IMAP\nuser\n  none is not an allowed value (type=type_error.none.not_allowed)"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -148,18 +148,18 @@ class TestSources(TestCase):
 
     @parameterized.expand(
         [
-            ["alias_1", "url1", "user_1", "password_1", "imap_server", 993, False],
-            ["alias_1", "url1", None, "password_1", "imap_server", 993, True],
-            ["alias_1", "url1", "user_1", None, "imap_server", 993, True],
-            ["alias_1", "url1", "user_1", "password_1", None, 993, True],
-            ["alias_1", "url1", "user_1", "password_1", "imap_server", None, False],
+            ["name_1", "url1", "user_1", "password_1", "imap_server", 993, False],
+            ["name_1", "url1", None, "password_1", "imap_server", 993, True],
+            ["name_1", "url1", "user_1", None, "imap_server", 993, True],
+            ["name_1", "url1", "user_1", "password_1", None, 993, True],
+            ["name_1", "url1", "user_1", "password_1", "imap_server", None, False],
         ]  # pylint: disable=too-many-arguments
     )
-    def test_imap_init(self, alias, url, user, password, imap_server, imap_port, exception):
+    def test_imap_init(self, name, url, user, password, imap_server, imap_port, exception):
         """Test IMAP class init."""
         kwargs = {}
-        if alias:
-            kwargs["alias"] = alias
+        if name:
+            kwargs["name"] = name
         if url:
             kwargs["url"] = url
         if user:

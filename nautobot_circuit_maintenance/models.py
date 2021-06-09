@@ -235,25 +235,26 @@ class ParsedNotification(OrganizationalModel):
 class NotificationSource(OrganizationalModel):
     """Model for Notification Source configuration."""
 
-    alias = models.CharField(
-        max_length=200,
+    name = models.CharField(
+        max_length=100,
         unique=True,
-        help_text="Notification Source Alias as defined in nautobot_configuration.py",
+        help_text="Notification Source Name as defined in configuration file.",
     )
+    slug = models.SlugField(max_length=100, unique=True)
     providers = models.ManyToManyField(
         Provider,
         help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
     )
 
-    csv_headers = ["alias"]
+    csv_headers = ["name", "slug"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["alias"]
+        ordering = ["name"]
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.alias}"
+        return f"{self.name}"
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
@@ -261,4 +262,4 @@ class NotificationSource(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.alias, self.providers)
+        return (self.name, self.slug, self.providers)

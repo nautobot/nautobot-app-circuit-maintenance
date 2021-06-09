@@ -23,7 +23,7 @@ T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
 class Source(BaseModel):
     """Base class to retrieve notifications. To be extended for each scheme."""
 
-    alias: str
+    name: str
     url: str
 
     def receive_notifications(
@@ -34,26 +34,26 @@ class Source(BaseModel):
         # Notification Source.
 
     @classmethod
-    def init(cls: Type[T], alias: str) -> Optional[Type[T]]:
+    def init(cls: Type[T], name: str) -> Optional[Type[T]]:
         """Factory Pattern to get the specific Source Class depending on the scheme."""
         for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
             "notification_sources", []
         ):
-            if notification_source.get("alias", "") == alias:
+            if notification_source.get("name", "") == name:
                 config = notification_source
                 break
         else:
-            raise ValueError(f"Alias {alias} not found in PLUGINS_CONFIG.")
+            raise ValueError(f"Name {name} not found in PLUGINS_CONFIG.")
 
         url = config.get("url")
         if not url:
-            raise ValueError(f"URL for {alias} not found in PLUGINS_CONFIG.")
+            raise ValueError(f"URL for {name} not found in PLUGINS_CONFIG.")
 
         url_components = urlparse(url)
         scheme = url_components.scheme.lower()
         if scheme == "imap":
             return IMAP(
-                alias=alias,
+                name=name,
                 url=url,
                 user=config.get("account"),
                 password=config.get("secret"),
@@ -237,14 +237,14 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
                 continue
 
             logger.log_info(
-                message=f"Retrieving notifications from {notification_source.alias} for {', '.join(providers_with_email)} since {since_txt}",
+                message=f"Retrieving notifications from {notification_source.name} for {', '.join(providers_with_email)} since {since_txt}",
             )
 
             try:
-                imap_conn = Source.init(alias=notification_source.alias)
+                imap_conn = Source.init(name=notification_source.name)
             except ValidationError as validation_error:
                 logger.log_warning(
-                    message=f"Notification Source {notification_source.alias} is not matching class expectations: {validation_error}",
+                    message=f"Notification Source {notification_source.name} is not matching class expectations: {validation_error}",
                 )
                 continue
             except ValueError as value_error:
@@ -256,11 +256,11 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
 
             if not received_notifications:
                 logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {notification_source.alias}",
+                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {notification_source.name}",
                 )
         except Exception as error:
             logger.log_warning(
-                message=f"Issue fetching notifications from {notification_source.alias}: {error}",
+                message=f"Issue fetching notifications from {notification_source.name}: {error}",
             )
 
     return received_notifications

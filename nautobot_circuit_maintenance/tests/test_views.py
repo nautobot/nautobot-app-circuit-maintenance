@@ -187,21 +187,22 @@ class NotificationSourceTest(
         )
         Provider.objects.bulk_create(providers)
 
-        notificationsource_1 = NotificationSource.objects.create(alias="whatever1")
-        notificationsource_2 = NotificationSource.objects.create(alias="whatever2")
+        notificationsource_1 = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+        notificationsource_2 = NotificationSource.objects.create(name="whatever 2", slug="whatever-2")
 
         notificationsource_1.providers.set(providers)
         notificationsource_2.providers.set(providers)
 
         cls.form_data = {
-            "alias": "whatever3",
+            "name": "whatever 3",
+            "slug": "whatever-3",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "alias,",
-            "whatever4",
-            "whatever5",
+            "name,slug",
+            "whatever 4,whatever-4",
+            "whatever 5,whatever-5",
         )
 
     def test_list_objects_with_constrained_permission(self):

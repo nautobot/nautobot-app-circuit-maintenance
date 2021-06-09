@@ -60,7 +60,7 @@ In the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should
 
 There are two mandatory attributes (other keys are dependent on the integration type, and will be documented below):
 
-- `alias`: Name to identify the Source and will be available in the UI.
+- `name`: Name to identify the Source and will be available in the UI.
 - `url`: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 
 > Currently, only IMAP email box integration is supported as URL scheme,
@@ -79,7 +79,7 @@ PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "notification_sources": [
             {
-                "alias": "my custom alias",
+                "name": "my custom name",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
                 "url": os.environ.get("CM_NS_1_URL", ""),
