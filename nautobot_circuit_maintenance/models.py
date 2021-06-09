@@ -247,7 +247,7 @@ class NotificationSource(OrganizationalModel):
         blank=True,
     )
 
-    csv_headers = ["name", "slug"]
+    csv_headers = ["name", "slug", "providers"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["name"]
