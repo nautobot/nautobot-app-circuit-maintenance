@@ -35,12 +35,17 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
 
     from nautobot_circuit_maintenance.models import NotificationSource
 
+    desired_notification_sources_names = []
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
         NotificationSource.objects.get_or_create(
             name=notification_source["name"], slug=slugify(notification_source["name"])
         )
+        desired_notification_sources_names.append(notification_source["name"])
+
+    # We remove old Notification Sources that could be in Nautobot but removed from configuration
+    NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
 
 
 class CircuitMaintenanceConfig(PluginConfig):
