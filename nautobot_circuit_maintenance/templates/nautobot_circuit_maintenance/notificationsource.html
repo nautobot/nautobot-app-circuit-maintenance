@@ -23,26 +23,26 @@
         <strong>Info</strong>
       </div>
       <table class="table table-hover panel-body attr-table">
-        <td>Source ID</td>
+      <tr>
+        <td>Name</td>
         <td>
-          <span class="">{{ object.source_id }}</span>
+          <span class="">{{ object.name }}</span>
         </td>
       </tr>
       <tr>
-        <td>Url</td>
-        <td>{{ object.url }}</td>
+      <td>Slug</td>
+      <td>{{ object.slug }}</td>
       </tr>
       <tr>
-          <td>Server Type</td>
-          <td>{{ object.source_type }}</td>
-      </tr>
+      <td>Providers</td>
+      <td>
+
       {% for provider in providers %}
-      <tr>
-          <td>
-              <a href="{% url 'circuits:provider' pk=provider.id %}">{{ provider.name }}</a>
-          </td>
-      </tr>
+              <a href="{% url 'circuits:provider' slug=provider.slug %}">{{ provider.name }} </a>
       {% endfor %}
+
+      </td>
+      </tr>
       </table>
     </div>
   </div>

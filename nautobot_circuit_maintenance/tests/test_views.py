@@ -158,7 +158,16 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
 
 
-class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
+class NotificationSourceTest(
+    ViewTestCases.GetObjectViewTestCase,
+    ViewTestCases.GetObjectChangelogViewTestCase,
+    # ViewTestCases.CreateObjectViewTestCase,
+    ViewTestCases.EditObjectViewTestCase,
+    # ViewTestCases.DeleteObjectViewTestCase,
+    ViewTestCases.ListObjectsViewTestCase,
+    # ViewTestCases.BulkImportObjectsViewTestCase,
+    # ViewTestCases.BulkDeleteObjectsViewTestCase,
+):
     """View tests for NotificationSource."""
 
     model = NotificationSource
@@ -178,30 +187,23 @@ class NotificationSourceTest(ViewTestCases.OrganizationalObjectViewTestCase):
         )
         Provider.objects.bulk_create(providers)
 
-        notificationsource_1 = NotificationSource.objects.create(
-            source_id="whatever1@validemail.com", _password="password", url="whatever"
-        )
-        notificationsource_2 = NotificationSource.objects.create(
-            source_id="whatever2@validemail.com", _password="password", url="whatever"
-        )
+        notificationsource_1 = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+        notificationsource_2 = NotificationSource.objects.create(name="whatever 2", slug="whatever-2")
 
         notificationsource_1.providers.set(providers)
         notificationsource_2.providers.set(providers)
 
         cls.form_data = {
-            "source_id": "whatever3@validemail.com",
-            "_password": "password",
-            "url": "whatever",
+            "name": "whatever 3",
+            "slug": "whatever-3",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "source_id,_password,url",
-            "whatever4@validemail.com, password, whatever",
-            "whatever5@validemail.com, password, whatever",
+            "name,slug",
+            "whatever 4,whatever-4",
+            "whatever 5,whatever-5",
         )
-
-        cls.bulk_edit_data = {"source_type": "GMAIL"}
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
