@@ -63,7 +63,7 @@ class NotificationSourceTable(BaseTable):
     """Table to display Circuit Impact model."""
 
     name = tables.LinkColumn(
-        viewname="plugins:nautobot_circuit_maintenance:notificationsource_edit", args=[Accessor("id")]
+        viewname="plugins:nautobot_circuit_maintenance:notificationsource_edit", args=[Accessor("slug")]
     )
 
     pk = ToggleColumn()

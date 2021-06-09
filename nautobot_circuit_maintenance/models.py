@@ -258,7 +258,7 @@ class NotificationSource(OrganizationalModel):
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
+        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.slug])
 
     def to_csv(self):
         """Return fields for bulk view."""

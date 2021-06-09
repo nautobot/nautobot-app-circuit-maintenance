@@ -101,11 +101,11 @@ urlpatterns = [
     ),
     # Notification Source
     path("source/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
-    path("source/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
-    path("source/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
+    path("source/<slug:slug>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
+    path("source/<slug:slug>/", views.NotificationSourceView.as_view(), name="notificationsource"),
     path("source/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
     path(
-        "source/<uuid:pk>/changelog/",
+        "source/<slug:slug>/changelog/",
         ObjectChangeLogView.as_view(),
         name="notificationsource_changelog",
         kwargs={"model": NotificationSource},
