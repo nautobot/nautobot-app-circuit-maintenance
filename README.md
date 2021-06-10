@@ -29,7 +29,7 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 
 Extra configuration to define notification sources is defined in the [Usage](#Usage) section.
 
-````py
+```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "notification_sources": [
@@ -39,6 +39,7 @@ PLUGINS_CONFIG = {
         ]
     }
 }
+```
 
 ## Usage
 
@@ -87,7 +88,7 @@ PLUGINS_CONFIG = {
         ]
     }
 }
-````
+```
 
 #### 2.2 Add `Providers` to the Notification Sources
 
