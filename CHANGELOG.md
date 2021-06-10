@@ -1,6 +1,12 @@
 # Changelog
 
-## v0.1.2
+## v0.1.3 - 2021-06-10
+
+### Fixed
+
+- #19 - Fix Readme format
+
+## v0.1.2 - 2021-06-10
 
 ### Fixed
 
