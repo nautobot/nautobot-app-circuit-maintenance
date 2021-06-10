@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.1.1"
+version = "0.1.2"
 description = "Nautobot plugin to automatically handle Circuit Maintenances"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
@@ -23,7 +23,7 @@ python = "^3.6.1"
 nautobot = "*"
 bs4 = "^0.0.1"
 pydantic = "^1.8.1"
-circuit-maintenance-parser = "^1.0.0"
+circuit-maintenance-parser = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"

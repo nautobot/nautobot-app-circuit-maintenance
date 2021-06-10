@@ -1,7 +1,23 @@
-ARG PYTHON_VER
-ARG NAUTOBOT_VER
-# FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
-FROM nniehoff/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
+ARG NAUTOBOT_VER="1.0.1"
+ARG PYTHON_VER=3.8
+FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
+
+
+ENV prometheus_multiproc_dir=/prom_cache
+
+ARG NAUTOBOT_ROOT=/opt/nautobot
+
+ENV NAUTOBOT_ROOT ${NAUTOBOT_ROOT}
+
+WORKDIR $NAUTOBOT_ROOT
+
+# Configure poetry
+RUN poetry config virtualenvs.create false \
+    && poetry config installer.parallel false
+
+# -------------------------------------------------------------------------------------
+# Install Nautobot Plugin
+# -------------------------------------------------------------------------------------
 
 WORKDIR /source
 

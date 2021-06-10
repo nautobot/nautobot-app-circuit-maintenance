@@ -1,5 +1,6 @@
 """Views for Circuit Maintenance."""
 from nautobot.core.views import generic
+from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
 
 
@@ -218,6 +219,7 @@ class NotificationSourceListView(generic.ObjectListView):
     queryset = models.NotificationSource.objects.all()
     filterset = filters.NotificationSourceFilterSet
     filterset_form = forms.NotificationSourceFilterSetForm
+    action_buttons = ("edit",)
 
 
 class NotificationSourceView(generic.ObjectView):
@@ -225,13 +227,11 @@ class NotificationSourceView(generic.ObjectView):
 
     queryset = models.NotificationSource.objects.all()
 
-
-def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
-    """Extend content of detailed view for NotificationSource."""
-    providers = instance.objects.prefetch_related("providers")
-    return {
-        "providers": providers,
-    }
+    def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
+        """Extend content of detailed view for NotificationSource."""
+        return {
+            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
+        }
 
 
 class NotificationSourceEditView(generic.ObjectEditView):
@@ -240,28 +240,6 @@ class NotificationSourceEditView(generic.ObjectEditView):
     model = models.NotificationSource
     queryset = models.NotificationSource.objects.all()
     model_form = forms.NotificationSourceForm
-
-
-class NotificationSourceDeleteView(generic.ObjectDeleteView):
-    """View for deleting circuit maintenances."""
-
-    model = models.NotificationSource
-    queryset = models.NotificationSource.objects.all()
-
-
-class NotificationSourceBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting Settings entries."""
-
-    queryset = models.NotificationSource.objects.all()
-    table = tables.NotificationSourceTable
-
-
-class NotificationSourceBulkImportView(generic.BulkImportView):
-    """View for bulk of NotificationSource."""
-
-    queryset = models.NotificationSource.objects.all()
-    model_form = forms.NotificationSourceCSVForm
-    table = tables.NotificationSourceTable
 
 
 class NotificationSourceBulkEditView(generic.BulkEditView):

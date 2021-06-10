@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
-from django_cryptography.fields import encrypt
 from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
@@ -12,7 +11,6 @@ from .choices import (
     CircuitImpactChoices,
     CircuitMaintenanceStatusChoices,
     NoteLevelChoices,
-    NotificationSourceServerChoices,
 )
 
 
@@ -171,9 +169,7 @@ class RawNotification(OrganizationalModel):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200)
     source = models.CharField(
-        default=NotificationSourceServerChoices.UNKNOWN,
         max_length=50,
-        choices=NotificationSourceServerChoices,
         null=True,
         blank=True,
     )
@@ -239,38 +235,31 @@ class ParsedNotification(OrganizationalModel):
 class NotificationSource(OrganizationalModel):
     """Model for Notification Source configuration."""
 
-    # Mark field as private so that it doesn't get included in ChangeLogging records!
-    _password = encrypt(models.CharField(max_length=100))
-    source_id = models.EmailField(max_length=100, unique=True, help_text="Email address used as identifier.")
-    url = models.CharField(max_length=200)
-    source_type = models.CharField(
-        default=NotificationSourceServerChoices.UNKNOWN,
-        max_length=50,
-        choices=NotificationSourceServerChoices,
-        null=True,
-        blank=True,
-        help_text="Type of source integration to retrieve the notifications.",
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Notification Source Name as defined in configuration file.",
     )
-
+    slug = models.SlugField(max_length=100, unique=True)
     providers = models.ManyToManyField(
         Provider,
-        help_text="The Provider(s) to which this notification source applies.",
+        help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
     )
 
-    csv_headers = ["source_id", "_password", "url"]
+    csv_headers = ["name", "slug", "providers"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["source_id"]
+        ordering = ["name"]
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.source_id}"
+        return f"{self.name}"
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
+        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.slug])
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.source_id, self.url, self.source_type, self.providers)
+        return (self.name, self.slug, self.providers)

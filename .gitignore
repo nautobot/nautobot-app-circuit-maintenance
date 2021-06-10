@@ -301,3 +301,6 @@ override.env
 
 ### demo ###
 demo/
+
+# Secrets
+development/creds.env
