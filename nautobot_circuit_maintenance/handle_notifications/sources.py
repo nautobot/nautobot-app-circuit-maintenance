@@ -14,6 +14,7 @@ from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-i
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
+from nautobot.extras.models import CustomField
 
 from nautobot_circuit_maintenance.models import NotificationSource
 
@@ -235,11 +236,8 @@ class IMAP(Source):
             return False
 
         for provider in notification_source.providers.all():
-            provider_emails = ""
-            for custom_field, value in provider.get_custom_fields().items():
-                if custom_field.name == "emails_circuit_maintenances" and value:
-                    provider_emails = value
-                    break
+            cm_cf = CustomField.objects.get(name="emails_circuit_maintenances")
+            provider_emails = provider.get_custom_fields().get(cm_cf)
             if provider_emails:
                 self.emails_to_fetch.extend(provider_emails.split(","))
                 providers_with_email.append(provider.name)
