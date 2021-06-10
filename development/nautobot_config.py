@@ -303,7 +303,7 @@ PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "notification_sources": [
             {
-                "name": "my imap integration",
+                "name": "my imap source",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
                 "url": os.environ.get("CM_NS_1_URL", ""),

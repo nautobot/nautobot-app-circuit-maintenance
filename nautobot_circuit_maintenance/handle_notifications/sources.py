@@ -5,7 +5,7 @@ import email
 import imaplib
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, Union, TypeVar, Type
+from typing import Iterable, Optional, TypeVar, Type
 
 from django.conf import settings
 
@@ -43,7 +43,7 @@ class Source(BaseModel):
         raise NotImplementedError
 
     def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
-        """Method to validate that the NotificartionSource has attached Providers.
+        """Method to validate that the NotificationSource has attached Providers.
 
         Args:
             logger (Job): Job to use its logger
@@ -56,7 +56,7 @@ class Source(BaseModel):
         raise NotImplementedError
 
     @classmethod
-    def init(cls: Type[T], name: str) -> Optional[Type[T]]:
+    def init(cls: Type[T], name: str) -> Type[T]:
         """Factory Pattern to get the specific Source Class depending on the scheme."""
         for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
             "notification_sources", []
@@ -94,9 +94,8 @@ class IMAP(Source):
     imap_server: str
     imap_port: int = 993
 
-    _session: Union[imaplib.IMAP4_SSL, None] = None
-
-    _emails_to_fetch = []
+    session: Optional[imaplib.IMAP4_SSL] = None
+    emails_to_fetch = []
 
     class Config:
         """Pydantic BaseModel config."""
@@ -105,22 +104,22 @@ class IMAP(Source):
 
     def open_session(self):
         """Open session to IMAP server."""
-        if not self._session:
-            self._session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
-            self._session.login(self.user, self.password)
+        if not self.session:
+            self.session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            self.session.login(self.user, self.password)
 
     def close_session(self):
         """Close session to IMAP server."""
-        if self._session:
-            if self._session.state == "SELECTED":
-                self._session.close()
-            if self._session.state == "AUTH":
-                self._session.logout()
+        if self.session:
+            if self.session.state == "SELECTED":
+                self.session.close()
+            if self.session.state == "AUTH":
+                self.session.logout()
 
     # pylint: disable=inconsistent-return-statements
     def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
-        _, data = self._session.fetch(msg_id, "(RFC822)")
+        _, data = self.session.fetch(msg_id, "(RFC822)")
         raw_email = data[0][1]
         raw_email_string = raw_email.decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
@@ -139,6 +138,7 @@ class IMAP(Source):
                 logger.log_failure(
                     email_message, f"Not possible to determine the email sender: {email_message['From']}"
                 )
+                return
 
         for provider in Provider.objects.all():
             if "emails_circuit_maintenances" in provider.custom_field_data:
@@ -182,7 +182,7 @@ class IMAP(Source):
         self.open_session()
 
         # Define searching criteria
-        self._session.select("Inbox")
+        self.session.select("Inbox")
 
         # TODO: find the right way to search messages from several senders
         # Maybe extend filtering options, for instance, to discard some type of notifications
@@ -193,16 +193,16 @@ class IMAP(Source):
             since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
             since_date = f'SINCE "{since_txt}"'
 
-        if self._emails_to_fetch:
-            for sender in self._emails_to_fetch:
+        if self.emails_to_fetch:
+            for sender in self.emails_to_fetch:
                 search_items = (f'FROM "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
-                messages = self._session.search(None, search_criteria)[1][0]
+                messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
         else:
             search_criteria = f"({since_date})"
-            messages = self._session.search(None, search_criteria)[1][0]
+            messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend = messages.split()
 
         received_notifications = []
@@ -216,7 +216,7 @@ class IMAP(Source):
         return received_notifications
 
     def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
-        """Method to validate that the NotificartionSource has attached Providers.
+        """Method to validate that the NotificationSource has attached Providers.
 
         Args:
             logger (Job): Job to use its logger
@@ -237,7 +237,7 @@ class IMAP(Source):
         for provider in notification_source.providers.all():
             for custom_field, value in provider.get_custom_fields().items():
                 if custom_field.name == "emails_circuit_maintenances" and value:
-                    self._emails_to_fetch.extend(value.split(","))
+                    self.emails_to_fetch.extend(value.split(","))
                     providers_with_email.append(provider.name)
                 else:
                     providers_without_email.append(provider.name)

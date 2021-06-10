@@ -34,6 +34,7 @@ class TestSources(TestCase):
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_1.copy()]}}
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(name=SOURCE_1["name"]).delete()
+        self.source = NotificationSource.objects.first()
 
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
@@ -123,7 +124,7 @@ class TestSources(TestCase):
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications with provider without email."""
         notification_data = get_base_notification_data()
-        notification = generate_raw_notification(notification_data)
+        notification = generate_raw_notification(notification_data, self.source.name)
 
         mock_receive_notifications.return_value = [notification]
 
@@ -137,7 +138,7 @@ class TestSources(TestCase):
         """Test get_notifications with provider without email."""
 
         notification_data = get_base_notification_data()
-        notification = generate_raw_notification(notification_data)
+        notification = generate_raw_notification(notification_data, self.source.name)
 
         mock_receive_notifications.return_value = [notification, notification]
 

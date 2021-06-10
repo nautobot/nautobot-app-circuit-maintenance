@@ -182,7 +182,7 @@ def process_raw_notification(logger, notification: MaintenanceNotification) -> U
         provider=provider,
         raw=parser.raw,
         sender=parser.sender,
-        source=parser.source,
+        source=NotificationSource.objects.filter(name=parser.source).last(),
     )
     if not created:
         logger.log_warning(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")

@@ -25,6 +25,9 @@ class RawNotificationTable(BaseTable):
     """Table to display Raw Notifications model."""
 
     subject = tables.LinkColumn(viewname="plugins:nautobot_circuit_maintenance:rawnotification", args=[Accessor("id")])
+    source = tables.LinkColumn(
+        viewname="plugins:nautobot_circuit_maintenance:notificationsource", args=[Accessor("source__slug")]
+    )
 
     pk = ToggleColumn()
 

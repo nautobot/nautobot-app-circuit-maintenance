@@ -23,7 +23,7 @@ from nautobot_circuit_maintenance.models import (
 )
 
 
-def generate_raw_notification(notification_data):
+def generate_raw_notification(notification_data, source):
     """Generate raw notification text for a provider."""
     raw_notification_template = """
 BEGIN:VCALENDAR
@@ -50,10 +50,11 @@ END:VCALENDAR
 """
 
     template = Template(raw_notification_template)
+
     return MaintenanceNotification(
         subject="Test subject",
         sender="sender@example.com",
-        source="imap",
+        source=source,
         raw=template.render(obj=notification_data),
         provider_type=notification_data["provider"],
     )
@@ -91,10 +92,13 @@ class TestHandleNotificationsJob(TestCase):
     job.log_failure = Mock()
     job.log_success = Mock()
 
+    def setUp(self):
+        self.source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+
     def test_run_simple(self):
         """Test the simple execution to create a Circuit Maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -116,7 +120,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data = get_base_notification_data()
         fake_cid = "nonexistent circuit"
         notification_data["circuitimpacts"].append({"cid": fake_cid, "impact": "NO-IMPACT"})
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -167,7 +171,7 @@ class TestHandleNotificationsJob(TestCase):
 
         notification_data = get_base_notification_data()
         notification_data["status"] = "Non valid status"
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -188,7 +192,7 @@ class TestHandleNotificationsJob(TestCase):
     def test_process_raw_notification_no_parser(self):
         """Test process_raw_notification with non existant parser."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         test_notification.provider_type = "unknown"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
@@ -199,7 +203,7 @@ class TestHandleNotificationsJob(TestCase):
     def test_process_raw_notification_no_provider_type(self):
         """Test process_raw_notification with non existant provider_type."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         test_notification.provider_type = "ICal"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
@@ -210,7 +214,7 @@ class TestHandleNotificationsJob(TestCase):
     def test_process_raw_notification(self):
         """Test process_raw_notification."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         res = process_raw_notification(self.job, test_notification)
 
         raw_notification = RawNotification.objects.get(pk=res)
@@ -223,7 +227,7 @@ class TestHandleNotificationsJob(TestCase):
         """Test process_raw_notification with parsing issues"""
         notification_data = get_base_notification_data()
         notification_data["status"] = "Non valid status"
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         res = process_raw_notification(self.job, test_notification)
 
         raw_notification = RawNotification.objects.get(pk=res)
@@ -236,7 +240,7 @@ class TestHandleNotificationsJob(TestCase):
     def test_create_circuit_maintenance(self):
         """Test create_circuit_maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         parser = init_parser(**test_notification.__dict__)
         raw_entry, _ = RawNotification.objects.get_or_create(
@@ -244,7 +248,7 @@ class TestHandleNotificationsJob(TestCase):
             provider=Provider.objects.get(slug=parser.provider_type),
             raw=parser.raw,
             sender=parser.sender,
-            source=parser.source,
+            source=self.source,
         )
         parsed_maintenance = parser.process()[0]
         create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
@@ -256,7 +260,7 @@ class TestHandleNotificationsJob(TestCase):
         """Test create_circuit_maintenance without existent circuits."""
         notification_data = get_base_notification_data()
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         parser = init_parser(**test_notification.__dict__)
         raw_entry, _ = RawNotification.objects.get_or_create(
@@ -264,7 +268,7 @@ class TestHandleNotificationsJob(TestCase):
             provider=Provider.objects.get(slug=parser.provider_type),
             raw=parser.raw,
             sender=parser.sender,
-            source=parser.source,
+            source=self.source,
         )
         parsed_maintenance = parser.process()[0]
         create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
@@ -275,7 +279,7 @@ class TestHandleNotificationsJob(TestCase):
     def test_update_circuit_maintenance(self):
         """Test update_circuit_maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -291,7 +295,7 @@ class TestHandleNotificationsJob(TestCase):
         circuit_to_update["impact"] = "OUTAGE"
         notification_data["circuitimpacts"].append(circuit_to_update)
 
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         parser = init_parser(**test_notification.__dict__)
 
         parsed_maintenance = parser.process()[0]
