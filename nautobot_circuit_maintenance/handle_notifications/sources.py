@@ -216,7 +216,7 @@ class IMAP(Source):
         return received_notifications
 
     def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
-        """Method to validate that the NotificationSource has attached Providers.
+        """Method to validate that the Notificatest_create_circuit_maintenancetionSource has attached Providers.
 
         Args:
             logger (Job): Job to use its logger
@@ -244,12 +244,12 @@ class IMAP(Source):
 
         if providers_without_email:
             logger.log_warning(
-                message=f"Skipping {', '.join(providers_without_email)} because these providers has no email configured.",
+                message=f"Skipping {', '.join(providers_without_email)} because these providers have no email configured.",
             )
 
         if not providers_with_email:
             logger.log_warning(
-                message=f"Skipping this email account because none of the providers ({', '.join(providers_with_email)}) have at least one email defined.",
+                message=f"Skipping Notification Source {notification_source.name} because none of the related providers have emails defined.",
             )
             return False
 
@@ -285,10 +285,10 @@ def get_notifications(
                 continue
 
             if source.validate_providers(logger, notification_source, since_txt):
-                rawnotification = source.receive_notifications(logger, since)
-                received_notifications.extend(rawnotification)
+                raw_notifications = source.receive_notifications(logger, since)
+                received_notifications.extend(raw_notifications)
 
-                if not received_notifications:
+                if not raw_notifications:
                     logger.log_info(
                         message=f"No notifications received for {', '.join(notification_source.providers.all().values_list('name', flat=True))} since {since_txt} from {notification_source.name}",
                     )

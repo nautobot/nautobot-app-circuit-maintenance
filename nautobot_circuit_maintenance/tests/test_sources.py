@@ -105,7 +105,7 @@ class TestSources(TestCase):
         self.assertEqual([], res)
 
         self.logger.log_warning.assert_called_with(
-            message=f"Skipping {new_provider.name} because these providers has no email configured."
+            message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
             message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
