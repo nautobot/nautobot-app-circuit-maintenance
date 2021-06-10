@@ -29,7 +29,7 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 
 Extra configuration to define notification sources is defined in the [Usage](#Usage) section.
 
-````py
+```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "notification_sources": [
@@ -39,6 +39,7 @@ PLUGINS_CONFIG = {
         ]
     }
 }
+```
 
 ## Usage
 
@@ -87,7 +88,7 @@ PLUGINS_CONFIG = {
         ]
     }
 }
-````
+```
 
 #### 2.2 Add `Providers` to the Notification Sources
 
@@ -195,3 +196,7 @@ Each command can be executed with `invoke <command>`. All commands support the a
 
 For any questions or comments, please check the [FAQ](FAQ.md) first and feel free to swing by the [Network to Code slack channel](https://networktocode.slack.com/) (channel #nautobot).
 Sign up [here](http://slack.networktocode.com/)
+
+```
+
+```
