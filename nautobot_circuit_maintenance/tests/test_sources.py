@@ -107,7 +107,7 @@ class TestSources(TestCase):
             message=f"Skipping {new_provider.name} because these providers has no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
         )
 
     def test_get_notifications_no_imap_account(self):

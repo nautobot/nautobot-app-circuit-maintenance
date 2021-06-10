@@ -13,6 +13,8 @@ from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
 from nautobot.circuits.models import Provider
+from nautobot.extras.jobs import Job
+
 from nautobot_circuit_maintenance.models import NotificationSource
 
 # pylint: disable=broad-except
@@ -26,12 +28,32 @@ class Source(BaseModel):
     name: str
     url: str
 
-    def receive_notifications(
-        self, logger, senders: Iterable[str] = None, since: int = None
-    ) -> Iterable[MaintenanceNotification]:
-        """Function to retrieve notifications."""
+    def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
+        """Function to retrieve notifications since one moment in time.
+
+        The `MaintenanceNotification` attributes will contains these attributes:
+        * source: self.name
+        * sender: it could be the email 'from' or omitted if not relevant
+        * subject: it could be the email 'subject' or some meaningful identifier from notification
+        * raw: the raw_payload from notification
+        * provider_type: the provider slug identified by sender email or from membership
+        """
         # TODO: `senders` is used to limit the scope of emails retrieved, this won't have sense depending on the
         # Notification Source.
+        raise NotImplementedError
+
+    def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+        """Method to validate that the NotificartionSource has attached Providers.
+
+        Args:
+            logger (Job): Job to use its logger
+            notification_source (NotificationSource): Notification Source to validate providers
+            since_txt (str): Date string to be used to log
+
+        Returns:
+            bool: True if there are relevant providers attached or False otherwise
+        """
+        raise NotImplementedError
 
     @classmethod
     def init(cls: Type[T], name: str) -> Optional[Type[T]]:
@@ -72,7 +94,9 @@ class IMAP(Source):
     imap_server: str
     imap_port: int = 993
 
-    session: Union[imaplib.IMAP4_SSL, None] = None
+    _session: Union[imaplib.IMAP4_SSL, None] = None
+
+    _emails_to_fetch = []
 
     class Config:
         """Pydantic BaseModel config."""
@@ -81,22 +105,22 @@ class IMAP(Source):
 
     def open_session(self):
         """Open session to IMAP server."""
-        if not self.session:
-            self.session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
-            self.session.login(self.user, self.password)
+        if not self._session:
+            self._session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            self._session.login(self.user, self.password)
 
     def close_session(self):
         """Close session to IMAP server."""
-        if self.session:
-            if self.session.state == "SELECTED":
-                self.session.close()
-            if self.session.state == "AUTH":
-                self.session.logout()
+        if self._session:
+            if self._session.state == "SELECTED":
+                self._session.close()
+            if self._session.state == "AUTH":
+                self._session.logout()
 
     # pylint: disable=inconsistent-return-statements
-    def fetch_email(self, logger, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
-        _, data = self.session.fetch(msg_id, "(RFC822)")
+        _, data = self._session.fetch(msg_id, "(RFC822)")
         raw_email = data[0][1]
         raw_email_string = raw_email.decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
@@ -146,21 +170,19 @@ class IMAP(Source):
             return
 
         return MaintenanceNotification(
-            source=self.__class__.__name__,
+            source=self.name,
             sender=email_message["From"],
             subject=email_message["Subject"],
             raw=raw_payload,
             provider_type=provider_type,
         )
 
-    def receive_notifications(
-        self, logger, senders: Iterable[str] = None, since: int = None
-    ) -> Iterable[MaintenanceNotification]:
-        """Retrieve emails from specific senders and from an specific time, if provided."""
+    def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
+        """Retrieve emails since an specific time, if provided."""
         self.open_session()
 
         # Define searching criteria
-        self.session.select("Inbox")
+        self._session.select("Inbox")
 
         # TODO: find the right way to search messages from several senders
         # Maybe extend filtering options, for instance, to discard some type of notifications
@@ -171,16 +193,16 @@ class IMAP(Source):
             since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
             since_date = f'SINCE "{since_txt}"'
 
-        if senders:
-            for sender in senders:
+        if self._emails_to_fetch:
+            for sender in self._emails_to_fetch:
                 search_items = (f'FROM "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
-                messages = self.session.search(None, search_criteria)[1][0]
+                messages = self._session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
         else:
             search_criteria = f"({since_date})"
-            messages = self.session.search(None, search_criteria)[1][0]
+            messages = self._session.search(None, search_criteria)[1][0]
             msg_ids.extend = messages.split()
 
         received_notifications = []
@@ -193,9 +215,53 @@ class IMAP(Source):
         self.close_session()
         return received_notifications
 
+    def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+        """Method to validate that the NotificartionSource has attached Providers.
 
-def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
-    logger, notification_sources: Iterable[NotificationSource], since: int = None
+        Args:
+            logger (Job): Job to use its logger
+            notification_source (NotificationSource): Notification Source to validate providers
+            since_txt (str): Date string to be used to log
+
+        Returns:
+            bool: True if there are relevant providers attached or False otherwise
+        """
+        providers_with_email = []
+        providers_without_email = []
+        if not notification_source.providers.all():
+            logger.log_warning(
+                message="Skipping this email account no providers were defined.",
+            )
+            return False
+
+        for provider in notification_source.providers.all():
+            for custom_field, value in provider.get_custom_fields().items():
+                if custom_field.name == "emails_circuit_maintenances" and value:
+                    self._emails_to_fetch.extend(value.split(","))
+                    providers_with_email.append(provider.name)
+                else:
+                    providers_without_email.append(provider.name)
+
+        if providers_without_email:
+            logger.log_warning(
+                message=f"Skipping {', '.join(providers_without_email)} because these providers has no email configured.",
+            )
+
+        if not providers_with_email:
+            logger.log_warning(
+                message=f"Skipping this email account because none of the providers ({', '.join(providers_with_email)}) have at least one email defined.",
+            )
+            return False
+
+        logger.log_info(
+            message=f"Retrieving notifications from {notification_source.name} for {', '.join(providers_with_email)} since {since_txt}",
+        )
+
+        return True
+
+
+def get_notifications(
+    logger: Job, notification_sources: Iterable[NotificationSource], since: int = None
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch notifications from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
@@ -207,41 +273,8 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
             else:
                 since_txt = "always"
 
-            restrict_emails = []
-
-            providers_with_email = []
-            providers_without_email = []
-            if not notification_source.providers.all():
-                logger.log_warning(
-                    message="Skipping this email account no providers were defined.",
-                )
-                continue
-
-            for provider in notification_source.providers.all():
-                for custom_field, value in provider.get_custom_fields().items():
-                    if custom_field.name == "emails_circuit_maintenances" and value:
-                        restrict_emails.extend(value.split(","))
-                        providers_with_email.append(provider.name)
-                    else:
-                        providers_without_email.append(provider.name)
-
-            if providers_without_email:
-                logger.log_warning(
-                    message=f"Skipping {', '.join(providers_without_email)} because these providers has no email configured.",
-                )
-
-            if not providers_with_email:
-                logger.log_warning(
-                    message=f"Skipping this email account because none of the providers ({', '.join(providers_with_email)}) have at least one email defined.",
-                )
-                continue
-
-            logger.log_info(
-                message=f"Retrieving notifications from {notification_source.name} for {', '.join(providers_with_email)} since {since_txt}",
-            )
-
             try:
-                imap_conn = Source.init(name=notification_source.name)
+                source = Source.init(name=notification_source.name)
             except ValidationError as validation_error:
                 logger.log_warning(
                     message=f"Notification Source {notification_source.name} is not matching class expectations: {validation_error}",
@@ -251,13 +284,15 @@ def get_notifications(  # pylint: disable=too-many-locals, too-many-branches
                 logger.log_warning(message=value_error)
                 continue
 
-            rawnotification = imap_conn.receive_notifications(logger, restrict_emails, since)
-            received_notifications.extend(rawnotification)
+            if source.validate_providers(logger, notification_source, since_txt):
+                rawnotification = source.receive_notifications(logger, since)
+                received_notifications.extend(rawnotification)
 
-            if not received_notifications:
-                logger.log_info(
-                    message=f"No notifications received for {', '.join(providers_with_email)} since {since_txt} from {notification_source.name}",
-                )
+                if not received_notifications:
+                    logger.log_info(
+                        message=f"No notifications received for {', '.join(notification_source.providers.all().values_list('name', flat=True))} since {since_txt} from {notification_source.name}",
+                    )
+
         except Exception as error:
             logger.log_warning(
                 message=f"Issue fetching notifications from {notification_source.name}: {error}",
