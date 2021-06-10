@@ -235,12 +235,16 @@ class IMAP(Source):
             return False
 
         for provider in notification_source.providers.all():
+            provider_emails = ""
             for custom_field, value in provider.get_custom_fields().items():
                 if custom_field.name == "emails_circuit_maintenances" and value:
-                    self.emails_to_fetch.extend(value.split(","))
-                    providers_with_email.append(provider.name)
-                else:
-                    providers_without_email.append(provider.name)
+                    provider_emails = value
+                    break
+            if provider_emails:
+                self.emails_to_fetch.extend(provider_emails.split(","))
+                providers_with_email.append(provider.name)
+            else:
+                providers_without_email.append(provider.name)
 
         if providers_without_email:
             logger.log_warning(
