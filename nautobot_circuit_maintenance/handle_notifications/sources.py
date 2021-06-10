@@ -216,7 +216,7 @@ class IMAP(Source):
         return received_notifications
 
     def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
-        """Method to validate that the Notificatest_create_circuit_maintenancetionSource has attached Providers.
+        """Method to validate that the NotificationSource has attached Providers.
 
         Args:
             logger (Job): Job to use its logger
@@ -248,17 +248,25 @@ class IMAP(Source):
 
         if providers_without_email:
             logger.log_warning(
-                message=f"Skipping {', '.join(providers_without_email)} because these providers have no email configured.",
+                message=(
+                    f"Skipping {', '.join(providers_without_email)} because these providers have no email configured."
+                ),
             )
 
         if not providers_with_email:
             logger.log_warning(
-                message=f"Skipping Notification Source {notification_source.name} because none of the related providers have emails defined.",
+                message=(
+                    f"Skipping Notification Source {notification_source.name} because none of the related providers "
+                    "have emails defined."
+                ),
             )
             return False
 
         logger.log_info(
-            message=f"Retrieving notifications from {notification_source.name} for {', '.join(providers_with_email)} since {since_txt}",
+            message=(
+                f"Retrieving notifications from {notification_source.name} for "
+                f"{', '.join(providers_with_email)} since {since_txt}"
+            ),
         )
 
         return True
@@ -281,7 +289,10 @@ def get_notifications(
                 source = Source.init(name=notification_source.name)
             except ValidationError as validation_error:
                 logger.log_warning(
-                    message=f"Notification Source {notification_source.name} is not matching class expectations: {validation_error}",
+                    message=(
+                        f"Notification Source {notification_source.name} is not matching class expectations: "
+                        f"{validation_error}"
+                    ),
                 )
                 continue
             except ValueError as value_error:
@@ -294,7 +305,11 @@ def get_notifications(
 
                 if not raw_notifications:
                     logger.log_info(
-                        message=f"No notifications received for {', '.join(notification_source.providers.all().values_list('name', flat=True))} since {since_txt} from {notification_source.name}",
+                        message=(
+                            f"No notifications received for "
+                            f"{', '.join(notification_source.providers.all().values_list('name', flat=True))} since "
+                            f"{since_txt} from {notification_source.name}"
+                        ),
                     )
 
         except Exception as error:
