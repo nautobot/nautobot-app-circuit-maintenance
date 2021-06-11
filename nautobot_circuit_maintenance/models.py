@@ -161,18 +161,55 @@ class Note(OrganizationalModel):
     "relationships",
     "webhooks",
 )
+class NotificationSource(OrganizationalModel):
+    """Model for Notification Source configuration."""
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Notification Source Name as defined in configuration file.",
+    )
+    slug = models.SlugField(max_length=100, unique=True)
+    providers = models.ManyToManyField(
+        Provider,
+        help_text="The Provider(s) that this Notification Source applies to.",
+        blank=True,
+    )
+
+    csv_headers = ["name", "slug", "providers"]
+
+    class Meta:  # noqa: D106 "Missing docstring in public nested class"
+        ordering = ["name"]
+
+    def __str__(self):
+        """String value for HTML rendering."""
+        return f"{self.name}"
+
+    def get_absolute_url(self):
+        """Returns reverse loop up URL."""
+        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.slug])
+
+    def to_csv(self):
+        """Return fields for bulk view."""
+        return (self.name, self.slug, self.providers)
+
+
+@extras_features(
+    "custom_fields",
+    "custom_links",
+    "custom_validators",
+    "export_templates",
+    "relationships",
+    "webhooks",
+)
 class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
     raw = models.TextField(unique=True)
     subject = models.CharField(max_length=200)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
-    sender = models.CharField(max_length=200)
-    source = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-    )
+    sender = models.CharField(max_length=200, default="", null=True, blank=True)
+    source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False, null=True, blank=True)
     date = models.DateTimeField(default=now)
 
@@ -222,44 +259,3 @@ class ParsedNotification(OrganizationalModel):
     def to_csv(self):
         """Return fields for bulk view."""
         return (self.maintenance, self.raw_notification, self.json, self.date)
-
-
-@extras_features(
-    "custom_fields",
-    "custom_links",
-    "custom_validators",
-    "export_templates",
-    "relationships",
-    "webhooks",
-)
-class NotificationSource(OrganizationalModel):
-    """Model for Notification Source configuration."""
-
-    name = models.CharField(
-        max_length=100,
-        unique=True,
-        help_text="Notification Source Name as defined in configuration file.",
-    )
-    slug = models.SlugField(max_length=100, unique=True)
-    providers = models.ManyToManyField(
-        Provider,
-        help_text="The Provider(s) that this Notification Source applies to.",
-        blank=True,
-    )
-
-    csv_headers = ["name", "slug", "providers"]
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["name"]
-
-    def __str__(self):
-        """String value for HTML rendering."""
-        return f"{self.name}"
-
-    def get_absolute_url(self):
-        """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.slug])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.name, self.slug, self.providers)

@@ -34,6 +34,7 @@ class TestSources(TestCase):
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_1.copy()]}}
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(name=SOURCE_1["name"]).delete()
+        self.source = NotificationSource.objects.first()
 
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
@@ -93,21 +94,22 @@ class TestSources(TestCase):
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
     def test_get_notifications_without_notifications(self, mock_receive_notifications):
-        """Test get_notifications with provider without email."""
+        """Test get_notifications with provider without email in one of the provider and without notifications."""
         mock_receive_notifications.return_value = []
         original_provider = Provider.objects.all().first()
         new_provider = Provider.objects.create(name="something", slug="something")
         notification_source = NotificationSource.objects.all().first()
+        notification_source.providers.add(original_provider)
         notification_source.providers.add(new_provider)
 
         res = get_notifications(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
 
         self.logger.log_warning.assert_called_with(
-            message=f"Skipping {new_provider.name} because these providers has no email configured."
+            message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
         )
 
     def test_get_notifications_no_imap_account(self):
@@ -121,9 +123,9 @@ class TestSources(TestCase):
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
     def test_get_notifications(self, mock_receive_notifications):
-        """Test get_notifications with provider without email."""
+        """Test get_notifications."""
         notification_data = get_base_notification_data()
-        notification = generate_raw_notification(notification_data)
+        notification = generate_raw_notification(notification_data, self.source.name)
 
         mock_receive_notifications.return_value = [notification]
 
@@ -134,10 +136,10 @@ class TestSources(TestCase):
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
-        """Test get_notifications with provider without email."""
+        """Test get_notifications multiple."""
 
         notification_data = get_base_notification_data()
-        notification = generate_raw_notification(notification_data)
+        notification = generate_raw_notification(notification_data, self.source.name)
 
         mock_receive_notifications.return_value = [notification, notification]
 
