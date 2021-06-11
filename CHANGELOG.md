@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.4
+
+### Changed
+
+- #23 - Make notifications more agnostic to multiple source types and improve `RawNotification` model
+
 ## v0.1.3 - 2021-06-10
 
 ### Fixed
