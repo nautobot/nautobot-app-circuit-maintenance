@@ -1,7 +1,9 @@
 """Views for Circuit Maintenance."""
+from django.shortcuts import get_object_or_404, render
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
-from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance import filters, forms, models, tables, choices
+from nautobot_circuit_maintenance.handle_notifications.sources import Source
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
@@ -248,3 +250,35 @@ class NotificationSourceBulkEditView(generic.BulkEditView):
     queryset = models.NotificationSource.objects.all()
     table = tables.NotificationSourceTable
     form = forms.NotificationSourceBulkEditForm
+
+
+class NotificationSourceValidate(generic.ObjectView):
+    """View for validate NotificationSource authenticate."""
+
+    queryset = models.NotificationSource.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        """Custom GET to run a authentication validation."""
+        instance = get_object_or_404(self.queryset, **kwargs)
+
+        try:
+            source = Source.init(name=instance.name)
+
+            is_authenticated, message = source.test_authentication()
+
+            if is_authenticated:
+                instance.auth_status = choices.AuthStatusChoices.SUCCESS
+            else:
+                instance.auth_status = choices.AuthStatusChoices.FAILED
+            instance.save()
+        except ValueError as exc:
+            message = str(exc)
+
+        return render(
+            request,
+            self.get_template_name(),
+            {
+                "object": instance,
+                "authentication_message": message,
+            },
+        )

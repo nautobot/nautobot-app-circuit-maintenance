@@ -148,6 +148,22 @@ class TestSources(TestCase):
         self.assertEqual(2, len(res))
         self.logger.log_warning.assert_not_called()
 
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.close_session")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.open_session")
+    def test_imap_test_authentication_ok(self, mock_open, mock_close):  # pylint: disable=unused-argument
+        imap = IMAP(name="whatever", url="imap://localhost", user="user", password="pass", imap_server="localhost")
+        res, message = imap.test_authentication()
+        self.assertEqual(res, True)
+        self.assertEqual(message, "Test OK")
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.open_session")
+    def test_imap_test_authentication_ko(self, mock_open):
+        mock_open.side_effect = Exception("error message")
+        imap = IMAP(name="whatever", url="imap://localhost", user="user", password="pass", imap_server="localhost")
+        res, message = imap.test_authentication()
+        self.assertEqual(res, False)
+        self.assertEqual(message, "error message")
+
     @parameterized.expand(
         [
             ["name_1", "url1", "user_1", "password_1", "imap_server", 993, False],

@@ -1,5 +1,10 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
+from unittest.mock import patch
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from nautobot.users.models import ObjectPermission
+
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.utilities.testing import ViewTestCases
 from nautobot_circuit_maintenance.models import (
@@ -204,6 +209,59 @@ class NotificationSourceTest(
             "whatever 4,whatever-4",
             "whatever 5,whatever-5",
         )
+
+        cls.SOURCE_1 = {
+            "name": "example",
+            "account": "me@example.com",
+            "secret": "supersecret",
+            "url": "imap://example.com",
+        }
+        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [cls.SOURCE_1.copy()]}}
+        NotificationSource.objects.create(name=cls.SOURCE_1["name"], slug=cls.SOURCE_1["name"])
+
+    def test_validate_view_unknown(self):
+        """Test for custom NotificationSourceValidate view when source is not defined in plugins."""
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        response = self.client.get(
+            self._get_queryset().exclude(name=self.SOURCE_1["name"]).first().get_absolute_url() + "validate/"
+        )
+        self.assertContains(response, "UNKNOWN", status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ok(self, mock_test_authentication):
+        """Test for custom NotificationSourceValidate view."""
+        mock_test_authentication.return_value = True, "Test OK"
+
+        # Adding test to user to run Validate
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        response = self.client.get(
+            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+        )
+        self.assertContains(response, "SUCCESS: Test OK", status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ko(self, mock_test_authentication):
+        """Test for custom NotificationSourceValidate view."""
+        mock_test_authentication.return_value = False, "Some error"
+
+        # Adding test to user to run Validate
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        response = self.client.get(
+            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+        )
+        self.assertContains(response, "FAILED: Some error", status_code=200)
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""

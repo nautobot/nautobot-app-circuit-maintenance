@@ -57,3 +57,17 @@ class NoteLevelChoices(ChoiceSet):
         (INFO, "INFO"),
         (WARNING, "WARNING"),
     )
+
+
+class AuthStatusChoices(ChoiceSet):
+    """Valid values for Authenticated Statuses."""
+
+    UNKNOWN = "UNKNOWN"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
+    CHOICES = (
+        (UNKNOWN, "UNKNOWN"),
+        (SUCCESS, "SUCCESS"),
+        (FAILED, "FAILED"),
+    )
