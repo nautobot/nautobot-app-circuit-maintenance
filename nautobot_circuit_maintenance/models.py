@@ -7,7 +7,7 @@ from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 
-from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices, AuthStatusChoices
+from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
 
 
 @extras_features(
@@ -170,14 +170,6 @@ class NotificationSource(OrganizationalModel):
         Provider,
         help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
-    )
-    auth_status = models.CharField(
-        default=AuthStatusChoices.UNKNOWN,
-        max_length=50,
-        choices=AuthStatusChoices,
-        null=True,
-        blank=True,
-        editable=False,
     )
 
     csv_headers = ["name", "slug", "providers"]

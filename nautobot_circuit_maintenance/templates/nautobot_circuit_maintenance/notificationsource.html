@@ -41,10 +41,12 @@
       {% endfor %}
       </td>
       </tr>
+      {% if authentication_message %}
       <tr>
       <td>Authentication Status</td>
-      <td>{{ object.auth_status }}{% if authentication_message %}: {{ authentication_message }}{% endif %}</td>
+      <td>{{ authentication_message }}</td>
       </tr>
+      {% endif %}
 
       </table>
     </div>

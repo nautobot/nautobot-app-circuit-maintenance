@@ -75,4 +75,4 @@ class NotificationSourceTable(BaseTable):
         """Meta for class NotificationSourceTable."""
 
         model = NotificationSource
-        fields = ("pk", "name", "slug", "providers", "auth_status")
+        fields = ("pk", "name", "slug", "providers")

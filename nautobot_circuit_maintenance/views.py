@@ -2,7 +2,7 @@
 from django.shortcuts import get_object_or_404, render
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
-from nautobot_circuit_maintenance import filters, forms, models, tables, choices
+from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import Source
 
 
@@ -263,14 +263,10 @@ class NotificationSourceValidate(generic.ObjectView):
 
         try:
             source = Source.init(name=instance.name)
+            is_authenticated, mess_auth = source.test_authentication()
 
-            is_authenticated, message = source.test_authentication()
-
-            if is_authenticated:
-                instance.auth_status = choices.AuthStatusChoices.SUCCESS
-            else:
-                instance.auth_status = choices.AuthStatusChoices.FAILED
-            instance.save()
+            message = "SUCCESS" if is_authenticated else "FAILED"
+            message += f": {mess_auth}"
         except ValueError as exc:
             message = str(exc)
 

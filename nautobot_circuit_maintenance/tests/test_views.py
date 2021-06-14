@@ -219,18 +219,6 @@ class NotificationSourceTest(
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [cls.SOURCE_1.copy()]}}
         NotificationSource.objects.create(name=cls.SOURCE_1["name"], slug=cls.SOURCE_1["name"])
 
-    def test_validate_view_unknown(self):
-        """Test for custom NotificationSourceValidate view when source is not defined in plugins."""
-        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
-        obj_perm.save()
-        obj_perm.users.add(self.user)
-        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
-
-        response = self.client.get(
-            self._get_queryset().exclude(name=self.SOURCE_1["name"]).first().get_absolute_url() + "validate/"
-        )
-        self.assertContains(response, "UNKNOWN", status_code=200)
-
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
     def test_validate_view_ok(self, mock_test_authentication):
         """Test for custom NotificationSourceValidate view."""
