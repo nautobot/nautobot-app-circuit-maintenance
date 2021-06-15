@@ -5,7 +5,7 @@ import email
 import imaplib
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, TypeVar, Type
+from typing import Iterable, Optional, TypeVar, Type, Tuple
 
 from django.conf import settings
 
@@ -53,6 +53,16 @@ class Source(BaseModel):
 
         Returns:
             bool: True if there are relevant providers attached or False otherwise
+        """
+        raise NotImplementedError
+
+    def test_authentication(self) -> Tuple[bool, str]:
+        """Method to validate the authentication of the Source.
+
+        Returns:
+            Tuple:
+                bool: True if authentication was successful, False otherwise
+                str: Message from authentication execution
         """
         raise NotImplementedError
 
@@ -116,6 +126,27 @@ class IMAP(Source):
                 self.session.close()
             if self.session.state == "AUTH":
                 self.session.logout()
+
+    def test_authentication(self) -> Tuple[bool, str]:
+        """Method to validate the authentication of the Source.
+
+        Returns:
+            Tuple:
+                bool: True if authentication was successful, False otherwise
+                str: Message from authentication execution
+        """
+        try:
+            self.open_session()
+            self.close_session()
+            is_authenticated = True
+            message = "Test OK"
+        except Exception as exc:
+            is_authenticated = False
+            if isinstance(exc.args[0], bytes):
+                message = str(exc.args[0].decode())
+            else:
+                message = str(exc)
+        return is_authenticated, message
 
     # pylint: disable=inconsistent-return-statements
     def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:

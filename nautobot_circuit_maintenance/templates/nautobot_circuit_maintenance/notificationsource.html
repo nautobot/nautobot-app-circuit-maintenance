@@ -36,16 +36,33 @@
       <tr>
       <td>Providers</td>
       <td>
-
       {% for provider in providers %}
               <a href="{% url 'circuits:provider' slug=provider.slug %}">{{ provider.name }} </a>
       {% endfor %}
-
       </td>
       </tr>
+      {% if authentication_message %}
+      <tr>
+      <td>Authentication Status</td>
+      <td>{{ authentication_message }}</td>
+      </tr>
+      {% endif %}
+
       </table>
     </div>
+    <div class="btn-group">
+      <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+        <button type="submit" name="_validate" class="btn btn-primary">Validate Authentication</button>
+      </a>
+      {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+      <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+        <button type="submit" name="_validate" class="btn btn-primary btn-warning">Edit</button>
+      </a>
+      {% endif %}
+  </div>
   </div>
 </div>
+
+
 
 {% endblock %}

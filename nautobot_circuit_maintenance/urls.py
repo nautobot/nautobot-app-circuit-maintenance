@@ -105,6 +105,9 @@ urlpatterns = [
     path("source/<slug:slug>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
     path("source/<slug:slug>/", views.NotificationSourceView.as_view(), name="notificationsource"),
     path(
+        "source/<slug:slug>/validate/", views.NotificationSourceValidate.as_view(), name="notificationsource_validate"
+    ),
+    path(
         "source/<slug:slug>/changelog/",
         ObjectChangeLogView.as_view(),
         name="notificationsource_changelog",

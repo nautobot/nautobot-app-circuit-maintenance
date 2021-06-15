@@ -7,11 +7,7 @@ from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 
-from .choices import (
-    CircuitImpactChoices,
-    CircuitMaintenanceStatusChoices,
-    NoteLevelChoices,
-)
+from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
 
 
 @extras_features(
