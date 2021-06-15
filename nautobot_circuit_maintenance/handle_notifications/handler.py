@@ -3,6 +3,7 @@ import datetime
 import traceback
 from typing import Union
 from django.conf import settings
+from django.db import OperationalError
 from circuit_maintenance_parser import ParsingError, init_parser, MaintenanceNotification
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job
@@ -180,7 +181,6 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
     """
     parser = init_parser(**notification.__dict__)
-
     if not parser:
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
         return None
@@ -196,13 +196,18 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         return None
 
     # Insert raw notification in DB
-    raw_entry, created = RawNotification.objects.get_or_create(
-        subject=parser.subject,
-        provider=provider,
-        raw=parser.raw,
-        sender=parser.sender,
-        source=NotificationSource.objects.filter(name=parser.source).last(),
-    )
+    try:
+        raw_entry, created = RawNotification.objects.get_or_create(
+            subject=parser.subject,
+            provider=provider,
+            raw=parser.raw,
+            sender=parser.sender,
+            source=NotificationSource.objects.filter(name=parser.source).last(),
+        )
+    except OperationalError as exc:
+        logger.log_warning(message=f"Raw notification '{raw_entry.subject}' not created because {str(exc)}")
+        return None
+
     if not created:
         logger.log_warning(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
@@ -258,8 +263,6 @@ class HandleCircuitMaintenanceNotifications(Job):
             last_time_processed = None
 
         try:
-            # TODO: get_notifications should be replaced by get_notifications_from_source when new types
-            # are supported
             notifications = get_notifications(
                 logger=self,
                 notification_sources=notification_sources,

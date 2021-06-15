@@ -42,7 +42,7 @@ class TestSources(TestCase):
         self.assertIsInstance(source_instance, IMAP)
         self.assertEqual(source_instance.name, SOURCE_1["name"])
         self.assertEqual(source_instance.url, SOURCE_1["url"])
-        self.assertEqual(source_instance.user, SOURCE_1["account"])
+        self.assertEqual(source_instance.account, SOURCE_1["account"])
         self.assertEqual(source_instance.password, SOURCE_1["secret"])
         self.assertEqual(source_instance.imap_server, "example.com")
         self.assertEqual(source_instance.imap_port, 993)
@@ -90,7 +90,10 @@ class TestSources(TestCase):
 
         res = get_notifications(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
-        self.logger.log_warning.assert_called_with(message="Skipping this email account no providers were defined.")
+        source_name = SOURCE_1["name"]
+        self.logger.log_warning.assert_called_with(
+            message=f"Skipping source '{source_name}' because no providers were defined."
+        )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
     def test_get_notifications_without_notifications(self, mock_receive_notifications):
@@ -118,7 +121,7 @@ class TestSources(TestCase):
         get_notifications(self.logger, NotificationSource.objects.all())
 
         self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_1['name']} is not matching class expectations: 1 validation error for IMAP\nuser\n  none is not an allowed value (type=type_error.none.not_allowed)"
+            message=f"Notification Source {SOURCE_1['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -151,7 +154,9 @@ class TestSources(TestCase):
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.close_session")
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.open_session")
     def test_imap_test_authentication_ok(self, mock_open, mock_close):  # pylint: disable=unused-argument
-        imap = IMAP(name="whatever", url="imap://localhost", user="user", password="pass", imap_server="localhost")
+        imap = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
         res, message = imap.test_authentication()
         self.assertEqual(res, True)
         self.assertEqual(message, "Test OK")
@@ -159,7 +164,9 @@ class TestSources(TestCase):
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.open_session")
     def test_imap_test_authentication_ko(self, mock_open):
         mock_open.side_effect = Exception("error message")
-        imap = IMAP(name="whatever", url="imap://localhost", user="user", password="pass", imap_server="localhost")
+        imap = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
         res, message = imap.test_authentication()
         self.assertEqual(res, False)
         self.assertEqual(message, "error message")
@@ -173,15 +180,15 @@ class TestSources(TestCase):
             ["name_1", "url1", "user_1", "password_1", "imap_server", None, False],
         ]  # pylint: disable=too-many-arguments
     )
-    def test_imap_init(self, name, url, user, password, imap_server, imap_port, exception):
+    def test_imap_init(self, name, url, account, password, imap_server, imap_port, exception):
         """Test IMAP class init."""
         kwargs = {}
         if name:
             kwargs["name"] = name
         if url:
             kwargs["url"] = url
-        if user:
-            kwargs["user"] = user
+        if account:
+            kwargs["account"] = account
         if password:
             kwargs["password"] = password
         if imap_server:
