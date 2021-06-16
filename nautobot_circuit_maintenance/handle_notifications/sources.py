@@ -121,7 +121,9 @@ class Source(BaseModel):
                 credentials_file=config.get("credentials_file"),
             )
 
-        raise ValueError(f"Scheme {scheme} not supported as Notification Source (only IMAP).")
+        raise ValueError(
+            f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
+        )
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
@@ -197,7 +199,15 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 
     @staticmethod
     def extract_provider_data_type(email_source: str) -> Tuple[str, str, str]:
-        """Method to extract the provider data type based on the referenced email for the provider."""
+        """Method to extract the provider data type based on the referenced email for the provider.
+
+        Returns:
+            Tuple(
+                str: provider_data_type, data type related to a specific Provider Parser
+                str: provider_type, corresponding to the Provider slug
+                str: error_message, if there was an issue
+            )
+        """
         for provider in Provider.objects.all():
             if "emails_circuit_maintenances" in provider.custom_field_data:
                 if email_source in provider.custom_field_data["emails_circuit_maintenances"].split(","):
@@ -272,6 +282,7 @@ class IMAP(EmailSource):
         provider_data_type, provider_type, error_message = self.extract_provider_data_type(email_source)
         if not provider_data_type:
             logger.log_warning(message=error_message)
+            return
 
         for part in email_message.walk():
             if part.get_content_type() == provider_data_type:
@@ -403,12 +414,12 @@ class GmailAPIServiceAccount(EmailSource):
 
         if not email_subject or not email_source:
             logger.log_warning(
-                received_email, message="Received email doesn't contain either Suject or From, so skipping it."
+                received_email, message="Received email doesn't contain either Subject or From, so skipping it."
             )
             return
 
         if since:
-            if received_email["internalDate"] < since:
+            if int(received_email["internalDate"]) < since:
                 logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
                 return
 
@@ -421,6 +432,7 @@ class GmailAPIServiceAccount(EmailSource):
         provider_data_type, provider_type, error_message = self.extract_provider_data_type(email_source)
         if not provider_data_type:
             logger.log_warning(message=error_message)
+            return
 
         raw_payload = ""
         for part in received_email["payload"]["parts"]:
