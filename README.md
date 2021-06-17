@@ -97,12 +97,14 @@ There are 2 extra attributes:
 - `account`: Identifier (i.e. email address) to use to impersonate as service account.
 - `credentials_file`: JSON file containing all the necessary data to identify the Service Account.
 
-Enabling Gmail API access and create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)involves multiple steps that could be summarised as:
+Enabling Gmail API access and create a [Service Account](https://support.google.com/a/answer/7378726?hl=en) involves multiple steps that could be summarized as:
 
 1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
 2. Under **APIs and Services**, enable **Gmail API** for the selected project.
 3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated.
-4. With Admin rights, in the email account that this Service Account will impersonate, enable Google Workspace Domain-wide Delegation.
+4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
+5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
+6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
 
 ```py
 PLUGINS_CONFIG = {
