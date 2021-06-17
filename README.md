@@ -57,14 +57,14 @@ Notification Sources are defined in two steps:
 
 #### 2.1 Define Notification Sources in `configuration.py`
 
-In the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should define the Notification Sources that will be able later in the UI.
+In the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should define the Notification Sources that will be able later in the UI, where you will be able to **validate** if the authentication credentials provided are working fine or not.
 
 There are two mandatory attributes (other keys are dependent on the integration type, and will be documented below):
 
 - `name`: Name to identify the Source and will be available in the UI.
 - `url`: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 
-> Currently, only IMAP email box integration is supported as URL scheme,
+> Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as URL scheme
 
 ##### IMAP
 
@@ -83,6 +83,35 @@ PLUGINS_CONFIG = {
                 "name": "my custom name",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
+                "url": os.environ.get("CM_NS_1_URL", ""),
+            }
+        ]
+    }
+}
+```
+
+##### Gmail API Service Account
+
+There are 2 extra attributes:
+
+- `account`: Identifier (i.e. email address) to use to impersonate as service account.
+- `credentials_file`: JSON file containing all the necessary data to identify the Service Account.
+
+Enabling Gmail API access and create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)involves multiple steps that could be summarised as:
+
+1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
+2. Under **APIs and Services**, enable **Gmail API** for the selected project.
+3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated.
+4. With Admin rights, in the email account that this Service Account will impersonate, enable Google Workspace Domain-wide Delegation.
+
+```py
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "notification_sources": [
+            {
+                "name": "my custom name",
+                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_1_CREDENTIALS_FILE", ""),
                 "url": os.environ.get("CM_NS_1_URL", ""),
             }
         ]
