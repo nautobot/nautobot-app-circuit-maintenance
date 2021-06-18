@@ -231,8 +231,11 @@ class NotificationSourceView(generic.ObjectView):
 
     def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
         """Extend content of detailed view for NotificationSource."""
+        source = Source.init(name=instance.name)
         return {
             "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
+            "account": source.get_account_id(),
+            "source_type": source.__class__.__name__,
         }
 
 

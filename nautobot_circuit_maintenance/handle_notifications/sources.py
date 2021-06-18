@@ -29,6 +29,10 @@ class Source(BaseModel):
     name: str
     url: str
 
+    def get_account_id(self) -> str:
+        """Method to get an identifier of the related account."""
+        raise NotImplementedError
+
     def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
         """Function to retrieve notifications since one moment in time.
 
@@ -112,6 +116,10 @@ class IMAP(Source):
         """Pydantic BaseModel config."""
 
         arbitrary_types_allowed = True
+
+    def get_account_id(self) -> str:
+        """Method to get an identifier of the related account."""
+        return self.user
 
     def open_session(self):
         """Open session to IMAP server."""
