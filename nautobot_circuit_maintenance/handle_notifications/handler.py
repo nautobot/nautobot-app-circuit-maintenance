@@ -237,7 +237,7 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         name = "Update Circuit Maintenances"
         description = (
-            "Fetch Circuit Maintenance Notifications from Source and create or upate Circuit Maintenances accordingly"
+            "Fetch Circuit Maintenance Notifications from Source and create or update Circuit Maintenances accordingly"
         )
 
     def run(self, data=None, commit=None):
