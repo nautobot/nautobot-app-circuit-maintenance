@@ -15,6 +15,13 @@ menu_items = (
                 color=ButtonColorChoices.GREEN,
                 permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],
             ),
+            PluginMenuButton(
+                link="plugins:nautobot_circuit_maintenance:circuitmaintenance_job",
+                title="Job to update Circuit Maintenance",
+                icon_class="mdi mdi-database-refresh",
+                color=ButtonColorChoices.GREEN,
+                permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],
+            ),
         ),
     ),
     PluginMenuItem(

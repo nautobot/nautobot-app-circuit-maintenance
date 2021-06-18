@@ -1,5 +1,5 @@
 """Views for Circuit Maintenance."""
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
@@ -68,6 +68,20 @@ class CircuitMaintenanceBulkDeleteView(generic.BulkDeleteView):
 
     queryset = models.CircuitMaintenance.objects.all()
     table = tables.CircuitMaintenanceTable
+
+
+class CircuitMaintenanceJobView(generic.ObjectView):
+    """Special View to trigger the Job to look for new Circuit Maintenances."""
+
+    queryset = models.CircuitMaintenance.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        """Custom GET to run a the Job."""
+        class_path = (
+            "plugins/nautobot_circuit_maintenance.handle_notifications.handler/HandleCircuitMaintenanceNotifications/"
+        )
+
+        return redirect(f"/extras/jobs/{class_path}")
 
 
 class CircuitImpactListView(generic.ObjectListView):

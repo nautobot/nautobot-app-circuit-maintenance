@@ -26,6 +26,7 @@ urlpatterns = [
         name="circuitmaintenance_changelog",
         kwargs={"model": CircuitMaintenance},
     ),
+    path("maintenance/job/", views.CircuitMaintenanceJobView.as_view(), name="circuitmaintenance_job"),
     # Circuit Impact
     path("impact/", views.CircuitImpactListView.as_view(), name="circuitimpact_list"),
     path(
