@@ -8,7 +8,7 @@
 {% block header %}
 
 
-<h1>{{ object.title }}</h1>
+<h1>{{ object.name }}</h1>
 
 {% include 'inc/created_updated.html' with obj=object %}
 
@@ -32,6 +32,14 @@
       <tr>
       <td>Slug</td>
       <td>{{ object.slug }}</td>
+      </tr>
+      <tr>
+      <td>Type</td>
+      <td>{{ source_type }}</td>
+      </tr>
+      <tr>
+      <td>Account ID</td>
+      <td>{{ account }}</td>
       </tr>
       <tr>
       <td>Providers</td>

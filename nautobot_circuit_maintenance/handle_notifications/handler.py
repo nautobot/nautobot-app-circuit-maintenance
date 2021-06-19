@@ -240,9 +240,9 @@ class HandleCircuitMaintenanceNotifications(Job):
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
-        name = "Handle Circuit Maintenance Notifications"
+        name = "Update Circuit Maintenances"
         description = (
-            "Retrieve via email latest Circuit Maintenance Notifications and create or update them accrodingly"
+            "Fetch Circuit Maintenance Notifications from Source and create or update Circuit Maintenances accordingly"
         )
 
     def run(self, data=None, commit=None):
