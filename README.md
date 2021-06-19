@@ -97,7 +97,7 @@ There are 2 extra attributes:
 - `account`: Identifier (i.e. email address) to use to impersonate as service account.
 - `credentials_file`: JSON file containing all the necessary data to identify the Service Account.
 
-Enabling Gmail API access and create a [Service Account](https://support.google.com/a/answer/7378726?hl=en) involves multiple steps that could be summarized as:
+Enabling Gmail API access and creating a [Service Account](https://support.google.com/a/answer/7378726?hl=en) involves multiple steps that could be summarized as:
 
 1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
 2. Under **APIs and Services**, enable **Gmail API** for the selected project.
