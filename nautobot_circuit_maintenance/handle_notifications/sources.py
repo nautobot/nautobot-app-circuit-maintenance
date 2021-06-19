@@ -136,6 +136,10 @@ class EmailSource(Source):  # pylint: disable=abstract-method
     account: str
     emails_to_fetch = []
 
+    def get_account_id(self) -> str:
+        """Method to get an identifier of the related account."""
+        return self.account
+
     def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
@@ -245,10 +249,6 @@ class IMAP(EmailSource):
         """Pydantic BaseModel config."""
 
         arbitrary_types_allowed = True
-
-    def get_account_id(self) -> str:
-        """Method to get an identifier of the related account."""
-        return self.user
 
     def open_session(self):
         """Open session to IMAP server."""
