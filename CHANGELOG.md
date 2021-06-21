@@ -5,6 +5,7 @@
 ### Changed
 
 - #23 - Make notifications more agnostic to multiple source types and improve `RawNotification` model
+- #26 - Add Gmail API Service Account Source type to Notification Sources
 
 ## v0.1.3 - 2021-06-10
 
