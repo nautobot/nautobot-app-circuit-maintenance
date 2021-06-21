@@ -221,7 +221,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 
         Returns:
             Tuple(
-                List[str]: provider_data_types, data types related to a specific Provider Parser
+                Iterable[str]: provider_data_types, data types related to a specific Provider Parser
                 str: provider_type, corresponding to the Provider slug
                 str: error_message, if there was an issue
             )

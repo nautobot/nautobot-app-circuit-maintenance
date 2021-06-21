@@ -29,6 +29,21 @@
     noc_contact: ""
     admin_contact: ""
     comments: ""
+- model: circuits.provider
+  pk: b6c067ac-2215-4412-b99f-f269c25b9e56
+  fields:
+    created: 2021-04-30
+    last_updated: 2021-04-30 07:43:14.510402+00:00
+    _custom_field_data:
+      emails_circuit_maintenances: sender3@example.com
+    name: abc
+    slug: abc
+    asn: null
+    account: ""
+    portal_url: ""
+    noc_contact: ""
+    admin_contact: ""
+    comments: ""
 - model: circuits.circuittype
   pk: d1c2ed9d-9376-485b-b058-d26c29b5f22f
   fields:

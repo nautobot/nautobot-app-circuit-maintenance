@@ -190,22 +190,22 @@ class TestHandleNotificationsJob(TestCase):
             self.job.log_warning.assert_called()
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
-    def test_process_raw_notification_no_parser(self):
-        """Test process_raw_notification with non existant parser."""
+    def test_process_raw_notification_no_provider_in_parser(self):
+        """Test process_raw_notification with non existant Proivder in the parser library."""
         notification_data = get_base_notification_data()
         test_notification = generate_raw_notification(notification_data, self.source.name)
-        test_notification.provider_type = "unknown"
+        test_notification.provider_type = "abc"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
         self.job.log_warning.assert_called_with(
-            message=f"Raw notification not created because is referencing to a provider not existent: {test_notification.provider_type}"
+            message=f"Notification Parser not found for {test_notification.provider_type}"
         )
 
-    def test_process_raw_notification_no_provider_type(self):
-        """Test process_raw_notification with non existant provider_type."""
+    def test_process_raw_notification_no_provider_in_plugin(self):
+        """Test process_raw_notification with non existant provider in the Plugin."""
         notification_data = get_base_notification_data()
         test_notification = generate_raw_notification(notification_data, self.source.name)
-        test_notification.provider_type = "ICal"
+        test_notification.provider_type = "telstra"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
         self.job.log_warning.assert_called_with(
