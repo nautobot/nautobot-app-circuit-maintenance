@@ -4,7 +4,7 @@ import traceback
 from typing import Union
 from django.conf import settings
 from django.db import OperationalError
-from circuit_maintenance_parser import ParsingError, init_parser, MaintenanceNotification
+from circuit_maintenance_parser import ParsingError, init_parser
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.models import (
@@ -15,7 +15,7 @@ from nautobot_circuit_maintenance.models import (
     RawNotification,
     NotificationSource,
 )
-from .sources import get_notifications
+from .sources import get_notifications, MaintenanceNotification
 
 
 # pylint: disable=broad-except
@@ -180,32 +180,48 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
 
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
     """
-    parser = init_parser(**notification.__dict__)
-    if not parser:
-        logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
-        return None
-
-    provider = Provider.objects.filter(slug=parser.provider_type).last()
+    provider = Provider.objects.filter(slug=notification.provider_type).last()
 
     if not provider:
         logger.log_warning(
             message=(
-                f"Raw notification not created because is referencing to a provider not existent {parser.provider_type}"
+                f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
             )
         )
         return None
 
-    # Insert raw notification in DB
+    for raw_payload in notification.raw_payloads:
+        parser = init_parser(raw=raw_payload, provider_type=notification.provider_type)
+        if not parser:
+            logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
+            return None
+
+        try:
+            parsed_notifications = parser.process()
+            break
+        except ParsingError as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_debug(message=f"Parsing failed for notification {notification.subject}:.\n{tb_str}")
+        except Exception as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_debug(
+                message=f"Unexpected exception while parsing notification {notification.subject}.\n{tb_str}"
+            )
+    else:
+        parsed_notifications = []
+        raw_payload = b""
+
+    # Insert raw notification in DB even failed parsing
     try:
         raw_entry, created = RawNotification.objects.get_or_create(
-            subject=parser.subject,
+            subject=notification.subject,
             provider=provider,
-            raw=parser.raw,
-            sender=parser.sender,
-            source=NotificationSource.objects.filter(name=parser.source).last(),
+            raw=raw_payload,
+            sender=notification.sender,
+            source=NotificationSource.objects.filter(name=notification.source).last(),
         )
     except OperationalError as exc:
-        logger.log_warning(message=f"Raw notification '{raw_entry.subject}' not created because {str(exc)}")
+        logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
         return None
 
     if not created:
@@ -214,22 +230,19 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
 
     logger.log_success(raw_entry, message="Raw notification created.")
 
-    try:
-        parsed_notifications = parser.process()
-        for parsed_notification in parsed_notifications:
+    for parsed_notification in parsed_notifications:
+        try:
             process_parsed_notification(logger, parsed_notification, raw_entry)
-
-        # Update raw notification as properly parsed
-        raw_entry.parsed = True
-        raw_entry.save()
-    except ParsingError as exc:
-        tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-        logger.log_warning(raw_entry, message=f"Parsing failed for notification {raw_entry.id}:.\n{tb_str}")
-    except Exception as exc:
-        tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-        logger.log_warning(
-            raw_entry, message=f"Unexpected exception while processing notification: {raw_entry.id}.\n{tb_str}"
-        )
+            # Update raw notification as properly parsed
+            raw_entry.parsed = True
+            raw_entry.save()
+        except Exception as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_warning(
+                parsed_notification,
+                message=f"Unexpected exception while handling parsed notification {notification.subject}.\n{tb_str}",
+            )
+            continue
 
     return raw_entry.id
 
