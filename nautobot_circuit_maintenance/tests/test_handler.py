@@ -4,7 +4,7 @@ from django.test import TestCase
 from jinja2 import Template
 
 from nautobot.circuits.models import Circuit, Provider
-from circuit_maintenance_parser import init_parser
+from circuit_maintenance_parser import init_provider
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     HandleCircuitMaintenanceNotifications,
@@ -244,7 +244,7 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_raw_notification(notification_data, self.source.name)
 
         for raw_payload in test_notification.raw_payloads:
-            parser = init_parser(provider_type=test_notification.provider_type, raw=raw_payload)
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
             raw_entry, _ = RawNotification.objects.get_or_create(
                 subject=test_notification.subject,
                 provider=Provider.objects.get(slug=test_notification.provider_type),
@@ -264,7 +264,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
         test_notification = generate_raw_notification(notification_data, self.source.name)
         for raw_payload in test_notification.raw_payloads:
-            parser = init_parser(provider_type=test_notification.provider_type, raw=raw_payload)
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
             raw_entry, _ = RawNotification.objects.get_or_create(
                 subject=test_notification.subject,
                 provider=Provider.objects.get(slug=test_notification.provider_type),
@@ -299,7 +299,7 @@ class TestHandleNotificationsJob(TestCase):
 
         test_notification = generate_raw_notification(notification_data, self.source.name)
         for raw_payload in test_notification.raw_payloads:
-            parser = init_parser(provider_type=test_notification.provider_type, raw=raw_payload)
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
 
             parsed_maintenance = parser.process()[0]
             maintenance_id = str(parsed_maintenance.maintenance_id)

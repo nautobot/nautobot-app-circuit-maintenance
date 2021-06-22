@@ -4,7 +4,7 @@ import traceback
 from typing import Union
 from django.conf import settings
 from django.db import OperationalError
-from circuit_maintenance_parser import ParsingError, init_parser
+from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.models import (
@@ -184,7 +184,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         return None
 
     for raw_payload in notification.raw_payloads:
-        parser = init_parser(raw=raw_payload, provider_type=notification.provider_type)
+        parser = init_provider(raw=raw_payload, provider_type=notification.provider_type)
         if not parser:
             logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
             return None
