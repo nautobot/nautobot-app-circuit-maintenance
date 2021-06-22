@@ -427,11 +427,13 @@ class GmailAPIServiceAccount(EmailSource):
         """
 
         def get_raw_payload_from_parts(parts, provider_data_type):
-            """Helper function to extract the raw_payload from a multiple parts."""
+            """Helper function to extract the raw_payload from a multiple parts via a recursive call."""
             for part_inner in parts:
                 for header_inner in part_inner["headers"]:
                     if header_inner.get("name") == "Content-Type" and provider_data_type in header_inner.get("value"):
                         return self.extract_raw_payload(part_inner["body"], msg_id)
+                    elif header_inner.get("name") == "Content-Type" and "multipart" in header_inner.get("value"):
+                        return get_raw_payload_from_parts(part_inner["parts"], provider_data_type)
 
         received_email = (
             self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
@@ -469,29 +471,9 @@ class GmailAPIServiceAccount(EmailSource):
 
         raw_payloads = []
         for provider_data_type in provider_data_types:
-            # len_raw_payloads will be used at the end of the inner loop to verify if we have already gotten the
-            # payload for the content-type
-            len_raw_payloads = len(raw_payloads)
-            for part in received_email["payload"]["parts"]:
-                for header in part["headers"]:
-                    if header.get("name") == "Content-Type":
-                        content_type = header.get("value")
-                        break
-                else:
-                    # We don't expect a part without a Content-Type
-                    break
-
-                if provider_data_type in content_type:
-                    raw_payloads.append(self.extract_raw_payload(part["body"], msg_id))
-                elif "multipart" in content_type:
-                    raw_payload = get_raw_payload_from_parts(part["parts"], provider_data_type)
-                    if raw_payload:
-                        raw_payloads.append(raw_payload)
-                        break
-
-                # If we got a new payload for a provider_data_type, we don't explore more email parts
-                if len(raw_payloads) > len_raw_payloads:
-                    break
+            raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
+            if raw_payload:
+                raw_payloads.append(raw_payload)
 
         if not raw_payloads:
             logger.log_warning(
