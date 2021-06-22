@@ -311,7 +311,6 @@ class IMAP(EmailSource):
                 logger.log_debug(
                     message=f"Payload type {provider_data_type} not found in email payload.",
                 )
-                continue
 
         if not raw_payloads:
             logger.log_warning(
@@ -432,8 +431,9 @@ class GmailAPIServiceAccount(EmailSource):
                 for header_inner in part_inner["headers"]:
                     if header_inner.get("name") == "Content-Type" and provider_data_type in header_inner.get("value"):
                         return self.extract_raw_payload(part_inner["body"], msg_id)
-                    elif header_inner.get("name") == "Content-Type" and "multipart" in header_inner.get("value"):
+                    if header_inner.get("name") == "Content-Type" and "multipart" in header_inner.get("value"):
                         return get_raw_payload_from_parts(part_inner["parts"], provider_data_type)
+            return None
 
         received_email = (
             self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
