@@ -153,13 +153,6 @@ def process_parsed_notification(logger: Job, parsed_notification: ParsedNotifica
     """Processes a Parsed Notification, creating or updating the related Circuit Maintenance."""
     maintenance_id = str(parsed_notification.maintenance_id)
     circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
-    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
-
-    if not provider:
-        logger.log_info(
-            "Provider {parsed_notification.provider} referenced in {maintenance_id} does not exist in the Database",
-        )
-        return
 
     if circuit_maintenance_entry:
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification)
