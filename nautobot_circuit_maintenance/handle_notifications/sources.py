@@ -447,12 +447,6 @@ class GmailAPIServiceAccount(EmailSource):
             elif header.get("name") == "From":
                 email_source = header["value"]
 
-        if not email_subject or not email_source:
-            logger.log_warning(
-                received_email, message="Received email doesn't contain either Subject or From, so skipping it."
-            )
-            return
-
         if since:
             if int(received_email["internalDate"]) < since:
                 logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")

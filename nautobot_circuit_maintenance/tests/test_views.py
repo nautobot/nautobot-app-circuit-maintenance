@@ -287,10 +287,10 @@ class RawNotificationTest(
         source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
 
         RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw="whatever 1"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
         )
 
-        RawNotification.objects.create(subject="whatever", provider=providers[1], source=source, raw="whatever 2")
+        RawNotification.objects.create(subject="whatever", provider=providers[1], source=source, raw=b"whatever 2")
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
@@ -328,7 +328,7 @@ class ParsedNotificationTest(
         source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
 
         raw_notification = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw="whatever 1"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
@@ -336,7 +336,7 @@ class ParsedNotificationTest(
         ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
 
         raw_notification_2 = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw="whatever 2"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 2"
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"

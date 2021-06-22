@@ -56,7 +56,7 @@ END:VCALENDAR
         subject="Test subject",
         sender="sender@example.com",
         source=source,
-        raw_payloads=[template.render(obj=notification_data)],
+        raw_payloads=[template.render(obj=notification_data).encode("utf-8")],
         provider_type=notification_data["provider"],
     )
 
