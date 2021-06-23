@@ -151,7 +151,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
     """Form for creating new NotificationSource."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        """Metaclass attributes for NotificationSourcemodel_form = forms.NotificationSourceForm."""
+        """Metaclass attributes for NotificationSourceForm."""
 
         model = NotificationSource
         fields = ["providers"]

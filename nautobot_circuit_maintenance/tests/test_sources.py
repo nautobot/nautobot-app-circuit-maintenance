@@ -91,17 +91,17 @@ class TestEmailSource(TestCase):
         """Test for extract_email_source."""
         self.assertEqual(EmailSource.extract_email_source(email_source), email_source_output)
 
-    def test_extract_provider_data_type_no_email(self):
-        """Test for extract_provider_data_type when Provider doens't have the email."""
+    def test_extract_provider_data_types_no_email(self):
+        """Test for extract_provider_data_types when Provider doens't have the email."""
         Provider.objects.create(name="whatever", slug="whatever")
         email_source = "user@example.com"
         self.assertEqual(
-            EmailSource.extract_provider_data_type(email_source),
+            EmailSource.extract_provider_data_types(email_source),
             ("", "", f"Sender email {email_source} is not registered for any circuit provider."),
         )
 
-    def test_extract_provider_data_type_no_provider_parser(self):
-        """Test for extract_provider_data_type when Provider doesn't have the email."""
+    def test_extract_provider_data_types_no_provider_parser(self):
+        """Test for extract_provider_data_types when Provider doesn't have the email."""
         provider_type = "whatever"
         email_source = "user@example.com"
         provider = Provider.objects.create(name=provider_type, slug=provider_type)
@@ -109,7 +109,7 @@ class TestEmailSource(TestCase):
         provider.save()
 
         self.assertEqual(
-            EmailSource.extract_provider_data_type(email_source),
+            EmailSource.extract_provider_data_types(email_source),
             (
                 "",
                 "",
@@ -117,20 +117,29 @@ class TestEmailSource(TestCase):
             ),
         )
 
-    def test_extract_provider_data_type_ok(self):
-        """Test for extract_provider_data_type."""
-        provider_type = "ntt"
+    @parameterized.expand(
+        [
+            ["ntt", {"text/calendar"}, False],
+            ["telstra", {"text/html", "text/calendar"}, False],
+            ["zayo", {"text/html"}, False],
+            ["unknown", "unknown", True],
+        ]
+    )
+    def test_extract_provider_data_types_ok(self, provider_type, data_types, error_message):
+        """Test for extract_provider_data_types."""
         email_source = "user@example.com"
         provider = Provider.objects.create(name=provider_type, slug=provider_type)
         provider.cf["emails_circuit_maintenances"] = email_source
         provider.save()
 
         self.assertEqual(
-            EmailSource.extract_provider_data_type(email_source),
+            EmailSource.extract_provider_data_types(email_source),
             (
-                "text/calendar",
-                "ntt",
-                "",
+                data_types if not error_message else "",
+                provider_type if not error_message else "",
+                f"Unexpected provider unknown received from {email_source}, so not getting the notification"
+                if error_message
+                else "",
             ),
         )
 

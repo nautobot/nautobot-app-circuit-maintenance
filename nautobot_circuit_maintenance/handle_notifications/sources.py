@@ -17,7 +17,7 @@ from django.conf import settings
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
-from circuit_maintenance_parser import NonexistentParserError, MaintenanceNotification, get_provider_data_type
+from circuit_maintenance_parser import NonexistentParserError, get_provider_data_types
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 from nautobot.extras.models import CustomField
@@ -27,6 +27,16 @@ from nautobot_circuit_maintenance.models import NotificationSource
 # pylint: disable=broad-except
 
 T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
+
+
+class MaintenanceNotification(BaseModel):
+    """Representation of all the data related to a Maintenance Notification."""
+
+    source: str
+    sender: str
+    subject: str
+    provider_type: str
+    raw_payloads: Iterable[bytes]
 
 
 class Source(BaseModel):
@@ -206,12 +216,12 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return email_source
 
     @staticmethod
-    def extract_provider_data_type(email_source: str) -> Tuple[str, str, str]:
+    def extract_provider_data_types(email_source: str) -> Tuple[str, str, str]:
         """Method to extract the provider data type based on the referenced email for the provider.
 
         Returns:
             Tuple(
-                str: provider_data_type, data type related to a specific Provider Parser
+                Iterable[str]: provider_data_types, data types related to a specific Provider Parser
                 str: provider_type, corresponding to the Provider slug
                 str: error_message, if there was an issue
             )
@@ -225,7 +235,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             return "", "", f"Sender email {email_source} is not registered for any circuit provider."
 
         try:
-            provider_data_type = get_provider_data_type(provider_type)
+            provider_data_types = get_provider_data_types(provider_type)
         except NonexistentParserError:
             return (
                 "",
@@ -233,7 +243,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 f"Unexpected provider {provider_type} received from {email_source}, so not getting the notification",
             )
 
-        return provider_data_type, provider_type, ""
+        return provider_data_types, provider_type, ""
 
 
 class IMAP(EmailSource):
@@ -273,8 +283,7 @@ class IMAP(EmailSource):
     def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
-        raw_email = data[0][1]
-        raw_email_string = raw_email.decode("utf-8")
+        raw_email_string = data[0][1].decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
 
         if since:
@@ -287,18 +296,25 @@ class IMAP(EmailSource):
             logger.log_failure(message=f"Not possible to determine the email sender: {email_message['From']}")
             return None
 
-        provider_data_type, provider_type, error_message = self.extract_provider_data_type(email_source)
-        if not provider_data_type:
+        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
+        if not provider_data_types:
             logger.log_warning(message=error_message)
             return
 
-        for part in email_message.walk():
-            if part.get_content_type() == provider_data_type:
-                raw_payload = part.get_payload()
-                break
-        else:
+        raw_payloads = []
+        for provider_data_type in provider_data_types:
+            for part in email_message.walk():
+                if part.get_content_type() == provider_data_type:
+                    raw_payloads.append(part.get_payload())
+                    break
+            else:
+                logger.log_debug(
+                    message=f"Payload type {provider_data_type} not found in email payload.",
+                )
+
+        if not raw_payloads:
             logger.log_warning(
-                message=f"Payload type {provider_data_type} not found in email payload.",
+                message=f"Payload types {', '.join(provider_data_types)} not found in email payload.",
             )
             return
 
@@ -306,7 +322,7 @@ class IMAP(EmailSource):
             source=self.name,
             sender=email_message["From"],
             subject=email_message["Subject"],
-            raw=raw_payload,
+            raw_payloads=raw_payloads,
             provider_type=provider_type,
         )
 
@@ -402,12 +418,23 @@ class GmailAPIServiceAccount(EmailSource):
 
         return b""
 
-    # pylint: disable=inconsistent-return-statements,too-many-locals,too-many-branches
+    # pylint: disable=inconsistent-return-statements,too-many-locals,too-many-branches, too-many-nested-blocks
     def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
         """
+
+        def get_raw_payload_from_parts(parts, provider_data_type):
+            """Helper function to extract the raw_payload from a multiple parts via a recursive call."""
+            for part_inner in parts:
+                for header_inner in part_inner["headers"]:
+                    if header_inner.get("name") == "Content-Type" and provider_data_type in header_inner.get("value"):
+                        return self.extract_raw_payload(part_inner["body"], msg_id)
+                    if header_inner.get("name") == "Content-Type" and "multipart" in header_inner.get("value"):
+                        return get_raw_payload_from_parts(part_inner["parts"], provider_data_type)
+            return None
+
         received_email = (
             self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
         )
@@ -420,12 +447,6 @@ class GmailAPIServiceAccount(EmailSource):
             elif header.get("name") == "From":
                 email_source = header["value"]
 
-        if not email_subject or not email_source:
-            logger.log_warning(
-                received_email, message="Received email doesn't contain either Subject or From, so skipping it."
-            )
-            return
-
         if since:
             if int(received_email["internalDate"]) < since:
                 logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
@@ -437,36 +458,20 @@ class GmailAPIServiceAccount(EmailSource):
             logger.log_failure(message=f"Not possible to determine the email sender: {email_source_before}")
             return
 
-        provider_data_type, provider_type, error_message = self.extract_provider_data_type(email_source)
-        if not provider_data_type:
+        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
+        if not provider_data_types:
             logger.log_warning(message=error_message)
             return
 
-        raw_payload = ""
-        for part in received_email["payload"]["parts"]:
-            content_type = ""
-            for header in part["headers"]:
-                if header.get("name") == "Content-Type":
-                    content_type = header.get("value")
-            if provider_data_type in content_type:
-                raw_payload = self.extract_raw_payload(part["body"], msg_id)
-            elif "multipart" in content_type:
-                for part_inner in part["parts"]:
-                    for header_inner in part_inner["headers"]:
-                        if header_inner.get("name") == "Content-Type" and provider_data_type in header_inner.get(
-                            "value"
-                        ):
-                            raw_payload = self.extract_raw_payload(part_inner["body"], msg_id)
-                        if raw_payload:
-                            break
-                    if raw_payload:
-                        break
+        raw_payloads = []
+        for provider_data_type in provider_data_types:
+            raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
             if raw_payload:
-                break
+                raw_payloads.append(raw_payload)
 
-        if not raw_payload:
+        if not raw_payloads:
             logger.log_warning(
-                message=f"Payload type {provider_data_type} not found in email payload.",
+                message=f"Payload types {provider_data_types} not found in email payload.",
             )
             return
 
@@ -474,7 +479,7 @@ class GmailAPIServiceAccount(EmailSource):
             source=self.name,
             sender=email_source,
             subject=email_subject,
-            raw=raw_payload,
+            raw_payloads=raw_payloads,
             provider_type=provider_type,
         )
 

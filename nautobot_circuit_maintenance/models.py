@@ -1,4 +1,5 @@
 """Models for Circuit Maintenance."""
+import hashlib
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -201,7 +202,8 @@ class NotificationSource(OrganizationalModel):
 class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
-    raw = models.TextField(unique=True)
+    raw = models.TextField()
+    _raw_md5 = models.TextField(unique=True)
     subject = models.CharField(max_length=200)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200, default="", null=True, blank=True)
@@ -211,6 +213,11 @@ class RawNotification(OrganizationalModel):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["date"]
+
+    def save(self, *args, **kwargs):
+        """Custom save for RawNotification."""
+        self._raw_md5 = hashlib.md5(self.raw).hexdigest()  # nosec
+        super().save(*args, **kwargs)
 
     def __str__(self):
         """String value for HTML rendering."""
