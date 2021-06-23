@@ -1,11 +1,18 @@
 # Changelog
 
-## v0.1.4
+## v0.1.4 - 2021-06-23
 
 ### Changed
 
 - #23 - Make notifications more agnostic to multiple source types and improve `RawNotification` model
+- #25 - Add a Validation view for Notification Sources
 - #26 - Add Gmail API Service Account Source type to Notification Sources
+- #27 - Improve Notification Source UX
+- #28 - Bump `circuit-maintenance-parser` to version 1.2.1
+
+### Fixed
+
+- #24 - Fix Bulk Edit Notification Source
 
 ## v0.1.3 - 2021-06-10
 
