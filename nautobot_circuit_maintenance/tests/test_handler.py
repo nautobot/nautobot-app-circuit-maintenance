@@ -4,7 +4,7 @@ from django.test import TestCase
 from jinja2 import Template
 
 from nautobot.circuits.models import Circuit, Provider
-from circuit_maintenance_parser import MaintenanceNotification, init_parser
+from circuit_maintenance_parser import init_provider
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     HandleCircuitMaintenanceNotifications,
@@ -21,9 +21,10 @@ from nautobot_circuit_maintenance.models import (
     RawNotification,
     ParsedNotification,
 )
+from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification
 
 
-def generate_raw_notification(notification_data):
+def generate_raw_notification(notification_data, source):
     """Generate raw notification text for a provider."""
     raw_notification_template = """
 BEGIN:VCALENDAR
@@ -50,11 +51,12 @@ END:VCALENDAR
 """
 
     template = Template(raw_notification_template)
+
     return MaintenanceNotification(
         subject="Test subject",
         sender="sender@example.com",
-        source="imap",
-        raw=template.render(obj=notification_data),
+        source=source,
+        raw_payloads=[template.render(obj=notification_data).encode("utf-8")],
         provider_type=notification_data["provider"],
     )
 
@@ -91,10 +93,13 @@ class TestHandleNotificationsJob(TestCase):
     job.log_failure = Mock()
     job.log_success = Mock()
 
+    def setUp(self):
+        self.source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+
     def test_run_simple(self):
         """Test the simple execution to create a Circuit Maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -116,7 +121,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data = get_base_notification_data()
         fake_cid = "nonexistent circuit"
         notification_data["circuitimpacts"].append({"cid": fake_cid, "impact": "NO-IMPACT"})
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -167,7 +172,7 @@ class TestHandleNotificationsJob(TestCase):
 
         notification_data = get_base_notification_data()
         notification_data["status"] = "Non valid status"
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -185,32 +190,32 @@ class TestHandleNotificationsJob(TestCase):
             self.job.log_warning.assert_called()
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
-    def test_process_raw_notification_no_parser(self):
-        """Test process_raw_notification with non existant parser."""
+    def test_process_raw_notification_no_provider_in_parser(self):
+        """Test process_raw_notification with non existant Proivder in the parser library."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
-        test_notification.provider_type = "unknown"
+        test_notification = generate_raw_notification(notification_data, self.source.name)
+        test_notification.provider_type = "abc"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
         self.job.log_warning.assert_called_with(
             message=f"Notification Parser not found for {test_notification.provider_type}"
         )
 
-    def test_process_raw_notification_no_provider_type(self):
-        """Test process_raw_notification with non existant provider_type."""
+    def test_process_raw_notification_no_provider_in_plugin(self):
+        """Test process_raw_notification with non existant provider in the Plugin."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
-        test_notification.provider_type = "ICal"
+        test_notification = generate_raw_notification(notification_data, self.source.name)
+        test_notification.provider_type = "telstra"
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
         self.job.log_warning.assert_called_with(
-            message=f"Raw notification not created because is referencing to a provider not existent {test_notification.provider_type}"
+            message=f"Raw notification not created because is referencing to a provider not existent: {test_notification.provider_type}"
         )
 
     def test_process_raw_notification(self):
         """Test process_raw_notification."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         res = process_raw_notification(self.job, test_notification)
 
         raw_notification = RawNotification.objects.get(pk=res)
@@ -223,7 +228,7 @@ class TestHandleNotificationsJob(TestCase):
         """Test process_raw_notification with parsing issues"""
         notification_data = get_base_notification_data()
         notification_data["status"] = "Non valid status"
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
         res = process_raw_notification(self.job, test_notification)
 
         raw_notification = RawNotification.objects.get(pk=res)
@@ -236,46 +241,47 @@ class TestHandleNotificationsJob(TestCase):
     def test_create_circuit_maintenance(self):
         """Test create_circuit_maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
-        parser = init_parser(**test_notification.__dict__)
-        raw_entry, _ = RawNotification.objects.get_or_create(
-            subject=parser.subject,
-            provider=Provider.objects.get(slug=parser.provider_type),
-            raw=parser.raw,
-            sender=parser.sender,
-            source=parser.source,
-        )
-        parsed_maintenance = parser.process()[0]
-        create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
-        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
-        self.assertEqual(2, len(CircuitImpact.objects.all()))
-        self.assertEqual(0, len(Note.objects.all()))
+        for raw_payload in test_notification.raw_payloads:
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
+            raw_entry, _ = RawNotification.objects.get_or_create(
+                subject=test_notification.subject,
+                provider=Provider.objects.get(slug=test_notification.provider_type),
+                raw=raw_payload,
+                sender=test_notification.sender,
+                source=self.source,
+            )
+            parsed_maintenance = parser.process()[0]
+            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
+            self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+            self.assertEqual(2, len(CircuitImpact.objects.all()))
+            self.assertEqual(0, len(Note.objects.all()))
 
     def test_create_circuit_maintenance_no_circuits(self):
         """Test create_circuit_maintenance without existent circuits."""
         notification_data = get_base_notification_data()
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
-        test_notification = generate_raw_notification(notification_data)
-
-        parser = init_parser(**test_notification.__dict__)
-        raw_entry, _ = RawNotification.objects.get_or_create(
-            subject=parser.subject,
-            provider=Provider.objects.get(slug=parser.provider_type),
-            raw=parser.raw,
-            sender=parser.sender,
-            source=parser.source,
-        )
-        parsed_maintenance = parser.process()[0]
-        create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
-        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
-        self.assertEqual(0, len(CircuitImpact.objects.all()))
-        self.assertEqual(1, len(Note.objects.all()))
+        test_notification = generate_raw_notification(notification_data, self.source.name)
+        for raw_payload in test_notification.raw_payloads:
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
+            raw_entry, _ = RawNotification.objects.get_or_create(
+                subject=test_notification.subject,
+                provider=Provider.objects.get(slug=test_notification.provider_type),
+                raw=raw_payload,
+                sender=test_notification.sender,
+                source=self.source,
+            )
+            parsed_maintenance = parser.process()[0]
+            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
+            self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+            self.assertEqual(0, len(CircuitImpact.objects.all()))
+            self.assertEqual(1, len(Note.objects.all()))
 
     def test_update_circuit_maintenance(self):
         """Test update_circuit_maintenance."""
         notification_data = get_base_notification_data()
-        test_notification = generate_raw_notification(notification_data)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
 
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
@@ -291,17 +297,18 @@ class TestHandleNotificationsJob(TestCase):
         circuit_to_update["impact"] = "OUTAGE"
         notification_data["circuitimpacts"].append(circuit_to_update)
 
-        test_notification = generate_raw_notification(notification_data)
-        parser = init_parser(**test_notification.__dict__)
+        test_notification = generate_raw_notification(notification_data, self.source.name)
+        for raw_payload in test_notification.raw_payloads:
+            parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
 
-        parsed_maintenance = parser.process()[0]
-        maintenance_id = str(parsed_maintenance.maintenance_id)
-        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
-        update_circuit_maintenance(self.job, circuit_maintenance_entry, maintenance_id, parsed_maintenance)
-        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
-        self.assertEqual(1, len(CircuitImpact.objects.all()))
-        self.assertEqual(1, len(Note.objects.all()))
-        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
-        self.assertEqual(notification_data["status"], circuit_maintenance_entry.status)
-        circuit_impact_entry = CircuitImpact.objects.get(circuit__cid=circuit_to_update["cid"])
-        self.assertEqual(circuit_to_update["impact"], circuit_impact_entry.impact)
+            parsed_maintenance = parser.process()[0]
+            maintenance_id = str(parsed_maintenance.maintenance_id)
+            circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+            update_circuit_maintenance(self.job, circuit_maintenance_entry, maintenance_id, parsed_maintenance)
+            self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+            self.assertEqual(1, len(CircuitImpact.objects.all()))
+            self.assertEqual(1, len(Note.objects.all()))
+            circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+            self.assertEqual(notification_data["status"], circuit_maintenance_entry.status)
+            circuit_impact_entry = CircuitImpact.objects.get(circuit__cid=circuit_to_update["cid"])
+            self.assertEqual(circuit_to_update["impact"], circuit_impact_entry.impact)

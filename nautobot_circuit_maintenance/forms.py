@@ -151,7 +151,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
     """Form for creating new NotificationSource."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        """Metaclass attributes for NotificationSourcemodel_form = forms.NotificationSourceForm."""
+        """Metaclass attributes for NotificationSourceForm."""
 
         model = NotificationSource
         fields = ["providers"]
@@ -166,9 +166,9 @@ class NotificationSourceCSVForm(CustomFieldModelCSVForm):
 
 
 class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
-    """Form for bulk editing Notes."""
+    """Form for bulk editing NotificationSources."""
 
-    pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
+    pk = forms.ModelMultipleChoiceField(queryset=NotificationSource.objects.all(), widget=forms.MultipleHiddenInput)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         nullable_fields = ["providers"]

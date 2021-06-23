@@ -1,5 +1,10 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
+from unittest.mock import patch
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from nautobot.users.models import ObjectPermission
+
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.utilities.testing import ViewTestCases
 from nautobot_circuit_maintenance.models import (
@@ -205,6 +210,47 @@ class NotificationSourceTest(
             "whatever 5,whatever-5",
         )
 
+        cls.SOURCE_1 = {
+            "name": "example",
+            "account": "me@example.com",
+            "secret": "supersecret",
+            "url": "imap://example.com",
+        }
+        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [cls.SOURCE_1.copy()]}}
+        NotificationSource.objects.create(name=cls.SOURCE_1["name"], slug=cls.SOURCE_1["name"])
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ok(self, mock_test_authentication):
+        """Test for custom NotificationSourceValidate view."""
+        mock_test_authentication.return_value = True, "Test OK"
+
+        # Adding test to user to run Validate
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        response = self.client.get(
+            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+        )
+        self.assertContains(response, "SUCCESS: Test OK", status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ko(self, mock_test_authentication):
+        """Test for custom NotificationSourceValidate view."""
+        mock_test_authentication.return_value = False, "Some error"
+
+        # Adding test to user to run Validate
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        response = self.client.get(
+            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+        )
+        self.assertContains(response, "FAILED: Some error", status_code=200)
+
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
 
@@ -238,13 +284,13 @@ class RawNotificationTest(
         )
         Provider.objects.bulk_create(providers)
 
-        RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source="whatever", raw="whatever 1"
-        )
+        source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
 
         RawNotification.objects.create(
-            subject="whatever", provider=providers[1], sender="whatever", source="whatever", raw="whatever 2"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
         )
+
+        RawNotification.objects.create(subject="whatever", provider=providers[1], source=source, raw=b"whatever 2")
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
@@ -279,8 +325,10 @@ class ParsedNotificationTest(
         )
         Provider.objects.bulk_create(providers)
 
+        source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+
         raw_notification = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source="whatever", raw="whatever 1"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
@@ -288,7 +336,7 @@ class ParsedNotificationTest(
         ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
 
         raw_notification_2 = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source="whatever", raw="whatever 2"
+            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 2"
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"

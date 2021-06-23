@@ -3,7 +3,8 @@ import datetime
 import traceback
 from typing import Union
 from django.conf import settings
-from circuit_maintenance_parser import ParsingError, init_parser, MaintenanceNotification
+from django.db import OperationalError
+from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.models import (
@@ -14,14 +15,16 @@ from nautobot_circuit_maintenance.models import (
     RawNotification,
     NotificationSource,
 )
-from .sources import get_notifications
+from .sources import get_notifications, MaintenanceNotification
 
 
 # pylint: disable=broad-except
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]
 
 
-def create_circuit_maintenance(logger, maintenance_id, parsed_notification):
+def create_circuit_maintenance(
+    logger: Job, maintenance_id: str, parsed_notification: ParsedNotification
+) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
     provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
 
@@ -50,12 +53,18 @@ def create_circuit_maintenance(logger, maintenance_id, parsed_notification):
             note_entry = Note.objects.create(
                 maintenance=circuit_maintenance_entry,
                 title=f"Nonexistent circuit ID {circuit.circuit_id}",
-                comment=f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the maintenance.",
+                comment=(
+                    f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
+                    "maintenance."
+                ),
                 level="WARNING",
             )
             logger.log_warning(
                 note_entry,
-                message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a note",
+                message=(
+                    f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a "
+                    "note"
+                ),
             )
     if not CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry):
         logger.log_warning(message=f"Circuit Maintenance {maintenance_id} has no valid Circuit IDs")
@@ -64,7 +73,10 @@ def create_circuit_maintenance(logger, maintenance_id, parsed_notification):
 
 
 def update_circuit_maintenance(
-    logger, circuit_maintenance_entry, maintenance_id, parsed_notification
+    logger: Job,
+    circuit_maintenance_entry: CircuitMaintenance,
+    maintenance_id: str,
+    parsed_notification: ParsedNotification,
 ):  # pylint: disable=too-many-locals
     """Handles the update of an existent circuit maintenance."""
     provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
@@ -104,13 +116,19 @@ def update_circuit_maintenance(
             note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
                 title=f"Nonexistent circuit ID {circuit.circuit_id}",
-                comment=f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the maintenance.",
+                comment=(
+                    f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
+                    "maintenance."
+                ),
                 level="WARNING",
             )
             if created:
                 logger.log_warning(
                     note_entry,
-                    message=f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a note",
+                    message=(
+                        f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, "
+                        "adding a note"
+                    ),
                 )
 
     for cid in cids_to_update:
@@ -131,17 +149,10 @@ def update_circuit_maintenance(
     logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")
 
 
-def process_parsed_notification(logger, parsed_notification, raw_entry):
+def process_parsed_notification(logger: Job, parsed_notification: ParsedNotification, raw_entry: RawNotification):
     """Processes a Parsed Notification, creating or updating the related Circuit Maintenance."""
     maintenance_id = str(parsed_notification.maintenance_id)
     circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
-    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
-
-    if not provider:
-        logger.log_info(
-            "Provider {parsed_notification.provider} referenced in {maintenance_id} does not exist in the Database",
-        )
-        return
 
     if circuit_maintenance_entry:
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification)
@@ -157,55 +168,77 @@ def process_parsed_notification(logger, parsed_notification, raw_entry):
     logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {maintenance_id}.")
 
 
-def process_raw_notification(logger, notification: MaintenanceNotification) -> Union[int, None]:
+def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Union[int, None]:
     """Processes a raw notification (maybe containing multiple parsed notifications).
 
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
     """
-    parser = init_parser(**notification.__dict__)
-
-    if not parser:
-        logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
-        return None
-
-    provider = Provider.objects.filter(slug=parser.provider_type).last()
+    provider = Provider.objects.filter(slug=notification.provider_type).last()
 
     if not provider:
         logger.log_warning(
-            message=f"Raw notification not created because is referencing to a provider not existent {parser.provider_type}"
+            message=(
+                f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
+            )
         )
         return None
 
-    # Insert raw notification in DB
-    raw_entry, created = RawNotification.objects.get_or_create(
-        subject=parser.subject,
-        provider=provider,
-        raw=parser.raw,
-        sender=parser.sender,
-        source=parser.source,
-    )
+    for raw_payload in notification.raw_payloads:
+        parser = init_provider(raw=raw_payload, provider_type=notification.provider_type)
+        if not parser:
+            logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
+            return None
+
+        try:
+            parsed_notifications = parser.process()
+            break
+        except ParsingError as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_debug(message=f"Parsing failed for notification {notification.subject}:.\n{tb_str}")
+        except Exception as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_debug(
+                message=f"Unexpected exception while parsing notification {notification.subject}.\n{tb_str}"
+            )
+    else:
+        parsed_notifications = []
+        raw_payload = b""
+        logger.log_warning(message=f"Parsed failed for all the raw payloads for '{notification.subject}'.")
+
+    if isinstance(raw_payload, str):
+        raw_payload = raw_payload.encode("utf-8")
+
+    # Insert raw notification in DB even failed parsing
+    try:
+        raw_entry, created = RawNotification.objects.get_or_create(
+            subject=notification.subject,
+            provider=provider,
+            raw=raw_payload,
+            sender=notification.sender,
+            source=NotificationSource.objects.filter(name=notification.source).last(),
+        )
+    except OperationalError as exc:
+        logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
+        return None
+
     if not created:
         logger.log_warning(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
 
-    try:
-        parsed_notifications = parser.process()
-        for parsed_notification in parsed_notifications:
+    for parsed_notification in parsed_notifications:
+        try:
             process_parsed_notification(logger, parsed_notification, raw_entry)
-
-        # Update raw notification as properly parsed
-        raw_entry.parsed = True
-        raw_entry.save()
-    except ParsingError as exc:
-        tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-        logger.log_warning(raw_entry, message=f"Parsing failed for notification {raw_entry.id}:.\n{tb_str}")
-    except Exception as exc:
-        tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-        logger.log_warning(
-            raw_entry, message=f"Unexpected exception while processing notification: {raw_entry.id}.\n{tb_str}"
-        )
+            # Update raw notification as properly parsed
+            raw_entry.parsed = True
+            raw_entry.save()
+        except Exception as exc:
+            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            logger.log_warning(
+                parsed_notification,
+                message=f"Unexpected exception while handling parsed notification {notification.subject}.\n{tb_str}",
+            )
 
     return raw_entry.id
 
@@ -216,9 +249,9 @@ class HandleCircuitMaintenanceNotifications(Job):
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
-        name = "Handle Circuit Maintenance Notifications"
+        name = "Update Circuit Maintenances"
         description = (
-            "Retrieve via email latest Circuit Maintenance Notifications and create or update them accrodingly"
+            "Fetch Circuit Maintenance Notifications from Source and create or update Circuit Maintenances accordingly"
         )
 
     def run(self, data=None, commit=None):
@@ -239,8 +272,6 @@ class HandleCircuitMaintenanceNotifications(Job):
             last_time_processed = None
 
         try:
-            # TODO: get_notifications should be replaced by get_notifications_from_source when new types
-            # are supported
             notifications = get_notifications(
                 logger=self,
                 notification_sources=notification_sources,

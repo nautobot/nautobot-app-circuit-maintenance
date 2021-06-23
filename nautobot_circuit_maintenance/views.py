@@ -1,7 +1,10 @@
 """Views for Circuit Maintenance."""
+from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.handle_notifications.sources import Source
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
@@ -66,6 +69,20 @@ class CircuitMaintenanceBulkDeleteView(generic.BulkDeleteView):
 
     queryset = models.CircuitMaintenance.objects.all()
     table = tables.CircuitMaintenanceTable
+
+
+class CircuitMaintenanceJobView(generic.ObjectView):
+    """Special View to trigger the Job to look for new Circuit Maintenances."""
+
+    queryset = models.CircuitMaintenance.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        """Custom GET to run a the Job."""
+        class_path = (
+            "plugins/nautobot_circuit_maintenance.handle_notifications.handler/HandleCircuitMaintenanceNotifications"
+        )
+
+        return redirect(reverse("extras:job", kwargs={"class_path": class_path}))
 
 
 class CircuitImpactListView(generic.ObjectListView):
@@ -229,8 +246,11 @@ class NotificationSourceView(generic.ObjectView):
 
     def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
         """Extend content of detailed view for NotificationSource."""
+        source = Source.init(name=instance.name)
         return {
             "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
+            "account": source.get_account_id(),
+            "source_type": source.__class__.__name__,
         }
 
 
@@ -248,3 +268,34 @@ class NotificationSourceBulkEditView(generic.BulkEditView):
     queryset = models.NotificationSource.objects.all()
     table = tables.NotificationSourceTable
     form = forms.NotificationSourceBulkEditForm
+
+
+class NotificationSourceValidate(generic.ObjectView):
+    """View for validate NotificationSource authenticate."""
+
+    queryset = models.NotificationSource.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        """Custom GET to run a authentication validation."""
+        instance = get_object_or_404(self.queryset, **kwargs)
+
+        try:
+            source = Source.init(name=instance.name)
+            is_authenticated, mess_auth = source.test_authentication()
+
+            message = "SUCCESS" if is_authenticated else "FAILED"
+            message += f": {mess_auth}"
+        except ValueError as exc:
+            message = str(exc)
+
+        return render(
+            request,
+            self.get_template_name(),
+            {
+                "object": instance,
+                "authentication_message": message,
+                "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
+                "account": source.get_account_id(),
+                "source_type": source.__class__.__name__,
+            },
+        )
