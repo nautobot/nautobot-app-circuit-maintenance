@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.5 - 2021-06-25
+
+### Fixed
+
+- #32 - Fix permissions to list `NotificationSources` in navigation menu
+- #33 - Add proper migration of Source field for `RawNotification`
+
 ## v0.1.4 - 2021-06-23
 
 ### Changed
