@@ -32,6 +32,6 @@ menu_items = (
     PluginMenuItem(
         link="plugins:nautobot_circuit_maintenance:notificationsource_list",
         link_text="Notification Sources",
-        permissions=["nautobot_circuit_maintenance.notificationsource_list"],
+        permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     ),
 )
