@@ -1,17 +1,21 @@
 """Notification Source classes."""
 import base64
+import os
 import re
 import datetime
 import email
+import json
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict
+from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
 from googleapiclient.discovery import build, Resource
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2.credentials import Credentials
 
 from django.conf import settings
 
@@ -128,12 +132,18 @@ class Source(BaseModel):
                 imap_port=url_components.port or 993,
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
-            return GmailAPIServiceAccount(
-                name=name,
-                url=url,
-                account=config.get("account"),
-                credentials_file=config.get("credentials_file"),
-            )
+            with open(config.get("credentials_file")) as crededentials_file:
+                credentials = json.load(crededentials_file)
+                if credentials.get("type") == "service_account":
+                    gmail_api_class = GmailAPIServiceAccount
+                else:
+                    gmail_api_class = GmailAPIOauth
+                return gmail_api_class(
+                    name=name,
+                    url=url,
+                    account=config.get("account"),
+                    credentials_file=config.get("credentials_file"),
+                )
 
         raise ValueError(
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
@@ -363,16 +373,13 @@ class IMAP(EmailSource):
         return received_notifications
 
 
-class GmailAPIServiceAccount(EmailSource):
-    """GmailAPIServiceAccount class.
-
-    See: https://developers.google.com/gmail/api/reference/rest/v1/users.messages
-    """
+class GmailAPI(EmailSource):
+    """GmailAPI class."""
 
     credentials_file: str
     account: str
     service: Optional[Resource] = None
-    credentials: Optional[service_account.Credentials] = None
+    credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -382,12 +389,8 @@ class GmailAPIServiceAccount(EmailSource):
         arbitrary_types_allowed = True
 
     def load_credentials(self):
-        """Load Gmail API Service Account credentials."""
-        if not self.credentials:
-            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
-            self.credentials = self.credentials.with_scopes(self.SCOPES)
-            self.credentials = self.credentials.with_subject(self.account)
-            self.credentials.refresh(Request())
+        """Load Credentials for Gmail API."""
+        raise NotImplementedError
 
     def build_service(self):
         """Build API service."""
@@ -514,6 +517,39 @@ class GmailAPIServiceAccount(EmailSource):
 
         self.close_service()
         return received_notifications
+
+
+class GmailAPIOauth(GmailAPI):
+    """GmailAPIOauth class."""
+
+    def load_credentials(self):
+        """Load Gmail API OAuth credentials."""
+        if os.path.exists("token.json"):
+            self.creds = Credentials.from_authorized_user_file("token.json", self.SCOPES)
+        if not self.credentials or not self.credentials.valid:
+            if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                self.credentials.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, self.SCOPES)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open("token.json", "w") as token:
+                token.write(self.credentials.to_json())
+
+
+class GmailAPIServiceAccount(GmailAPI):
+    """GmailAPIServiceAccount class.
+
+    See: https://developers.google.com/gmail/api/reference/rest/v1/users.messages
+    """
+
+    def load_credentials(self):
+        """Load Gmail API Service Account credentials."""
+        if not self.credentials:
+            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
+            self.credentials = self.credentials.with_scopes(self.SCOPES)
+            self.credentials = self.credentials.with_subject(self.account)
+            self.credentials.refresh(Request())
 
 
 def get_notifications(

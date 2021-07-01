@@ -631,6 +631,21 @@ httplib2 = ">=0.15.0"
 six = "*"
 
 [[package]]
+name = "google-auth-oauthlib"
+version = "0.4.4"
+description = "Google Authentication Library"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+google-auth = ">=1.0.0"
+requests-oauthlib = ">=0.7.0"
+
+[package.extras]
+tool = ["click (>=6.0.0)"]
+
+[[package]]
 name = "google-oauth"
 version = "1.0.0"
 description = "Google OAuth 2.0 for Server to Server applications implementation. Performs JWT-based access token retrieval for Google APIs."
@@ -1641,7 +1656,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "8f876cd5f8add0233cc27b1c80adde291c332ff20f89e6fe7b40cb3b445920f5"
+content-hash = "c38a316f90efc3a7b22110a3e64b3b11e3e877e49d63114fe3e1f0a4277fc7d6"
 
 [metadata.files]
 aniso8601 = [
@@ -1883,6 +1898,10 @@ google-auth = [
 google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
     {file = "google_auth_httplib2-0.1.0-py2.py3-none-any.whl", hash = "sha256:31e49c36c6b5643b57e82617cb3e021e3e1d2df9da63af67252c02fa9c1f4a10"},
+]
+google-auth-oauthlib = [
+    {file = "google-auth-oauthlib-0.4.4.tar.gz", hash = "sha256:09832c6e75032f93818edf1affe4746121d640c625a5bef9b5c96af676e98eee"},
+    {file = "google_auth_oauthlib-0.4.4-py2.py3-none-any.whl", hash = "sha256:0e92aacacfb94978de3b7972cf4b0f204c3cd206f74ddd0dc0b31e91164e6317"},
 ]
 google-oauth = [
     {file = "google-oauth-1.0.0.tar.gz", hash = "sha256:08ec0808701e43b9520510722c5b812e7bffbc5f4c2a4a19008b650e4da5ffa8"},
