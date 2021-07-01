@@ -5,6 +5,7 @@ import re
 import datetime
 import email
 import json
+import pickle  # nosec
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
 from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
@@ -14,10 +15,10 @@ import imaplib
 from googleapiclient.discovery import build, Resource
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
 
 from django.conf import settings
+from django.utils.text import slugify
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
@@ -96,12 +97,15 @@ class Source(BaseModel):
             self._authentication_logic()
             is_authenticated = True
             message = "Test OK"
+        except RedirectAuthorize:
+            raise
         except Exception as exc:
             is_authenticated = False
             if isinstance(exc.args[0], bytes):
                 message = str(exc.args[0].decode())
             else:
                 message = str(exc)
+
         return is_authenticated, message
 
     @classmethod
@@ -519,22 +523,40 @@ class GmailAPI(EmailSource):
         return received_notifications
 
 
+class RedirectAuthorize(Exception):
+    """Custom class to signal a redirect."""
+
+    def __init__(self, url_name, source_slug):
+        """Init for RedirectAuthorize."""
+        self.url_name = url_name
+        self.source_slug = source_slug
+        super().__init__()
+
+
 class GmailAPIOauth(GmailAPI):
-    """GmailAPIOauth class."""
+    """GmailAPIOauth class.
+
+    See: https://developers.google.com/identity/protocols/oauth2/web-server
+    """
 
     def load_credentials(self):
         """Load Gmail API OAuth credentials."""
-        if os.path.exists("token.json"):
-            self.creds = Credentials.from_authorized_user_file("token.json", self.SCOPES)
+        token_filename = f"{slugify(self.name)}_token.pickle"
+        if os.path.exists(token_filename):
+            with open(token_filename, "rb") as token:
+                self.credentials = pickle.load(token)  # nosec
+
         if not self.credentials or not self.credentials.valid:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
+                # Save the credentials for the next run
+                with open(token_filename, "wb") as token:
+                    pickle.dump(self.credentials, token)
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, self.SCOPES)
-                creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open("token.json", "w") as token:
-                token.write(self.credentials.to_json())
+                raise RedirectAuthorize(
+                    url_name="google_authorize",
+                    source_slug=slugify(self.name),
+                )
 
 
 class GmailAPIServiceAccount(GmailAPI):

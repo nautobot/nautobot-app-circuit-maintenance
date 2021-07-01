@@ -102,6 +102,8 @@ urlpatterns = [
     ),
     # Notification Source
     path("source/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
+    path("source/google_authorize/<slug:slug>/", views.google_authorize, name="google_authorize"),
+    path("source/google_oauth2callback/", views.google_oauth2callback, name="google_oauth2callback"),
     path("source/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
     path("source/<slug:slug>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
     path("source/<slug:slug>/", views.NotificationSourceView.as_view(), name="notificationsource"),

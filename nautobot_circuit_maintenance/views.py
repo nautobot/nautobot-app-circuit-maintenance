@@ -1,10 +1,18 @@
 """Views for Circuit Maintenance."""
+import logging
+import pickle  # nosec
+
+import google_auth_oauthlib
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
-from nautobot_circuit_maintenance.handle_notifications.sources import Source
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
+
+
+logger = logging.getLogger(__name__)
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
@@ -278,7 +286,6 @@ class NotificationSourceValidate(generic.ObjectView):
     def get(self, request, *args, **kwargs):
         """Custom GET to run a authentication validation."""
         instance = get_object_or_404(self.queryset, **kwargs)
-
         try:
             source = Source.init(name=instance.name)
             is_authenticated, mess_auth = source.test_authentication()
@@ -287,6 +294,15 @@ class NotificationSourceValidate(generic.ObjectView):
             message += f": {mess_auth}"
         except ValueError as exc:
             message = str(exc)
+        except RedirectAuthorize as exc:
+            return redirect(
+                reverse(
+                    f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
+                    kwargs={
+                        "slug": exc.source_slug,
+                    },
+                )
+            )
 
         return render(
             request,
@@ -299,3 +315,76 @@ class NotificationSourceValidate(generic.ObjectView):
                 "source_type": source.__class__.__name__,
             },
         )
+
+
+def google_authorize(request, slug):
+    """View to start the Google OAuth authorization flow."""
+    # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
+    notification_source = models.NotificationSource.objects.get(slug=slug)
+    source = Source.init(name=notification_source.name)
+    request.session["CLIENT_SECRETS_FILE"] = source.credentials_file
+    request.session["SCOPES"] = source.SCOPES
+    request.session["SOURCE_SLUG"] = slug
+
+    # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        request.session["CLIENT_SECRETS_FILE"], scopes=request.session["SCOPES"]
+    )
+    # The URI created here must exactly match one of the authorized redirect URIs
+    # for the OAuth 2.0 client, which you configured in the API Console. If this
+    # value doesn't match an authorized URI, you will get a 'redirect_uri_mismatch'
+    # error.
+
+    flow.redirect_uri = (
+        request.scheme
+        + "://"
+        + request.get_host()
+        + reverse("plugins:nautobot_circuit_maintenance:google_oauth2callback")
+    )
+    authorization_url, state = flow.authorization_url(
+        # Enable offline access so that you can refresh an access token without
+        # re-prompting the user for permission. Recommended for web server apps.
+        access_type="offline",
+        # Enable incremental authorization. Recommended as a best practice.
+        include_granted_scopes="true",
+    )
+    # Store the state so the callback can verify the auth server response.
+    request.session["state"] = state
+
+    return redirect(authorization_url)
+
+
+def google_oauth2callback(request):
+    """View to receive the callback from Google OAuth authorization flow."""
+    # Specify the state when creating the flow in the callback so that it can
+    # verified in the authorization server response.
+    state = request.session["state"]
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        request.session["CLIENT_SECRETS_FILE"], scopes=request.session["SCOPES"], state=state
+    )
+
+    flow.redirect_uri = (
+        request.scheme
+        + "://"
+        + request.get_host()
+        + reverse("plugins:nautobot_circuit_maintenance:google_oauth2callback")
+    )
+    # Use the authorization server's response to fetch the OAuth 2.0 tokens.
+    authorization_response = request.build_absolute_uri()
+
+    flow.fetch_token(authorization_response=authorization_response)
+
+    # Store credentials in the session.
+    # TODO: In a production app, you likely want to save these
+    #              credentials in a persistent database instead.
+    credentials = flow.credentials
+
+    with open(f"{request.session['SOURCE_SLUG']}_token.pickle", "wb") as token:
+        pickle.dump(credentials, token)
+
+    return redirect(
+        reverse(
+            "plugins:nautobot_circuit_maintenance:notificationsource_validate",
+            kwargs={"slug": request.session["SOURCE_SLUG"]},
+        )
+    )
