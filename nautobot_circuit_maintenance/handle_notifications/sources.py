@@ -136,7 +136,14 @@ class Source(BaseModel):
                 imap_port=url_components.port or 993,
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
-            with open(config.get("credentials_file")) as crededentials_file:
+            creds_filename = config.get("credentials_file")
+            if not creds_filename:
+                raise ValueError(f"Credentials_file for {name} not found in PLUGINS_CONFIG.")
+
+            if not os.path.isfile(creds_filename):
+                raise ValueError(f"Credentials_file {creds_filename} for {name} is not available.")
+
+            with open(creds_filename) as crededentials_file:
                 credentials = json.load(crededentials_file)
                 if credentials.get("type") == "service_account":
                     gmail_api_class = GmailAPIServiceAccount
@@ -146,7 +153,7 @@ class Source(BaseModel):
                     name=name,
                     url=url,
                     account=config.get("account"),
-                    credentials_file=config.get("credentials_file"),
+                    credentials_file=creds_filename,
                 )
 
         raise ValueError(
@@ -524,7 +531,7 @@ class GmailAPI(EmailSource):
 
 
 class RedirectAuthorize(Exception):
-    """Custom class to signal a redirect."""
+    """Custom class to signal a redirect to trigger OAuth autorization workflow for a specific source_slug."""
 
     def __init__(self, url_name, source_slug):
         """Init for RedirectAuthorize."""
@@ -560,10 +567,7 @@ class GmailAPIOauth(GmailAPI):
 
 
 class GmailAPIServiceAccount(GmailAPI):
-    """GmailAPIServiceAccount class.
-
-    See: https://developers.google.com/gmail/api/reference/rest/v1/users.messages
-    """
+    """GmailAPIServiceAccount class."""
 
     def load_credentials(self):
         """Load Gmail API Service Account credentials."""

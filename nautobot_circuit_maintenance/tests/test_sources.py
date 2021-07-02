@@ -1,5 +1,7 @@
 """Test sourcess utils."""
+import os
 from unittest.mock import Mock, patch
+import json
 from django.conf import settings
 from django.test import TestCase
 from parameterized import parameterized
@@ -9,6 +11,8 @@ from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance.models import NotificationSource
 
 from nautobot_circuit_maintenance.handle_notifications.sources import (
+    GmailAPIOauth,
+    GmailAPI,
     Source,
     IMAP,
     get_notifications,
@@ -25,11 +29,18 @@ SOURCE_IMAP = {
     "url": "imap://example.com",
 }
 
-SOURCE_GMAIL_API = {
-    "name": "source gmail api",
+SOURCE_GMAIL_API_SERVICE_ACCOUNT = {
+    "name": "source gmail api service account",
     "account": "me@example.com",
     "url": "https://accounts.google.com/o/oauth2/auth",
-    "credentials_file": "path_to_credentials",
+    "credentials_file": "path_to_credentials_service_account.json",
+}
+
+SOURCE_GMAIL_API_OAUTH = {
+    "name": "source gmail api oauth",
+    "account": "me@example.com",
+    "url": "https://accounts.google.com/o/oauth2/auth",
+    "credentials_file": "path_to_credentials_oauth.json",
 }
 
 
@@ -41,10 +52,14 @@ class TestSource(TestCase):
     def setUp(self):
         """Prepare data for tests."""
         settings.PLUGINS_CONFIG = {
-            "nautobot_circuit_maintenance": {"notification_sources": [SOURCE_IMAP.copy(), SOURCE_GMAIL_API.copy()]}
+            "nautobot_circuit_maintenance": {
+                "notification_sources": [SOURCE_IMAP.copy(), SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy()]
+            }
         }
         # Deleting other NotificationSource to define a reliable state.
-        NotificationSource.objects.exclude(name__in=[SOURCE_IMAP["name"], SOURCE_GMAIL_API["name"]]).delete()
+        NotificationSource.objects.exclude(
+            name__in=[SOURCE_IMAP["name"], SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]
+        ).delete()
 
     def test_source_factory_nonexistent_name(self):
         """Validate Factory pattern for non existent name."""
@@ -313,40 +328,70 @@ class TestGmailAPISource(TestCase):
 
     def setUp(self):
         """Prepare data for tests."""
-        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_GMAIL_API.copy()]}}
+        settings.PLUGINS_CONFIG = {
+            "nautobot_circuit_maintenance": {
+                "notification_sources": [SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy(), SOURCE_GMAIL_API_OAUTH.copy()]
+            }
+        }
         # Deleting other NotificationSource and Provider to define a reliable state.
-        NotificationSource.objects.exclude(name__in=[SOURCE_GMAIL_API["name"]]).delete()
-        self.source = NotificationSource.objects.get(name=SOURCE_GMAIL_API["name"])
+        NotificationSource.objects.exclude(name__in=[SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]).delete()
+        self.source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
-    def test_source_factory(self):
+        with open(SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"], "w") as credentials_file:
+            json.dump({"type": "service_account"}, credentials_file)
+
+        with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w") as credentials_file:
+            json.dump({}, credentials_file)
+
+    def tearDown(self):
+        """Clean up data from tests."""
+        os.remove(SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"])
+        os.remove(SOURCE_GMAIL_API_OAUTH["credentials_file"])
+
+    def test_source_factory_service_account(self):
         """Validate Factory pattern for Source class."""
-        source_instance = Source.init(name=SOURCE_GMAIL_API["name"])
+        source_instance = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         self.assertIsInstance(source_instance, GmailAPIServiceAccount)
-        self.assertEqual(source_instance.name, SOURCE_GMAIL_API["name"])
-        self.assertEqual(source_instance.url, SOURCE_GMAIL_API["url"])
-        self.assertEqual(source_instance.account, SOURCE_GMAIL_API["account"])
-        self.assertEqual(source_instance.credentials_file, SOURCE_GMAIL_API["credentials_file"])
+        self.assertEqual(source_instance.name, SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+        self.assertEqual(source_instance.url, SOURCE_GMAIL_API_SERVICE_ACCOUNT["url"])
+        self.assertEqual(source_instance.account, SOURCE_GMAIL_API_SERVICE_ACCOUNT["account"])
+        self.assertEqual(source_instance.credentials_file, SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"])
 
-    def test_source_factory_imap_no_account(self):
+    def test_source_factory_oauth(self):
+        """Validate Factory pattern for Source class."""
+        source_instance = Source.init(name=SOURCE_GMAIL_API_OAUTH["name"])
+        self.assertIsInstance(source_instance, GmailAPIOauth)
+        self.assertEqual(source_instance.name, SOURCE_GMAIL_API_OAUTH["name"])
+        self.assertEqual(source_instance.url, SOURCE_GMAIL_API_OAUTH["url"])
+        self.assertEqual(source_instance.account, SOURCE_GMAIL_API_OAUTH["account"])
+        self.assertEqual(source_instance.credentials_file, SOURCE_GMAIL_API_OAUTH["credentials_file"])
+
+    def test_source_factory_no_account(self):
         """Validate Factory pattern Gmail API without account settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         with self.assertRaises(ValidationError):
-            Source.init(name=SOURCE_GMAIL_API["name"])
+            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
-    def test_source_factory_imap_no_secret(self):
+    def test_source_factory_no_credentials(self):
         """Validate Factory pattern Gmail API without credentials_file."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["credentials_file"]
-        with self.assertRaises(ValidationError):
-            Source.init(name=SOURCE_GMAIL_API["name"])
+        with self.assertRaises(ValueError):
+            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+
+    def test_source_factory_credentials_file_non_existent(self):
+        """Validate Factory pattern Gmail API with credentials_file unexistent."""
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["credentials_file"] = "fake"
+        with self.assertRaises(ValueError):
+            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""
-        notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API["name"])
+        notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         notification_source.providers.set([])
 
         res = get_notifications(self.logger, NotificationSource.objects.all())
         self.assertEqual([], res)
-        source_name = SOURCE_GMAIL_API["name"]
+        source_name = SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]
         self.logger.log_warning.assert_called_with(
             message=f"Skipping source '{source_name}' because no providers were defined."
         )
@@ -377,10 +422,10 @@ class TestGmailAPISource(TestCase):
         get_notifications(self.logger, NotificationSource.objects.all())
 
         self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_GMAIL_API['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
+            message=f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
         )
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPIServiceAccount.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications."""
         notification_data = get_base_notification_data()
@@ -393,7 +438,7 @@ class TestGmailAPISource(TestCase):
         self.assertEqual(1, len(res))
         self.logger.log_warning.assert_not_called()
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPIServiceAccount.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
         """Test get_notifications multiple."""
         notification_data = get_base_notification_data()
@@ -427,15 +472,13 @@ class TestGmailAPISource(TestCase):
 
         if exception:
             with self.assertRaises(ValidationError):
-                GmailAPIServiceAccount(**kwargs)
+                GmailAPI(**kwargs)
         else:
-            GmailAPIServiceAccount(**kwargs)
+            GmailAPI(**kwargs)
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPIServiceAccount.load_credentials")
-    def test_gmail_api_service_account_test_authentication_ok(
-        self, mock_credentials
-    ):  # pylint: disable=unused-argument
-        source = GmailAPIServiceAccount(
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.load_credentials")
+    def test_gmail_api_test_authentication_ok(self, mock_credentials):  # pylint: disable=unused-argument
+        source = GmailAPI(
             name="whatever",
             url="https://accounts.google.com/o/oauth2/auth",
             account="account",
@@ -445,12 +488,10 @@ class TestGmailAPISource(TestCase):
         self.assertEqual(res, True)
         self.assertEqual(message, "Test OK")
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPIServiceAccount.load_credentials")
-    def test_gmail_api_service_account_test_authentication_ko(
-        self, mock_credentials
-    ):  # pylint: disable=unused-argument
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.load_credentials")
+    def test_gmail_api_test_authentication_ko(self, mock_credentials):  # pylint: disable=unused-argument
         mock_credentials.side_effect = Exception("error message")
-        source = GmailAPIServiceAccount(
+        source = GmailAPI(
             name="whatever",
             url="https://accounts.google.com/o/oauth2/auth",
             account="account",
