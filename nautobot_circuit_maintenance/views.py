@@ -1,6 +1,5 @@
 """Views for Circuit Maintenance."""
 import logging
-import pickle  # nosec
 
 import google_auth_oauthlib
 
@@ -375,12 +374,9 @@ def google_oauth2callback(request):
     flow.fetch_token(authorization_response=authorization_response)
 
     # Store credentials in the session.
-    # TODO: In a production app, you likely want to save these
-    #              credentials in a persistent database instead.
     credentials = flow.credentials
-
-    with open(f"{request.session['SOURCE_SLUG']}_token.pickle", "wb") as token:
-        pickle.dump(credentials, token)
+    notification_source = models.NotificationSource.objects.get(slug=request.session["SOURCE_SLUG"])
+    notification_source.set_token(credentials)
 
     return redirect(
         reverse(

@@ -1,9 +1,11 @@
 """Models for Circuit Maintenance."""
 import hashlib
+import pickle  # nosec
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
+from django_cryptography.fields import encrypt
 from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
@@ -172,6 +174,11 @@ class NotificationSource(OrganizationalModel):
         help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
     )
+    _token = encrypt(
+        models.BinaryField(
+            blank=True,
+        )
+    )
 
     csv_headers = ["name", "slug", "providers"]
 
@@ -189,6 +196,15 @@ class NotificationSource(OrganizationalModel):
     def to_csv(self):
         """Return fields for bulk view."""
         return (self.name, self.slug, self.providers)
+
+    def set_token(self, value):
+        """Getter for _token."""
+        self._token = pickle.dumps(value)
+        self.save()
+
+    def get_token(self):
+        """Setter for _token."""
+        return pickle.loads(self._token)  # nosec
 
 
 @extras_features(

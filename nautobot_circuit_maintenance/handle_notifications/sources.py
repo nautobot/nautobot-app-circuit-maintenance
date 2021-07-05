@@ -5,7 +5,6 @@ import re
 import datetime
 import email
 import json
-import pickle  # nosec
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
 from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
@@ -548,17 +547,17 @@ class GmailAPIOauth(GmailAPI):
 
     def load_credentials(self):
         """Load Gmail API OAuth credentials."""
-        token_filename = f"{slugify(self.name)}_token.pickle"
-        if os.path.exists(token_filename):
-            with open(token_filename, "rb") as token:
-                self.credentials = pickle.load(token)  # nosec
+        notification_source = NotificationSource.objects.get(name=self.name)
+        try:
+            self.credentials = notification_source.get_token()
+        except EOFError:
+            # _token has not been initialized yet
+            pass
 
         if not self.credentials or not self.credentials.valid:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
-                # Save the credentials for the next run
-                with open(token_filename, "wb") as token:
-                    pickle.dump(self.credentials, token)
+                notification_source.set_token(self.credentials)
             else:
                 raise RedirectAuthorize(
                     url_name="google_authorize",
