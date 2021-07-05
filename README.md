@@ -90,21 +90,12 @@ PLUGINS_CONFIG = {
 }
 ```
 
-##### Gmail API Service Account
+##### Gmail API integrations
 
 There are 2 extra attributes:
 
 - `account`: Identifier (i.e. email address) to use to impersonate as service account.
-- `credentials_file`: JSON file containing all the necessary data to identify the Service Account.
-
-Enabling Gmail API access and creating a [Service Account](https://support.google.com/a/answer/7378726?hl=en) involves multiple steps that could be summarized as:
-
-1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
-2. Under **APIs and Services**, enable **Gmail API** for the selected project.
-3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated.
-4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
-5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
-6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
+- `credentials_file`: JSON file containing all the necessary data to identify the API integration.
 
 ```py
 PLUGINS_CONFIG = {
@@ -120,6 +111,29 @@ PLUGINS_CONFIG = {
     }
 }
 ```
+
+To enable Gmail API access, there are some common steps for either Service Account and OAuth authentication:
+
+1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
+2. Under **APIs and Services**, enable **Gmail API** for the selected project.
+
+**Service Account**
+
+To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en) integration:
+
+3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated.
+4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
+5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
+6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
+
+**OAuth**
+
+To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/web-server) integration:
+
+3. Still under **APIs and Services**, in **Credentials**, create a new **OAuth client ID** selecting the **Web application** application type.
+4. Under **Authorized redirect URIs** add the location where your Nautobot server is listening plus `plugins/circuit-maintenance/source/google_oauth2callback/`. For instance: `http://localhost:8080/plugins/circuit-maintenance/source/google_oauth2callback/`
+
+> For OAuth integration, it's recommendable that, at least the first time, you run a manual **Validate** of the Notification Source to complete the OAuth authentication workflow, identifying your Google credentials.
 
 #### 2.2 Add `Providers` to the Notification Sources
 

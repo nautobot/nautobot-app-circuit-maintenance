@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.6
+
+### Added
+
+#36 - Add Gmail API OAuth Source type to Notification Sources
+
 ## v0.1.5 - 2021-06-25
 
 ### Fixed
