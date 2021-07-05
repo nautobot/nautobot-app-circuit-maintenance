@@ -305,4 +305,3 @@ demo/
 # Secrets
 development/creds.env
 development/*_credentials.json
-*.pickle
