@@ -346,6 +346,9 @@ def google_authorize(request, slug):
         access_type="offline",
         # Enable incremental authorization. Recommended as a best practice.
         include_granted_scopes="true",
+        # Asking for consent everytime is providing a refresh token that if not used only happens
+        # the first time.
+        prompt="consent",
     )
     # Store the state so the callback can verify the auth server response.
     request.session["state"] = state
