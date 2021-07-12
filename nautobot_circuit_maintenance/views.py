@@ -367,9 +367,9 @@ def google_oauth2callback(request):
     """View to receive the callback from Google OAuth authorization flow."""
     # Specify the state when creating the flow in the callback so that it can
     # verified in the authorization server response.
-    state = request.session["state"]
+    state = request.session.get("state")
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        request.session["CLIENT_SECRETS_FILE"], scopes=request.session["SCOPES"], state=state
+        request.session.get("CLIENT_SECRETS_FILE"), scopes=request.session.get("SCOPES"), state=state
     )
 
     flow.redirect_uri = (
@@ -385,7 +385,7 @@ def google_oauth2callback(request):
 
     # Store credentials in the session.
     credentials = flow.credentials
-    source_slug = request.session["SOURCE_SLUG"]
+    source_slug = request.session.get("SOURCE_SLUG")
 
     try:
         notification_source = models.NotificationSource.objects.get(slug=source_slug)
