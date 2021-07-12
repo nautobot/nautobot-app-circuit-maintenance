@@ -5,7 +5,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
-from django_cryptography.fields import encrypt
 from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
@@ -174,10 +173,8 @@ class NotificationSource(OrganizationalModel):
         help_text="The Provider(s) that this Notification Source applies to.",
         blank=True,
     )
-    _token = encrypt(
-        models.BinaryField(
-            blank=True,
-        )
+    _token = models.BinaryField(
+        blank=True,
     )
 
     csv_headers = ["name", "slug", "providers"]
