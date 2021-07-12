@@ -5,6 +5,7 @@ import google_auth_oauthlib
 
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 from nautobot.core.views import generic
 from nautobot.circuits.models import Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
@@ -294,14 +295,17 @@ class NotificationSourceValidate(generic.ObjectView):
         except ValueError as exc:
             message = str(exc)
         except RedirectAuthorize as exc:
-            return redirect(
-                reverse(
-                    f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
-                    kwargs={
-                        "slug": exc.source_slug,
-                    },
+            try:
+                return redirect(
+                    reverse(
+                        f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
+                        kwargs={
+                            "slug": exc.source_slug,
+                        },
+                    )
                 )
-            )
+            except NoReverseMatch:
+                pass
 
         return render(
             request,
@@ -346,8 +350,11 @@ def google_authorize(request, slug):
         access_type="offline",
         # Enable incremental authorization. Recommended as a best practice.
         include_granted_scopes="true",
-        # Asking for consent everytime is providing a refresh token that if not used only happens
-        # the first time.
+        # With "consent" as prompt option, we are going to ask for consent to authorize that the Application
+        # that has been created in the API Console can read emails. The default option only asks about it one
+        # time for different client usages, so if the Nautobot server was not the first one, it won't have the
+        # necessary "refresh_token" in the response, that is used to automatically renew the token when expired,
+        # without asking the user for login every time.
         prompt="consent",
     )
     # Store the state so the callback can verify the auth server response.
@@ -378,12 +385,17 @@ def google_oauth2callback(request):
 
     # Store credentials in the session.
     credentials = flow.credentials
-    notification_source = models.NotificationSource.objects.get(slug=request.session["SOURCE_SLUG"])
-    notification_source.set_token(credentials)
+    source_slug = request.session["SOURCE_SLUG"]
+
+    try:
+        notification_source = models.NotificationSource.objects.get(slug=source_slug)
+        notification_source.set_token(credentials)
+    except models.NotificationSource.DoesNotExist:
+        logger.warning("Google OAuth callback for %s is not matching any existing NotificationSource", source_slug)
 
     return redirect(
         reverse(
             "plugins:nautobot_circuit_maintenance:notificationsource_validate",
-            kwargs={"slug": request.session["SOURCE_SLUG"]},
+            kwargs={"slug": source_slug},
         )
     )

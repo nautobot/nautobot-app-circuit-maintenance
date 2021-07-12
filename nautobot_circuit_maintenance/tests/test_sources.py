@@ -341,7 +341,7 @@ class TestGmailAPISource(TestCase):
             json.dump({"type": "service_account"}, credentials_file)
 
         with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w") as credentials_file:
-            json.dump({}, credentials_file)
+            json.dump({"web": {}}, credentials_file)
 
     def tearDown(self):
         """Clean up data from tests."""
