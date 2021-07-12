@@ -330,7 +330,7 @@ def google_authorize(request, slug):
         request.session["CLIENT_SECRETS_FILE"], scopes=request.session["SCOPES"]
     )
     # The URI created here must exactly match one of the authorized redirect URIs
-    # for the OAuth 2.0 client, which you configured in the API Console. If this
+    # for the OAuth 2.0 client, which you configured in the Google Cloud Console. If this
     # value doesn't match an authorized URI, you will get a 'redirect_uri_mismatch'
     # error.
 
