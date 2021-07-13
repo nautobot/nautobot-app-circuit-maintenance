@@ -1,19 +1,24 @@
 """Notification Source classes."""
+import logging
 import base64
+import os
 import re
 import datetime
 import email
+import json
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
-from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict
+from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
 from googleapiclient.discovery import build, Resource
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 
 from django.conf import settings
+from django.utils.text import slugify
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
@@ -23,6 +28,9 @@ from nautobot.extras.jobs import Job
 from nautobot.extras.models import CustomField
 
 from nautobot_circuit_maintenance.models import NotificationSource
+
+logger = logging.getLogger(__name__)
+
 
 # pylint: disable=broad-except
 
@@ -49,7 +57,7 @@ class Source(BaseModel):
         """Method to get an identifier of the related account."""
         raise NotImplementedError
 
-    def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
+    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
         """Function to retrieve notifications since one moment in time.
 
         The `MaintenanceNotification` attributes will contains these attributes:
@@ -63,11 +71,11 @@ class Source(BaseModel):
         # Notification Source.
         raise NotImplementedError
 
-    def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(self, job_logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
-            logger (Job): Job to use its logger
+            job_logger (Job): Job to use its job_logger
             notification_source (NotificationSource): Notification Source to validate providers
             since_txt (str): Date string to be used to log
 
@@ -92,16 +100,19 @@ class Source(BaseModel):
             self._authentication_logic()
             is_authenticated = True
             message = "Test OK"
+        except RedirectAuthorize:
+            raise
         except Exception as exc:
             is_authenticated = False
             if isinstance(exc.args[0], bytes):
                 message = str(exc.args[0].decode())
             else:
                 message = str(exc)
+
         return is_authenticated, message
 
     @classmethod
-    def init(cls: Type[T], name: str) -> Type[T]:
+    def init(cls: Type[T], name: str) -> T:
         """Factory Pattern to get the specific Source Class depending on the scheme."""
         for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
             "notification_sources", []
@@ -128,12 +139,27 @@ class Source(BaseModel):
                 imap_port=url_components.port or 993,
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
-            return GmailAPIServiceAccount(
-                name=name,
-                url=url,
-                account=config.get("account"),
-                credentials_file=config.get("credentials_file"),
-            )
+            creds_filename = config.get("credentials_file")
+            if not creds_filename:
+                raise ValueError(f"Credentials_file for {name} not found in PLUGINS_CONFIG.")
+
+            if not os.path.isfile(creds_filename):
+                raise ValueError(f"Credentials_file {creds_filename} for {name} is not available.")
+
+            with open(creds_filename) as credentials_file:
+                credentials = json.load(credentials_file)
+                if credentials.get("type") == "service_account":
+                    gmail_api_class = GmailAPIServiceAccount
+                elif "web" in credentials:
+                    gmail_api_class = GmailAPIOauth
+                else:
+                    raise NotImplementedError(f"File {creds_filename} doens't contain any supported credentials.")
+                return gmail_api_class(
+                    name=name,
+                    url=url,
+                    account=config.get("account"),
+                    credentials_file=creds_filename,
+                )
 
         raise ValueError(
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
@@ -150,11 +176,11 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         """Method to get an identifier of the related account."""
         return self.account
 
-    def validate_providers(self, logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(self, job_logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
-            logger (Job): Job to use its logger
+            job_logger (Job): Job to use its job_logger
             notification_source (NotificationSource): Notification Source to validate providers
             since_txt (str): Date string to be used to log
 
@@ -164,7 +190,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         providers_with_email = []
         providers_without_email = []
         if not notification_source.providers.all():
-            logger.log_warning(
+            job_logger.log_warning(
                 message=f"Skipping source '{notification_source.name}' because no providers were defined.",
             )
             return False
@@ -179,14 +205,14 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 providers_without_email.append(provider.name)
 
         if providers_without_email:
-            logger.log_warning(
+            job_logger.log_warning(
                 message=(
                     f"Skipping {', '.join(providers_without_email)} because these providers have no email configured."
                 ),
             )
 
         if not providers_with_email:
-            logger.log_warning(
+            job_logger.log_warning(
                 message=(
                     f"Skipping Notification Source {notification_source.name} because none of the related providers "
                     "have emails defined."
@@ -194,7 +220,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
             return False
 
-        logger.log_info(
+        job_logger.log_info(
             message=(
                 f"Retrieving notifications from {notification_source.name} for "
                 f"{', '.join(providers_with_email)} since {since_txt}"
@@ -280,7 +306,7 @@ class IMAP(EmailSource):
         self.close_session()
 
     # pylint: disable=inconsistent-return-statements
-    def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
         raw_email_string = data[0][1].decode("utf-8")
@@ -288,17 +314,17 @@ class IMAP(EmailSource):
 
         if since:
             if mktime_tz(parsedate_tz(email_message["Date"])) < since:
-                logger.log_info(message=f"'{email_message['Subject']}' email is old, so not taking into account.")
+                job_logger.log_info(message=f"'{email_message['Subject']}' email is old, so not taking into account.")
                 return
 
         email_source = self.extract_email_source(email_message["From"])
         if not email_source:
-            logger.log_failure(message=f"Not possible to determine the email sender: {email_message['From']}")
+            job_logger.log_failure(message=f"Not possible to determine the email sender: {email_message['From']}")
             return None
 
         provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
         if not provider_data_types:
-            logger.log_warning(message=error_message)
+            job_logger.log_warning(message=error_message)
             return
 
         raw_payloads = []
@@ -308,12 +334,12 @@ class IMAP(EmailSource):
                     raw_payloads.append(part.get_payload())
                     break
             else:
-                logger.log_debug(
+                job_logger.log_debug(
                     message=f"Payload type {provider_data_type} not found in email payload.",
                 )
 
         if not raw_payloads:
-            logger.log_warning(
+            job_logger.log_warning(
                 message=f"Payload types {', '.join(provider_data_types)} not found in email payload.",
             )
             return
@@ -326,7 +352,7 @@ class IMAP(EmailSource):
             provider_type=provider_type,
         )
 
-    def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
+    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
         """Retrieve emails since an specific time, if provided."""
         self.open_session()
 
@@ -355,7 +381,7 @@ class IMAP(EmailSource):
 
         received_notifications = []
         for msg_id in msg_ids:
-            raw_notification = self.fetch_email(logger, msg_id, since)
+            raw_notification = self.fetch_email(job_logger, msg_id, since)
             if raw_notification:
                 received_notifications.append(raw_notification)
 
@@ -363,16 +389,13 @@ class IMAP(EmailSource):
         return received_notifications
 
 
-class GmailAPIServiceAccount(EmailSource):
-    """GmailAPIServiceAccount class.
-
-    See: https://developers.google.com/gmail/api/reference/rest/v1/users.messages
-    """
+class GmailAPI(EmailSource):
+    """GmailAPI class."""
 
     credentials_file: str
     account: str
     service: Optional[Resource] = None
-    credentials: Optional[service_account.Credentials] = None
+    credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
@@ -382,12 +405,8 @@ class GmailAPIServiceAccount(EmailSource):
         arbitrary_types_allowed = True
 
     def load_credentials(self):
-        """Load Gmail API Service Account credentials."""
-        if not self.credentials:
-            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
-            self.credentials = self.credentials.with_scopes(self.SCOPES)
-            self.credentials = self.credentials.with_subject(self.account)
-            self.credentials.refresh(Request())
+        """Load Credentials for Gmail API."""
+        raise NotImplementedError
 
     def build_service(self):
         """Build API service."""
@@ -419,7 +438,7 @@ class GmailAPIServiceAccount(EmailSource):
         return b""
 
     # pylint: disable=inconsistent-return-statements,too-many-locals,too-many-branches, too-many-nested-blocks
-    def fetch_email(self, logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
@@ -449,18 +468,18 @@ class GmailAPIServiceAccount(EmailSource):
 
         if since:
             if int(received_email["internalDate"]) < since:
-                logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
+                job_logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
                 return
 
         email_source_before = email_source
         email_source = self.extract_email_source(email_source)
         if not email_source:
-            logger.log_failure(message=f"Not possible to determine the email sender: {email_source_before}")
+            job_logger.log_failure(message=f"Not possible to determine the email sender: {email_source_before}")
             return
 
         provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
         if not provider_data_types:
-            logger.log_warning(message=error_message)
+            job_logger.log_warning(message=error_message)
             return
 
         raw_payloads = []
@@ -470,7 +489,7 @@ class GmailAPIServiceAccount(EmailSource):
                 raw_payloads.append(raw_payload)
 
         if not raw_payloads:
-            logger.log_warning(
+            job_logger.log_warning(
                 message=f"Payload types {provider_data_types} not found in email payload.",
             )
             return
@@ -483,7 +502,7 @@ class GmailAPIServiceAccount(EmailSource):
             provider_type=provider_type,
         )
 
-    def receive_notifications(self, logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
+    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
         """Retrieve emails since an specific time, if provided."""
         self.load_credentials()
         self.build_service()
@@ -508,7 +527,7 @@ class GmailAPIServiceAccount(EmailSource):
 
         received_notifications = []
         for msg_id in msg_ids:
-            raw_notification = self.fetch_email(logger, msg_id, since)
+            raw_notification = self.fetch_email(job_logger, msg_id, since)
             if raw_notification:
                 received_notifications.append(raw_notification)
 
@@ -516,8 +535,56 @@ class GmailAPIServiceAccount(EmailSource):
         return received_notifications
 
 
+class RedirectAuthorize(Exception):
+    """Custom class to signal a redirect to trigger OAuth autorization workflow for a specific source_slug."""
+
+    def __init__(self, url_name, source_slug):
+        """Init for RedirectAuthorize."""
+        self.url_name = url_name
+        self.source_slug = source_slug
+        super().__init__()
+
+
+class GmailAPIOauth(GmailAPI):
+    """GmailAPIOauth class.
+
+    See: https://developers.google.com/identity/protocols/oauth2/web-server
+    """
+
+    def load_credentials(self):
+        """Load Gmail API OAuth credentials."""
+        notification_source = NotificationSource.objects.get(name=self.name)
+        try:
+            self.credentials = notification_source.token
+        except EOFError:
+            logger.debug("Google OAuth Token has not been initialized yet.")
+
+        if not self.credentials or not self.credentials.valid:
+            if self.credentials and self.credentials.expired and self.credentials.refresh_token:
+                self.credentials.refresh(Request())
+                notification_source.token = self.credentials
+                notification_source.save()
+            else:
+                raise RedirectAuthorize(
+                    url_name="google_authorize",
+                    source_slug=slugify(self.name),
+                )
+
+
+class GmailAPIServiceAccount(GmailAPI):
+    """GmailAPIServiceAccount class."""
+
+    def load_credentials(self):
+        """Load Gmail API Service Account credentials."""
+        if not self.credentials:
+            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
+            self.credentials = self.credentials.with_scopes(self.SCOPES)
+            self.credentials = self.credentials.with_subject(self.account)
+            self.credentials.refresh(Request())
+
+
 def get_notifications(
-    logger: Job, notification_sources: Iterable[NotificationSource], since: int = None
+    job_logger: Job, notification_sources: Iterable[NotificationSource], since: int = None
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch notifications from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
@@ -532,7 +599,7 @@ def get_notifications(
             try:
                 source = Source.init(name=notification_source.name)
             except ValidationError as validation_error:
-                logger.log_warning(
+                job_logger.log_warning(
                     message=(
                         f"Notification Source {notification_source.name} is not matching class expectations: "
                         f"{validation_error}"
@@ -540,15 +607,15 @@ def get_notifications(
                 )
                 continue
             except ValueError as value_error:
-                logger.log_warning(message=value_error)
+                job_logger.log_warning(message=value_error)
                 continue
 
-            if source.validate_providers(logger, notification_source, since_txt):
-                raw_notifications = source.receive_notifications(logger, since)
+            if source.validate_providers(job_logger, notification_source, since_txt):
+                raw_notifications = source.receive_notifications(job_logger, since)
                 received_notifications.extend(raw_notifications)
 
                 if not raw_notifications:
-                    logger.log_info(
+                    job_logger.log_info(
                         message=(
                             f"No notifications received for "
                             f"{', '.join(notification_source.providers.all().values_list('name', flat=True))} since "
@@ -557,7 +624,7 @@ def get_notifications(
                     )
 
         except Exception as error:
-            logger.log_warning(
+            job_logger.log_warning(
                 message=f"Issue fetching notifications from {notification_source.name}: {error}",
             )
 

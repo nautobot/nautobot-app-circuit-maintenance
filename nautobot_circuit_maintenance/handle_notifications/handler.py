@@ -273,7 +273,7 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         try:
             notifications = get_notifications(
-                logger=self,
+                job_logger=self,
                 notification_sources=notification_sources,
                 since=last_time_processed,
             )
