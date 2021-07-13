@@ -389,7 +389,8 @@ def google_oauth2callback(request):
 
     try:
         notification_source = models.NotificationSource.objects.get(slug=source_slug)
-        notification_source.set_token(credentials)
+        notification_source.token = credentials
+        notification_source.save()
     except models.NotificationSource.DoesNotExist:
         logger.warning("Google OAuth callback for %s is not matching any existing NotificationSource", source_slug)
 

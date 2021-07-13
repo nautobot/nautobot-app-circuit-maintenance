@@ -194,14 +194,15 @@ class NotificationSource(OrganizationalModel):
         """Return fields for bulk view."""
         return (self.name, self.slug, self.providers)
 
-    def set_token(self, value):
+    @property
+    def token(self):
         """Getter for _token."""
-        self._token = pickle.dumps(value)
-        self.save()
-
-    def get_token(self):
-        """Setter for _token."""
         return pickle.loads(self._token)  # nosec
+
+    @token.setter
+    def token(self, value):
+        """Setter for _token."""
+        self._token = pickle.dumps(value)
 
 
 @extras_features(

@@ -555,14 +555,15 @@ class GmailAPIOauth(GmailAPI):
         """Load Gmail API OAuth credentials."""
         notification_source = NotificationSource.objects.get(name=self.name)
         try:
-            self.credentials = notification_source.get_token()
+            self.credentials = notification_source.token
         except EOFError:
             logger.debug("Google OAuth Token has not been initialized yet.")
 
         if not self.credentials or not self.credentials.valid:
             if self.credentials and self.credentials.expired and self.credentials.refresh_token:
                 self.credentials.refresh(Request())
-                notification_source.set_token(self.credentials)
+                notification_source.token = self.credentials
+                notification_source.save()
             else:
                 raise RedirectAuthorize(
                     url_name="google_authorize",
