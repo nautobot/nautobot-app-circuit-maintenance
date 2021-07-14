@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.1.5"
+version = "0.1.6"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
