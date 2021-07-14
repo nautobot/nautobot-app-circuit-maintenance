@@ -309,10 +309,16 @@ PLUGINS_CONFIG = {
                 "url": os.environ.get("CM_NS_1_URL", ""),
             },
             {
-                "name": "my gmail api source",
+                "name": "my gmail service account api source",
                 "url": os.environ.get("CM_NS_2_URL", ""),
                 "account": os.environ.get("CM_NS_2_ACCOUNT", ""),
                 "credentials_file": os.environ.get("CM_NS_2_CREDENTIALS_FILE", ""),
+            },
+            {
+                "name": "my gmail oauth api source",
+                "url": os.environ.get("CM_NS_3_URL", ""),
+                "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
             },
         ]
     }

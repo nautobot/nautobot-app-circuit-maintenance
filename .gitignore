@@ -304,4 +304,4 @@ demo/
 
 # Secrets
 development/creds.env
-development/gmail_service_account_credentials.json
+development/*_credentials.json

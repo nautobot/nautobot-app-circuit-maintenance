@@ -59,7 +59,17 @@
     created: 2021-05-06
     last_updated: 2021-05-06 05:19:11.314056+00:00
     _custom_field_data: {}
-    name: "source gmail api"
-    slug: "source-gmail-api"
+    name: "source gmail api service account"
+    slug: "source-gmail-api-service-account"
+    providers:
+      - 0ec89992-0de0-483f-8f53-bdcd179eaecd
+- model: nautobot_circuit_maintenance.notificationsource
+  pk: d08e7c43-f856-4ac9-a30e-11e263cc5954
+  fields:
+    created: 2021-05-06
+    last_updated: 2021-05-06 05:19:11.314056+00:00
+    _custom_field_data: {}
+    name: "source gmail api oauth"
+    slug: "source-gmail-api-oauth"
     providers:
       - 0ec89992-0de0-483f-8f53-bdcd179eaecd
