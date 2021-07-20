@@ -6,6 +6,7 @@ import re
 import datetime
 import email
 import json
+import traceback
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
 from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
@@ -624,8 +625,9 @@ def get_notifications(
                     )
 
         except Exception as error:
-            job_logger.log_warning(
-                message=f"Issue fetching notifications from {notification_source.name}: {error}",
+            stacktrace = traceback.format_exc()
+            job_logger.log_failure(
+                message=f"Issue fetching notifications from {notification_source.name}: {error}\n```\n{stacktrace}\n```",
             )
 
     return received_notifications
