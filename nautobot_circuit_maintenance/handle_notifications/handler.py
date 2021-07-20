@@ -194,16 +194,16 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             break
         except ParsingError as exc:
             tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-            logger.log_debug(message=f"Parsing failed for notification {notification.subject}:.\n{tb_str}")
+            logger.log_debug(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
         except Exception as exc:
             tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
             logger.log_debug(
-                message=f"Unexpected exception while parsing notification {notification.subject}.\n{tb_str}"
+                message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
             )
     else:
         parsed_notifications = []
         raw_payload = b""
-        logger.log_warning(message=f"Parsed failed for all the raw payloads for '{notification.subject}'.")
+        logger.log_warning(message=f"Parsed failed for all the raw payloads for `{notification.subject}`.")
 
     if isinstance(raw_payload, str):
         raw_payload = raw_payload.encode("utf-8")
@@ -282,7 +282,7 @@ class HandleCircuitMaintenanceNotifications(Job):
                 return raw_notification_ids
 
             for notification in notifications:
-                self.log_info(message=f"Processing notification {notification.subject}.")
+                self.log_info(message=f"Processing notification `{notification.subject}`.")
                 raw_id = process_raw_notification(self, notification)
                 if raw_id:
                     raw_notification_ids.append(raw_id)
