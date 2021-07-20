@@ -254,7 +254,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
         """
         for provider in Provider.objects.all():
-            if "emails_circuit_maintenances" in provider.custom_field_data:
+            if provider.custom_field_data.get("emails_circuit_maintenances"):
                 if email_source in provider.custom_field_data["emails_circuit_maintenances"].split(","):
                     provider_type = provider.slug
                     break
