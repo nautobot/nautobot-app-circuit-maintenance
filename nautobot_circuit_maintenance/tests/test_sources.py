@@ -128,7 +128,7 @@ class TestEmailSource(TestCase):
             (
                 "",
                 "",
-                f"Unexpected provider {provider_type} received from {email_source}, so not getting the notification",
+                f"{email_source} is for provider type `{provider_type}`, not presently supported",
             ),
         )
 
@@ -152,7 +152,7 @@ class TestEmailSource(TestCase):
             (
                 data_types if not error_message else "",
                 provider_type if not error_message else "",
-                f"Unexpected provider unknown received from {email_source}, so not getting the notification"
+                f"{email_source} is for provider type `{provider_type}`, not presently supported"
                 if error_message
                 else "",
             ),
