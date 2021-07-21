@@ -255,7 +255,9 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         """
         for provider in Provider.objects.all():
             if provider.custom_field_data.get("emails_circuit_maintenances"):
-                if email_source in provider.custom_field_data["emails_circuit_maintenances"].split(","):
+                if email_source in [
+                    source.strip() for source in provider.custom_field_data["emails_circuit_maintenances"].split(",")
+                ]:
                     provider_type = provider.slug
                     break
         else:
@@ -267,7 +269,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             return (
                 "",
                 "",
-                f"Unexpected provider {provider_type} received from {email_source}, so not getting the notification",
+                f"{email_source} is for provider type `{provider_type}`, not presently supported",
             )
 
         return provider_data_types, provider_type, ""
