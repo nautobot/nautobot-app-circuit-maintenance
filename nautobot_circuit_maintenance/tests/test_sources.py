@@ -100,6 +100,7 @@ class TestEmailSource(TestCase):
             ["user@example.com", "user@example.com"],
             ["<user@example.com>", "user@example.com"],
             ["user <user@example.com>", "user@example.com"],
+            ["No-reply via mailing list <mailing-list@example.com>", "mailing-list@example.com"],
         ]  # pylint: disable=too-many-arguments
     )
     def test_extract_email_source(self, email_source, email_source_output):

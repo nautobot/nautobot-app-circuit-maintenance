@@ -234,10 +234,10 @@ class EmailSource(Source):  # pylint: disable=abstract-method
     def extract_email_source(email_source: str) -> str:
         """Method to get the sender email address."""
         try:
-            email_source = re.search(r"\<([A-Za-z0-9_@.]+)\>", email_source).group(1)
+            email_source = re.search(r"\<([-A-Za-z0-9_@.]+)\>", email_source).group(1)
         except AttributeError:
             try:
-                email_source = re.search(r"([A-Za-z0-9_@.]+)", email_source).group(1)
+                email_source = re.search(r"([-A-Za-z0-9_@.]+)", email_source).group(1)
             except AttributeError:
                 return ""
         return email_source
