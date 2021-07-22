@@ -32,6 +32,7 @@ Extra configuration to define notification sources is defined in the [Usage](#Us
 ```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
+        "source_header": "X-Original-From",  # optional, see below
         "notification_sources": [
             {
               ...
@@ -41,23 +42,23 @@ PLUGINS_CONFIG = {
 }
 ```
 
-## Usage
+- The `source_header` setting is used to optionally specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-From` instead.
 
-All the plugin configuration is done via UI, under the **Plugins** tab, in the **Circuit Maintenance** sections.
+## Usage
 
 ### 1. Define source emails per Provider
 
-Each Circuit **Provider**, that we would like to track via the Circuit Maintenance plugin, requires at least one email address under the `Custom Fields` -> `Emails for Circuit Maintenance plugin` section.
+In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance plugin, we must configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance plugin** field.
 
-These are the source email addresses that the plugin will check and use to classify each notification for each specific provider.
+These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
 
 ### 2. Configure Notification Sources
 
 Notification Sources are defined in two steps:
 
-#### 2.1 Define Notification Sources in `configuration.py`
+#### 2.1 Define Notification Sources in `nautobot_config.py`
 
-In the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should define the Notification Sources that will be able later in the UI, where you will be able to **validate** if the authentication credentials provided are working fine or not.
+In `nautobot_config.py`, in the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should define the Notification Sources that will be able later in the UI, where you will be able to **validate** if the authentication credentials provided are working fine or not.
 
 There are two mandatory attributes (other keys are dependent on the integration type, and will be documented below):
 
@@ -136,11 +137,16 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 
 > For OAuth integration, it's recommendable that, at least the first time, you run a manual **Validate** of the Notification Source to complete the OAuth authentication workflow, identifying your Google credentials.
 
+> Typically the `url` setting to configure in your `nautobot_config.py` for use with OAuth integration will be `"https://accounts.google.com/o/oauth2/auth"`.
+
+
 #### 2.2 Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
+
+> Note that for emails from a given Provider to be processed, you must *both* define a source email address(es) for that Provider (Usage section 1, above) *and* add that provider to a specific Notification Source as described in this section.
 
 ### 3. Run Handle Notifications Job
 
