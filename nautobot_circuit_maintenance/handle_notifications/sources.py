@@ -515,6 +515,7 @@ class GmailAPI(EmailSource):
             )
             return None
 
+        job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
         return MaintenanceNotification(
             source=self.name,
             sender=email_source,
@@ -545,12 +546,15 @@ class GmailAPI(EmailSource):
             .execute()
         )
         msg_ids = [msg["id"] for msg in res.get("messages", [])]
+        job_logger.log_debug(message=f"Processing messages {msg_ids}")
 
         received_notifications = []
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(job_logger, msg_id, since)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
+        job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
 
         self.close_service()
         return received_notifications
