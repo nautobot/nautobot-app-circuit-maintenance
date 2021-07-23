@@ -182,6 +182,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         )
         return None
 
+    raw_payload = b""
     for raw_payload in notification.raw_payloads:
         parser = init_provider(raw=raw_payload, provider_type=notification.provider_type)
         if not parser:
@@ -201,8 +202,10 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             )
     else:
         parsed_notifications = []
-        raw_payload = b""
         logger.log_warning(message=f"Parsed failed for all the raw payloads for `{notification.subject}`.")
+        # Carry on with the last raw_payload in the list, if any
+        if not raw_payload:
+            return None
 
     if isinstance(raw_payload, str):
         raw_payload = raw_payload.encode("utf-8")
