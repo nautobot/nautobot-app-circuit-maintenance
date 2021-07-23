@@ -332,7 +332,7 @@ class IMAP(EmailSource):
         source_header = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["source_header"]
         email_source = self.extract_email_source(email_message[source_header])
         if not email_source:
-            job_logger.log_failure(
+            job_logger.log_warning(
                 message="Not possible to determine the email sender from "
                 f'"{source_header}: {email_message[source_header]}"'
             )
@@ -487,7 +487,7 @@ class GmailAPI(EmailSource):
         email_source_before = email_source
         email_source = self.extract_email_source(email_source)
         if not email_source:
-            job_logger.log_failure(message=f"Not possible to determine the email sender: {email_source_before}")
+            job_logger.log_warning(message=f'Not possible to determine the email sender from "{email_source_before}"')
             return None
 
         provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
@@ -561,7 +561,7 @@ class GmailAPI(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
+        # job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
 
         self.close_service()
         return received_notifications

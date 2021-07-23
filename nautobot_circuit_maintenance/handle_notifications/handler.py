@@ -193,10 +193,10 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             parsed_notifications = parser.process()
             break
         except ParsingError as exc:
-            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            tb_str = traceback.format_exc()
             logger.log_debug(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
         except Exception as exc:
-            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+            tb_str = traceback.format_exc()
             logger.log_debug(
                 message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
             )
@@ -217,7 +217,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             sender=notification.sender,
             source=NotificationSource.objects.filter(name=notification.source).last(),
         )
-    except OperationalError as exc:
+    except Exception as exc:
         logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
         return None
 
