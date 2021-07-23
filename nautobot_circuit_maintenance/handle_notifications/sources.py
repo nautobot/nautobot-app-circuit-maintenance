@@ -200,7 +200,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             cm_cf = CustomField.objects.get(name="emails_circuit_maintenances")
             provider_emails = provider.get_custom_fields().get(cm_cf)
             if provider_emails:
-                self.emails_to_fetch.extend(provider_emails.split(","))
+                self.emails_to_fetch.extend([src.strip().lower() for src in provider_emails.split(",")])
                 providers_with_email.append(provider.name)
             else:
                 providers_without_email.append(provider.name)
@@ -221,6 +221,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
             return False
 
+        job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
                 f"Retrieving notifications from {notification_source.name} for "
@@ -384,6 +385,7 @@ class IMAP(EmailSource):
 
         if self.emails_to_fetch:
             for sender in self.emails_to_fetch:
+                # TODO this needs to take configured `source_header` into account
                 search_items = (f'FROM "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
@@ -535,7 +537,8 @@ class GmailAPI(EmailSource):
             search_criteria = f'after:"{since_txt}"'
 
         if self.emails_to_fetch:
-            emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
+            source_header = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["source_header"]
+            emails_with_from = [f"{source_header}:{email}" for email in self.emails_to_fetch]
             search_criteria += f'({" OR ".join(emails_with_from)})'
 
         # TODO: For now not covering pagination as a way to limit the number of messages
