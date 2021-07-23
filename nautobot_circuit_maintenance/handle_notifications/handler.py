@@ -3,7 +3,6 @@ import datetime
 import traceback
 from typing import Union
 from django.conf import settings
-from django.db import OperationalError
 from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job
@@ -192,10 +191,10 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         try:
             parsed_notifications = parser.process()
             break
-        except ParsingError as exc:
+        except ParsingError:
             tb_str = traceback.format_exc()
             logger.log_debug(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
-        except Exception as exc:
+        except Exception:
             tb_str = traceback.format_exc()
             logger.log_debug(
                 message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
