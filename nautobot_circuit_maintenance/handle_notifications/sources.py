@@ -221,7 +221,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
             return False
 
-        job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
+        # job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
                 f"Retrieving notifications from {notification_source.name} for "
@@ -507,6 +507,11 @@ class GmailAPI(EmailSource):
 
         raw_payloads = []
         for provider_data_type in provider_data_types:
+            if "parts" not in received_email["payload"]:
+                job_logger.log_warning(
+                    message=f"No payload parts in message {email_subject}: {list(received_email['payload'].keys())}"
+                )
+                continue
             raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
             if raw_payload:
                 raw_payloads.append(raw_payload)
@@ -551,7 +556,6 @@ class GmailAPI(EmailSource):
             .execute()
         )
         msg_ids = [msg["id"] for msg in res.get("messages", [])]
-        job_logger.log_debug(message=f"Processing messages {msg_ids}")
 
         received_notifications = []
         for msg_id in msg_ids:
