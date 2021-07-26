@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.7 - 2021-07-27
+
+### Added
+
+- #42:
+    - Add stack trace to job log on exception
+    - IMAP and GMail notification sources now support a `source_header` configuration parameter to allow for cases where `From` is not the relevant header to inspect.
+
+
+### Fixed
+
+- #42:
+    - Avoid an exception if some Providers do not have a populated `emails_circuit_maintenance` value
+    - `extract_email_source()` now correctly handles email addresses containing dash characters.
+    - Avoid an exception on processing a non-multipart email payload
+    - Don't try to create a `RawNotification` if no `raw_payload` could be extracted from the notification.
+
 ## v0.1.6 - 2021-07-14
 
 ### Added
