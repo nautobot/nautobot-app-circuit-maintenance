@@ -1,15 +1,22 @@
 """Test sourcess utils."""
+import base64
+from email.message import EmailMessage
+import json
 import os
 from unittest.mock import Mock, patch
-import json
+import uuid
+
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from parameterized import parameterized
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+
 from nautobot.circuits.models import Provider
+from nautobot.extras.jobs import Job
+from nautobot.extras.models import JobResult, Job as JobModel
 
 from nautobot_circuit_maintenance.models import NotificationSource
-
 from nautobot_circuit_maintenance.handle_notifications.sources import (
     GmailAPIOauth,
     GmailAPI,
@@ -51,11 +58,10 @@ class TestSource(TestCase):
 
     def setUp(self):
         """Prepare data for tests."""
-        settings.PLUGINS_CONFIG = {
-            "nautobot_circuit_maintenance": {
-                "notification_sources": [SOURCE_IMAP.copy(), SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy()]
-            }
-        }
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"] = [
+            SOURCE_IMAP.copy(),
+            SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy(),
+        ]
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(
             name__in=[SOURCE_IMAP["name"], SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]
@@ -100,6 +106,7 @@ class TestEmailSource(TestCase):
             ["user@example.com", "user@example.com"],
             ["<user@example.com>", "user@example.com"],
             ["user <user@example.com>", "user@example.com"],
+            ["No-reply via mailing list <mailing-list@example.com>", "mailing-list@example.com"],
         ]  # pylint: disable=too-many-arguments
     )
     def test_extract_email_source(self, email_source, email_source_output):
@@ -128,7 +135,7 @@ class TestEmailSource(TestCase):
             (
                 "",
                 "",
-                f"Unexpected provider {provider_type} received from {email_source}, so not getting the notification",
+                f"{email_source} is for provider type `{provider_type}`, which is not presently supported",
             ),
         )
 
@@ -152,11 +159,25 @@ class TestEmailSource(TestCase):
             (
                 data_types if not error_message else "",
                 provider_type if not error_message else "",
-                f"Unexpected provider unknown received from {email_source}, so not getting the notification"
+                f"{email_source} is for provider type `{provider_type}`, which is not presently supported"
                 if error_message
                 else "",
             ),
         )
+
+    def test_extract_provider_data_types_multiple_sources(self):
+        """Test for extract_provider_data_types with multiple sources defined in the custom field data."""
+        email_sources = ["user@example.com", "another-user@example.com"]
+        provider = Provider.objects.create(name="ntt", slug="ntt")
+        # User-inputted custom field values can be messy - we're testing that here!
+        provider.cf["emails_circuit_maintenances"] = " user@example.com, Another-User@example.com, "
+        provider.save()
+
+        for email_source in email_sources:
+            self.assertEqual(
+                EmailSource.extract_provider_data_types(email_source),
+                ({"text/calendar"}, "ntt", ""),
+            )
 
 
 class TestIMAPSource(TestCase):
@@ -170,7 +191,7 @@ class TestIMAPSource(TestCase):
 
     def setUp(self):
         """Prepare data for tests."""
-        settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [SOURCE_IMAP.copy()]}}
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"] = [SOURCE_IMAP.copy()]
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(name__in=[SOURCE_IMAP["name"]]).delete()
         self.source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
@@ -316,6 +337,70 @@ class TestIMAPSource(TestCase):
         else:
             IMAP(**kwargs)
 
+    def test_process_email_success(self):
+        """Test successful processing of a single email into a MaintenanceNotification."""
+        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+
+        source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+
+        job = Job()
+        job.job_result = JobResult.objects.create(
+            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
+        )
+
+        email_message = EmailMessage()
+        email_message["From"] = "User <user@example.com>"
+        email_message["Subject"] = "Circuit Maintenance Notification"
+        email_message["Content-Type"] = "text/html"
+        email_message.set_payload("Some text goes here")
+
+        notification = source.process_email(job, email_message)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "User <user@example.com>")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, "zayo")
+        self.assertEqual(list(notification.raw_payloads), ["Some text goes here"])
+
+    def test_process_email_success_alternate_source_header(self):
+        """Test successful processing of a single email with a non-standard source header."""
+        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+
+        source = IMAP(
+            name="whatever",
+            url="imap://localhost",
+            account="account",
+            password="pass",
+            imap_server="localhost",
+            source_header="X-Original-Sender",
+        )
+
+        job = Job()
+        job.job_result = JobResult.objects.create(
+            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
+        )
+
+        email_message = EmailMessage()
+        email_message["From"] = "Mailing List <mailing-list@example.com>"
+        email_message["X-Original-Sender"] = "User <user@example.com>"
+        email_message["Subject"] = "Circuit Maintenance Notification"
+        email_message["Content-Type"] = "text/html"
+        email_message.set_payload("Some text goes here")
+
+        notification = source.process_email(job, email_message)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "User <user@example.com>")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, "zayo")
+        self.assertEqual(list(notification.raw_payloads), ["Some text goes here"])
+
 
 class TestGmailAPISource(TestCase):
     """Test case for GmailAPI Source."""
@@ -328,11 +413,10 @@ class TestGmailAPISource(TestCase):
 
     def setUp(self):
         """Prepare data for tests."""
-        settings.PLUGINS_CONFIG = {
-            "nautobot_circuit_maintenance": {
-                "notification_sources": [SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy(), SOURCE_GMAIL_API_OAUTH.copy()]
-            }
-        }
+        settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"] = [
+            SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy(),
+            SOURCE_GMAIL_API_OAUTH.copy(),
+        ]
         # Deleting other NotificationSource and Provider to define a reliable state.
         NotificationSource.objects.exclude(name__in=[SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]).delete()
         self.source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
@@ -500,3 +584,83 @@ class TestGmailAPISource(TestCase):
         res, message = source.test_authentication()
         self.assertEqual(res, False)
         self.assertEqual(message, "error message")
+
+    @staticmethod
+    def email_setup():
+        """Helper method for several test cases below."""
+        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+
+        job = Job()
+        job.job_result = JobResult.objects.create(
+            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
+        )
+
+        source = GmailAPI(
+            name="whatever",
+            url="https://accounts.google.com/o/oauth2/auth",
+            account="account",
+            credentials_file="path_to_file",
+        )
+
+        return (provider, job, source)
+
+    def test_process_email_success(self):
+        """Test successful processing of a single email into a MaintenanceNotification."""
+        provider, job, source = self.email_setup()
+
+        received_email = {
+            "payload": {
+                "headers": [
+                    {"name": "Subject", "value": "Circuit Maintenance Notification"},
+                    {"name": "From", "value": "user@example.com"},
+                ],
+                "parts": [
+                    {
+                        "headers": [{"name": "Content-Type", "value": "text/html"}],
+                        "body": {"data": base64.b64encode(b"Some text goes here")},
+                    }
+                ],
+            },
+            "internalDate": 1000,
+        }
+
+        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "user@example.com")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, provider.slug)
+        self.assertEqual(list(notification.raw_payloads), [b"Some text goes here"])
+
+    def test_process_email_success_alternate_source_header(self):
+        """Test successful processing of a single email with a non-standard source header."""
+        provider, job, source = self.email_setup()
+
+        source.source_header = "X-Original-Sender"
+
+        received_email = {
+            "payload": {
+                "headers": [
+                    {"name": "Subject", "value": "Circuit Maintenance Notification"},
+                    {"name": "From", "value": "mailing-list@example.com"},
+                    {"name": "X-Original-Sender", "value": "user@example.com"},
+                ],
+                "parts": [
+                    {
+                        "headers": [{"name": "Content-Type", "value": "text/html"}],
+                        "body": {"data": base64.b64encode(b"Some text goes here")},
+                    }
+                ],
+            },
+            "internalDate": 1000,
+        }
+
+        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "user@example.com")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, provider.slug)
+        self.assertEqual(list(notification.raw_payloads), [b"Some text goes here"])

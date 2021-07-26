@@ -44,9 +44,11 @@
       <tr>
       <td>Providers</td>
       <td>
-      {% for provider in providers %}
-              <a href="{% url 'circuits:provider' slug=provider.slug %}">{{ provider.name }} </a>
-      {% endfor %}
+          <ul>
+              {% for provider in providers %}
+                  <li><a href="{% url 'circuits:provider' slug=provider.slug %}">{{ provider.name }}</a></li>
+              {% endfor %}
+          </ul>
       </td>
       </tr>
       {% if authentication_message %}
