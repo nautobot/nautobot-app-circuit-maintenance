@@ -8,7 +8,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from parameterized import parameterized
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 
@@ -373,7 +373,12 @@ class TestIMAPSource(TestCase):
         provider.save()
 
         source = IMAP(
-            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+            name="whatever",
+            url="imap://localhost",
+            account="account",
+            password="pass",
+            imap_server="localhost",
+            source_header="X-Original-Sender",
         )
 
         job = Job()
@@ -383,26 +388,18 @@ class TestIMAPSource(TestCase):
 
         email_message = EmailMessage()
         email_message["From"] = "Mailing List <mailing-list@example.com>"
-        email_message["X-Original-From"] = "User <user@example.com>"
+        email_message["X-Original-Sender"] = "User <user@example.com>"
         email_message["Subject"] = "Circuit Maintenance Notification"
         email_message["Content-Type"] = "text/html"
         email_message.set_payload("Some text goes here")
 
-        with override_settings(
-            PLUGINS_CONFIG={
-                "nautobot_circuit_maintenance": {
-                    "source_header": "X-Original-From",
-                    "notification_sources": [SOURCE_IMAP.copy()],
-                }
-            }
-        ):
-            notification = source.process_email(job, email_message)
-            self.assertIsNotNone(notification)
-            self.assertEqual(notification.source, source.name)
-            self.assertEqual(notification.sender, "User <user@example.com>")
-            self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-            self.assertEqual(notification.provider_type, "zayo")
-            self.assertEqual(list(notification.raw_payloads), ["Some text goes here"])
+        notification = source.process_email(job, email_message)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "User <user@example.com>")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, "zayo")
+        self.assertEqual(list(notification.raw_payloads), ["Some text goes here"])
 
 
 class TestGmailAPISource(TestCase):
@@ -641,35 +638,29 @@ class TestGmailAPISource(TestCase):
         """Test successful processing of a single email with a non-standard source header."""
         provider, job, source = self.email_setup()
 
-        with override_settings(
-            PLUGINS_CONFIG={
-                "nautobot_circuit_maintenance": {
-                    "source_header": "X-Original-From",
-                    "notification_sources": [SOURCE_GMAIL_API_SERVICE_ACCOUNT.copy(), SOURCE_GMAIL_API_OAUTH.copy()],
-                }
-            }
-        ):
-            received_email = {
-                "payload": {
-                    "headers": [
-                        {"name": "Subject", "value": "Circuit Maintenance Notification"},
-                        {"name": "From", "value": "mailing-list@example.com"},
-                        {"name": "X-Original-From", "value": "user@example.com"},
-                    ],
-                    "parts": [
-                        {
-                            "headers": [{"name": "Content-Type", "value": "text/html"}],
-                            "body": {"data": base64.b64encode(b"Some text goes here")},
-                        }
-                    ],
-                },
-                "internalDate": 1000,
-            }
+        source.source_header = "X-Original-Sender"
 
-            notification = source.process_email(job, received_email, msg_id="abc", since=0)
-            self.assertIsNotNone(notification)
-            self.assertEqual(notification.source, source.name)
-            self.assertEqual(notification.sender, "user@example.com")
-            self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-            self.assertEqual(notification.provider_type, provider.slug)
-            self.assertEqual(list(notification.raw_payloads), [b"Some text goes here"])
+        received_email = {
+            "payload": {
+                "headers": [
+                    {"name": "Subject", "value": "Circuit Maintenance Notification"},
+                    {"name": "From", "value": "mailing-list@example.com"},
+                    {"name": "X-Original-Sender", "value": "user@example.com"},
+                ],
+                "parts": [
+                    {
+                        "headers": [{"name": "Content-Type", "value": "text/html"}],
+                        "body": {"data": base64.b64encode(b"Some text goes here")},
+                    }
+                ],
+            },
+            "internalDate": 1000,
+        }
+
+        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "user@example.com")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, provider.slug)
+        self.assertEqual(list(notification.raw_payloads), [b"Some text goes here"])

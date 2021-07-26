@@ -61,9 +61,7 @@ class CircuitMaintenanceConfig(PluginConfig):
     min_version = "1.0.0-beta.4"
     max_version = "1.999"
     required_settings = []
-    default_settings = {
-        "source_header": "From",
-    }
+    default_settings = {}
     caching_config = {}
 
     def ready(self):

@@ -138,6 +138,7 @@ class Source(BaseModel):
                 password=config.get("secret"),
                 imap_server=url_components.netloc.split(":")[0],
                 imap_port=url_components.port or 993,
+                source_header=config.get("source_header", "From"),
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
             creds_filename = config.get("credentials_file")
@@ -160,6 +161,7 @@ class Source(BaseModel):
                     url=url,
                     account=config.get("account"),
                     credentials_file=creds_filename,
+                    source_header=config.get("source_header", "From"),
                 )
 
         raise ValueError(
@@ -172,6 +174,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 
     account: str
     emails_to_fetch = []
+    source_header: str = "From"
 
     def get_account_id(self) -> str:
         """Method to get an identifier of the related account."""
@@ -329,12 +332,11 @@ class IMAP(EmailSource):
         self, job_logger: Job, email_message: email.message.EmailMessage
     ) -> Optional[MaintenanceNotification]:
         """Helper method for the fetch_email() method."""
-        source_header = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["source_header"]
-        email_source = self.extract_email_source(email_message[source_header])
+        email_source = self.extract_email_source(email_message[self.source_header])
         if not email_source:
             job_logger.log_warning(
                 message="Not possible to determine the email sender from "
-                f'"{source_header}: {email_message[source_header]}"'
+                f'"{self.source_header}: {email_message[self.source_header]}"'
             )
             return None
 
@@ -362,7 +364,7 @@ class IMAP(EmailSource):
 
         return MaintenanceNotification(
             source=self.name,
-            sender=email_message[source_header],
+            sender=email_message[self.source_header],
             subject=email_message["Subject"],
             raw_payloads=raw_payloads,
             provider_type=provider_type,
@@ -385,8 +387,10 @@ class IMAP(EmailSource):
 
         if self.emails_to_fetch:
             for sender in self.emails_to_fetch:
-                # TODO this needs to take configured `source_header` into account
-                search_items = (f'FROM "{sender}"', since_date)
+                if self.source_header == "From":
+                    search_items = (f'FROM "{sender}"', since_date)
+                else:
+                    search_items = (f'HEADER {self.source_header} "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
@@ -469,14 +473,13 @@ class GmailAPI(EmailSource):
         self, job_logger: Job, received_email: Dict, msg_id: bytes, since: Optional[int]
     ) -> Optional[MaintenanceNotification]:
         """Helper method for the fetch_email() method."""
-        source_header = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["source_header"]
         email_subject = ""
         email_source = ""
 
         for header in received_email["payload"]["headers"]:
             if header.get("name") == "Subject":
                 email_subject = header["value"]
-            elif header.get("name") == source_header:
+            elif header.get("name") == self.source_header:
                 email_source = header["value"]
 
         if since:
@@ -541,8 +544,7 @@ class GmailAPI(EmailSource):
 
         # If source_header is not "from" but some other custom header such as X-Original-Sender,
         # the GMail API doesn't let us filter by that.
-        source_header = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["source_header"]
-        if self.emails_to_fetch and source_header.lower() == "from":
+        if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
             search_criteria += f'({" OR ".join(emails_with_from)})'
 

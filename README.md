@@ -32,7 +32,6 @@ Extra configuration to define notification sources is defined in the [Usage](#Us
 ```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
-        "source_header": "X-Original-From",  # optional, see below
         "notification_sources": [
             {
               ...
@@ -41,8 +40,6 @@ PLUGINS_CONFIG = {
     }
 }
 ```
-
-- The `source_header` setting is used to optionally specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-From` instead.
 
 ## Usage
 
@@ -67,36 +64,18 @@ There are two mandatory attributes (other keys are dependent on the integration 
 
 > Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as URL scheme
 
-##### IMAP
+##### 2.1.1 IMAP
 
-There are 2 extra attributes:
+There are 2 extra required attributes:
 
 - `account`: Identifier (i.e. email address) to use to authenticate.
 - `secret`: Password to IMAP authentication.
 
 > Gmail example: [How to setup Gmail with App Passwords](https://support.google.com/accounts/answer/185833)
 
-```py
-PLUGINS_CONFIG = {
-    "nautobot_circuit_maintenance": {
-        "notification_sources": [
-            {
-                "name": "my custom name",
-                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
-                "secret": os.environ.get("CM_NS_1_SECRET", ""),
-                "url": os.environ.get("CM_NS_1_URL", ""),
-            }
-        ]
-    }
-}
-```
+There is also one optional attribute:
 
-##### Gmail API integrations
-
-There are 2 extra attributes:
-
-- `account`: Identifier (i.e. email address) to use to impersonate as service account.
-- `credentials_file`: JSON file containing all the necessary data to identify the API integration.
+- `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
 
 ```py
 PLUGINS_CONFIG = {
@@ -104,21 +83,49 @@ PLUGINS_CONFIG = {
         "notification_sources": [
             {
                 "name": "my custom name",
-                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
-                "credentials_file": os.environ.get("CM_NS_1_CREDENTIALS_FILE", ""),
-                "url": os.environ.get("CM_NS_1_URL", ""),
+                "account": os.getenv("CM_NS_1_ACCOUNT", ""),
+                "secret": os.getenv("CM_NS_1_SECRET", ""),
+                "url": os.getenv("CM_NS_1_URL", ""),
+                "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),  # optional
             }
         ]
     }
 }
 ```
 
-To enable Gmail API access, there are some common steps for either Service Account and OAuth authentication:
+##### 2.1.2 Gmail API integrations
+
+There are 2 extra required attributes:
+
+- `account`: Identifier (i.e. email address) to access via OAuth or to impersonate as service account.
+- `credentials_file`: JSON file containing all the necessary data to identify the API integration (see below).
+
+There is also one optional attribute:
+
+- `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
+
+```py
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "notification_sources": [
+            {
+                "name": "my custom name",
+                "account": os.getenv("CM_NS_1_ACCOUNT", ""),
+                "credentials_file": os.getenv("CM_NS_1_CREDENTIALS_FILE", ""),
+                "url": os.getenv("CM_NS_1_URL", ""),
+                "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),  # optional
+            }
+        ]
+    }
+}
+```
+
+To enable Gmail API access, there are some common steps for both Service Account and OAuth authentication:
 
 1. Create a **New Project** in [Google Cloud Console](https://console.cloud.google.com/).
 2. Under **APIs and Services**, enable **Gmail API** for the selected project.
 
-**Service Account**
+###### 2.1.2.1 Service Account
 
 To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en) integration:
 
@@ -127,7 +134,7 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
 6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
 
-**OAuth**
+###### 2.1.2.2 OAuth
 
 To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/web-server) integration:
 
