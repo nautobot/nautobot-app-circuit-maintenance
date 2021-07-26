@@ -6,6 +6,7 @@ import re
 import datetime
 import email
 import json
+import traceback
 from urllib.parse import urlparse
 from email.utils import mktime_tz, parsedate_tz
 from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
@@ -137,6 +138,7 @@ class Source(BaseModel):
                 password=config.get("secret"),
                 imap_server=url_components.netloc.split(":")[0],
                 imap_port=url_components.port or 993,
+                source_header=config.get("source_header", "From"),
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
             creds_filename = config.get("credentials_file")
@@ -159,6 +161,7 @@ class Source(BaseModel):
                     url=url,
                     account=config.get("account"),
                     credentials_file=creds_filename,
+                    source_header=config.get("source_header", "From"),
                 )
 
         raise ValueError(
@@ -171,6 +174,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 
     account: str
     emails_to_fetch = []
+    source_header: str = "From"
 
     def get_account_id(self) -> str:
         """Method to get an identifier of the related account."""
@@ -199,7 +203,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             cm_cf = CustomField.objects.get(name="emails_circuit_maintenances")
             provider_emails = provider.get_custom_fields().get(cm_cf)
             if provider_emails:
-                self.emails_to_fetch.extend(provider_emails.split(","))
+                self.emails_to_fetch.extend([src.strip().lower() for src in provider_emails.split(",")])
                 providers_with_email.append(provider.name)
             else:
                 providers_without_email.append(provider.name)
@@ -220,6 +224,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
             return False
 
+        # job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
                 f"Retrieving notifications from {notification_source.name} for "
@@ -233,13 +238,13 @@ class EmailSource(Source):  # pylint: disable=abstract-method
     def extract_email_source(email_source: str) -> str:
         """Method to get the sender email address."""
         try:
-            email_source = re.search(r"\<([A-Za-z0-9_@.]+)\>", email_source).group(1)
+            email_source = re.search(r"\<([-A-Za-z0-9_@.]+)\>", email_source).group(1)
         except AttributeError:
             try:
-                email_source = re.search(r"([A-Za-z0-9_@.]+)", email_source).group(1)
+                email_source = re.search(r"([-A-Za-z0-9_@.]+)", email_source).group(1)
             except AttributeError:
                 return ""
-        return email_source
+        return email_source.lower()
 
     @staticmethod
     def extract_provider_data_types(email_source: str) -> Tuple[str, str, str]:
@@ -252,11 +257,16 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 str: error_message, if there was an issue
             )
         """
+        email_source = email_source.lower()
         for provider in Provider.objects.all():
-            if "emails_circuit_maintenances" in provider.custom_field_data:
-                if email_source in provider.custom_field_data["emails_circuit_maintenances"].split(","):
-                    provider_type = provider.slug
-                    break
+            if not provider.custom_field_data.get("emails_circuit_maintenances"):
+                continue
+            sources = [
+                src.strip().lower() for src in provider.custom_field_data["emails_circuit_maintenances"].split(",")
+            ]
+            if email_source in sources:
+                provider_type = provider.slug
+                break
         else:
             return "", "", f"Sender email {email_source} is not registered for any circuit provider."
 
@@ -266,7 +276,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             return (
                 "",
                 "",
-                f"Unexpected provider {provider_type} received from {email_source}, so not getting the notification",
+                f"{email_source} is for provider type `{provider_type}`, which is not presently supported",
             )
 
         return provider_data_types, provider_type, ""
@@ -305,7 +315,6 @@ class IMAP(EmailSource):
         self.open_session()
         self.close_session()
 
-    # pylint: disable=inconsistent-return-statements
     def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
@@ -315,17 +324,26 @@ class IMAP(EmailSource):
         if since:
             if mktime_tz(parsedate_tz(email_message["Date"])) < since:
                 job_logger.log_info(message=f"'{email_message['Subject']}' email is old, so not taking into account.")
-                return
+                return None
 
-        email_source = self.extract_email_source(email_message["From"])
+        return self.process_email(job_logger, email_message)
+
+    def process_email(
+        self, job_logger: Job, email_message: email.message.EmailMessage
+    ) -> Optional[MaintenanceNotification]:
+        """Helper method for the fetch_email() method."""
+        email_source = self.extract_email_source(email_message[self.source_header])
         if not email_source:
-            job_logger.log_failure(message=f"Not possible to determine the email sender: {email_message['From']}")
+            job_logger.log_warning(
+                message="Not possible to determine the email sender from "
+                f'"{self.source_header}: {email_message[self.source_header]}"'
+            )
             return None
 
         provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
         if not provider_data_types:
             job_logger.log_warning(message=error_message)
-            return
+            return None
 
         raw_payloads = []
         for provider_data_type in provider_data_types:
@@ -342,11 +360,11 @@ class IMAP(EmailSource):
             job_logger.log_warning(
                 message=f"Payload types {', '.join(provider_data_types)} not found in email payload.",
             )
-            return
+            return None
 
         return MaintenanceNotification(
             source=self.name,
-            sender=email_message["From"],
+            sender=email_message[self.source_header],
             subject=email_message["Subject"],
             raw_payloads=raw_payloads,
             provider_type=provider_type,
@@ -369,7 +387,10 @@ class IMAP(EmailSource):
 
         if self.emails_to_fetch:
             for sender in self.emails_to_fetch:
-                search_items = (f'FROM "{sender}"', since_date)
+                if self.source_header == "From":
+                    search_items = (f'FROM "{sender}"', since_date)
+                else:
+                    search_items = (f'HEADER {self.source_header} "{sender}"', since_date)
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
@@ -437,12 +458,45 @@ class GmailAPI(EmailSource):
 
         return b""
 
-    # pylint: disable=inconsistent-return-statements,too-many-locals,too-many-branches, too-many-nested-blocks
     def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
         """
+        received_email = (
+            self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
+        )
+
+        return self.process_email(job_logger, received_email, msg_id, since)
+
+    def process_email(  # pylint: disable=too-many-locals
+        self, job_logger: Job, received_email: Dict, msg_id: bytes, since: Optional[int]
+    ) -> Optional[MaintenanceNotification]:
+        """Helper method for the fetch_email() method."""
+        email_subject = ""
+        email_source = ""
+
+        for header in received_email["payload"]["headers"]:
+            if header.get("name") == "Subject":
+                email_subject = header["value"]
+            elif header.get("name") == self.source_header:
+                email_source = header["value"]
+
+        if since:
+            if int(received_email["internalDate"]) < since:
+                job_logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
+                return None
+
+        email_source_before = email_source
+        email_source = self.extract_email_source(email_source)
+        if not email_source:
+            job_logger.log_warning(message=f'Not possible to determine the email sender from "{email_source_before}"')
+            return None
+
+        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
+        if not provider_data_types:
+            job_logger.log_warning(message=error_message)
+            return None
 
         def get_raw_payload_from_parts(parts, provider_data_type):
             """Helper function to extract the raw_payload from a multiple parts via a recursive call."""
@@ -454,37 +508,12 @@ class GmailAPI(EmailSource):
                         return get_raw_payload_from_parts(part_inner["parts"], provider_data_type)
             return None
 
-        received_email = (
-            self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
-        )
-        email_subject = ""
-        email_source = ""
-
-        for header in received_email["payload"]["headers"]:
-            if header.get("name") == "Subject":
-                email_subject = header["value"]
-            elif header.get("name") == "From":
-                email_source = header["value"]
-
-        if since:
-            if int(received_email["internalDate"]) < since:
-                job_logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
-                return
-
-        email_source_before = email_source
-        email_source = self.extract_email_source(email_source)
-        if not email_source:
-            job_logger.log_failure(message=f"Not possible to determine the email sender: {email_source_before}")
-            return
-
-        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
-        if not provider_data_types:
-            job_logger.log_warning(message=error_message)
-            return
-
         raw_payloads = []
         for provider_data_type in provider_data_types:
-            raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
+            if "parts" not in received_email["payload"]:
+                raw_payload = self.extract_raw_payload(received_email["payload"]["body"], msg_id)
+            else:
+                raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
             if raw_payload:
                 raw_payloads.append(raw_payload)
 
@@ -492,8 +521,9 @@ class GmailAPI(EmailSource):
             job_logger.log_warning(
                 message=f"Payload types {provider_data_types} not found in email payload.",
             )
-            return
+            return None
 
+        job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
         return MaintenanceNotification(
             source=self.name,
             sender=email_source,
@@ -512,7 +542,9 @@ class GmailAPI(EmailSource):
             since_txt = datetime.datetime.fromtimestamp(since).strftime("%Y/%b/%d")
             search_criteria = f'after:"{since_txt}"'
 
-        if self.emails_to_fetch:
+        # If source_header is not "from" but some other custom header such as X-Original-Sender,
+        # the GMail API doesn't let us filter by that.
+        if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
             search_criteria += f'({" OR ".join(emails_with_from)})'
 
@@ -530,6 +562,8 @@ class GmailAPI(EmailSource):
             raw_notification = self.fetch_email(job_logger, msg_id, since)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
+        # job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
 
         self.close_service()
         return received_notifications
@@ -624,8 +658,9 @@ def get_notifications(
                     )
 
         except Exception as error:
-            job_logger.log_warning(
-                message=f"Issue fetching notifications from {notification_source.name}: {error}",
+            stacktrace = traceback.format_exc()
+            job_logger.log_failure(
+                message=f"Issue fetching notifications from {notification_source.name}: {error}\n```\n{stacktrace}\n```",
             )
 
     return received_notifications
