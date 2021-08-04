@@ -132,7 +132,7 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated to be used when configuring Nautobot Sources.
 4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
-6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
+6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly`, `https://www.googleapis.com/auth/gmail.modify` (used to remove the `UNREAD` label) and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
 
 ###### 2.1.2.2 OAuth
 
@@ -146,18 +146,17 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 
 > Typically the `url` setting to configure in your `nautobot_config.py` for use with OAuth integration will be `"https://accounts.google.com/o/oauth2/auth"`.
 
-
 #### 2.2 Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
 
-> Note that for emails from a given Provider to be processed, you must *both* define a source email address(es) for that Provider (Usage section 1, above) *and* add that provider to a specific Notification Source as described in this section.
+> Note that for emails from a given Provider to be processed, you must _both_ define a source email address(es) for that Provider (Usage section 1, above) _and_ add that provider to a specific Notification Source as described in this section.
 
 ### 3. Run Handle Notifications Job
 
-There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the emails sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
+There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the notification sources defined under the NotificationSources section (step above), and will fetch new notifications received. In case of email sources, it fetches all the "unread" emails, and when processed, it marks them as read.
 Each notification will be parsed using the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser) library, and if a valid parsing is executed, a new **Circuit Maintenance** will be created, or if it was already created, it will updated with the new data.
 
 So, for each email notification received, several objects will be created:

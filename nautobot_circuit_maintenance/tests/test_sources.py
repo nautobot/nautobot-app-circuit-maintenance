@@ -248,7 +248,7 @@ class TestIMAPSource(TestCase):
             message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} from {notification_source.name}"
         )
 
     def test_get_notifications_no_imap_account(self):
@@ -497,7 +497,7 @@ class TestGmailAPISource(TestCase):
             message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} from {notification_source.name}"
         )
 
     def test_get_notifications_no_account(self):
@@ -626,7 +626,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id="abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")
@@ -657,7 +657,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id="abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")

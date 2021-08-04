@@ -265,19 +265,10 @@ class HandleCircuitMaintenanceNotifications(Job):
             self.log_warning(message="No notification sources configured to retrieve notifications from.")
             return raw_notification_ids
 
-        # Latest retrieved notification will limit the scope of notifications to retrieve
-        last_raw_notification = RawNotification.objects.last()
-        if last_raw_notification:
-            last_time_processed = last_raw_notification.date.timestamp()
-            self.log_info(message=f"Processing notifications since {last_raw_notification.date}")
-        else:
-            last_time_processed = None
-
         try:
             notifications = get_notifications(
                 job_logger=self,
                 notification_sources=notification_sources,
-                since=last_time_processed,
             )
             if not notifications:
                 self.log_info(message="No notifications received.")

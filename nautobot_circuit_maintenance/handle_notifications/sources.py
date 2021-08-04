@@ -3,12 +3,10 @@ import logging
 import base64
 import os
 import re
-import datetime
 import email
 import json
 import traceback
 from urllib.parse import urlparse
-from email.utils import mktime_tz, parsedate_tz
 from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
@@ -58,8 +56,8 @@ class Source(BaseModel):
         """Method to get an identifier of the related account."""
         raise NotImplementedError
 
-    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
-        """Function to retrieve notifications since one moment in time.
+    def receive_notifications(self, job_logger: Job) -> Iterable[MaintenanceNotification]:
+        """Function to retrieve notifications that are UNSEEN.
 
         The `MaintenanceNotification` attributes will contains these attributes:
         * source: self.name
@@ -72,13 +70,12 @@ class Source(BaseModel):
         # Notification Source.
         raise NotImplementedError
 
-    def validate_providers(self, job_logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(self, job_logger: Job, notification_source: NotificationSource) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
             job_logger (Job): Job to use its job_logger
             notification_source (NotificationSource): Notification Source to validate providers
-            since_txt (str): Date string to be used to log
 
         Returns:
             bool: True if there are relevant providers attached or False otherwise
@@ -180,13 +177,12 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         """Method to get an identifier of the related account."""
         return self.account
 
-    def validate_providers(self, job_logger: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(self, job_logger: Job, notification_source: NotificationSource) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
             job_logger (Job): Job to use its job_logger
             notification_source (NotificationSource): Notification Source to validate providers
-            since_txt (str): Date string to be used to log
 
         Returns:
             bool: True if there are relevant providers attached or False otherwise
@@ -227,8 +223,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         # job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
-                f"Retrieving notifications from {notification_source.name} for "
-                f"{', '.join(providers_with_email)} since {since_txt}"
+                f"Retrieving notifications from {notification_source.name} for " f"{', '.join(providers_with_email)}"
             ),
         )
 
@@ -315,16 +310,11 @@ class IMAP(EmailSource):
         self.open_session()
         self.close_session()
 
-    def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, job_logger: Job, msg_id: bytes) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
         raw_email_string = data[0][1].decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
-
-        if since:
-            if mktime_tz(parsedate_tz(email_message["Date"])) < since:
-                job_logger.log_info(message=f"'{email_message['Subject']}' email is old, so not taking into account.")
-                return None
 
         return self.process_email(job_logger, email_message)
 
@@ -370,9 +360,11 @@ class IMAP(EmailSource):
             provider_type=provider_type,
         )
 
-    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
-        """Retrieve emails since an specific time, if provided."""
+    def receive_notifications(self, job_logger: Job) -> Iterable[MaintenanceNotification]:
+        """Retrieve notifications received by email."""
         self.open_session()
+        if not self.session:
+            return []
 
         # Define searching criteria
         self.session.select("Inbox")
@@ -380,29 +372,28 @@ class IMAP(EmailSource):
         # TODO: find the right way to search messages from several senders
         # Maybe extend filtering options, for instance, to discard some type of notifications
         msg_ids = []
-        since_date = ""
-        if since:
-            since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
-            since_date = f'SINCE "{since_txt}"'
 
         if self.emails_to_fetch:
             for sender in self.emails_to_fetch:
                 if self.source_header == "From":
-                    search_items = (f'FROM "{sender}"', since_date)
+                    search_items = [f'FROM "{sender}"']
                 else:
-                    search_items = (f'HEADER {self.source_header} "{sender}"', since_date)
+                    search_items = [f'HEADER {self.source_header} "{sender}"']
+                search_items.append("UNSEEN")
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
         else:
-            search_criteria = f"({since_date})"
+            search_criteria = "(UNSEEN)"
             messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend = messages.split()
 
         received_notifications = []
         for msg_id in msg_ids:
-            raw_notification = self.fetch_email(job_logger, msg_id, since)
+            raw_notification = self.fetch_email(job_logger, msg_id)
+            # Marking the email as seen
+            self.session.store(msg_id, "+FLAGS", "(SEEN)")
             if raw_notification:
                 received_notifications.append(raw_notification)
 
@@ -418,7 +409,8 @@ class GmailAPI(EmailSource):
     service: Optional[Resource] = None
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
-    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+    # Modify scope is needed to remove the UNREAD label from an email
+    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"]
 
     class Config:
         """Pydantic BaseModel config."""
@@ -458,7 +450,7 @@ class GmailAPI(EmailSource):
 
         return b""
 
-    def fetch_email(self, job_logger: Job, msg_id: bytes, since: Optional[int]) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, job_logger: Job, msg_id: bytes) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
@@ -467,10 +459,10 @@ class GmailAPI(EmailSource):
             self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
         )
 
-        return self.process_email(job_logger, received_email, msg_id, since)
+        return self.process_email(job_logger, received_email, msg_id)
 
     def process_email(  # pylint: disable=too-many-locals
-        self, job_logger: Job, received_email: Dict, msg_id: bytes, since: Optional[int]
+        self, job_logger: Job, received_email: Dict, msg_id: bytes
     ) -> Optional[MaintenanceNotification]:
         """Helper method for the fetch_email() method."""
         email_subject = ""
@@ -481,11 +473,6 @@ class GmailAPI(EmailSource):
                 email_subject = header["value"]
             elif header.get("name") == self.source_header:
                 email_source = header["value"]
-
-        if since:
-            if int(received_email["internalDate"]) < since:
-                job_logger.log_info(message=f"'{email_subject}' email is old, so not taking into account.")
-                return None
 
         email_source_before = email_source
         email_source = self.extract_email_source(email_source)
@@ -532,15 +519,12 @@ class GmailAPI(EmailSource):
             provider_type=provider_type,
         )
 
-    def receive_notifications(self, job_logger: Job, since: int = None) -> Iterable[MaintenanceNotification]:
-        """Retrieve emails since an specific time, if provided."""
+    def receive_notifications(self, job_logger: Job) -> Iterable[MaintenanceNotification]:
+        """Retrieve notifications received by email."""
         self.load_credentials()
         self.build_service()
 
-        search_criteria = ""
-        if since:
-            since_txt = datetime.datetime.fromtimestamp(since).strftime("%Y/%b/%d")
-            search_criteria = f'after:"{since_txt}"'
+        search_criteria = "is:unread"
 
         # If source_header is not "from" but some other custom header such as X-Original-Sender,
         # the GMail API doesn't let us filter by that.
@@ -559,7 +543,13 @@ class GmailAPI(EmailSource):
 
         received_notifications = []
         for msg_id in msg_ids:
-            raw_notification = self.fetch_email(job_logger, msg_id, since)
+            raw_notification = self.fetch_email(job_logger, msg_id)
+
+            # Mark processed emails as read
+            self.service.users().messages().modify(  # pylint: disable=no-member
+                userId=self.account, id=msg_id, body={"removeLabelIds": ["UNREAD"]}
+            ).execute()
+
             if raw_notification:
                 received_notifications.append(raw_notification)
 
@@ -618,18 +608,14 @@ class GmailAPIServiceAccount(GmailAPI):
 
 
 def get_notifications(
-    job_logger: Job, notification_sources: Iterable[NotificationSource], since: int = None
+    job_logger: Job,
+    notification_sources: Iterable[NotificationSource],
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch notifications from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
 
     for notification_source in notification_sources:
         try:
-            if since:
-                since_txt = datetime.datetime.fromtimestamp(since).strftime("%d-%b-%Y")
-            else:
-                since_txt = "always"
-
             try:
                 source = Source.init(name=notification_source.name)
             except ValidationError as validation_error:
@@ -644,16 +630,16 @@ def get_notifications(
                 job_logger.log_warning(message=value_error)
                 continue
 
-            if source.validate_providers(job_logger, notification_source, since_txt):
-                raw_notifications = source.receive_notifications(job_logger, since)
+            if source.validate_providers(job_logger, notification_source):
+                raw_notifications = source.receive_notifications(job_logger)
                 received_notifications.extend(raw_notifications)
 
                 if not raw_notifications:
                     job_logger.log_info(
                         message=(
                             f"No notifications received for "
-                            f"{', '.join(notification_source.providers.all().values_list('name', flat=True))} since "
-                            f"{since_txt} from {notification_source.name}"
+                            f"{', '.join(notification_source.providers.all().values_list('name', flat=True))} "
+                            f"from {notification_source.name}"
                         ),
                     )
 
