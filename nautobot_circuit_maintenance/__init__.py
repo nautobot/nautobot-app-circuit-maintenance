@@ -6,8 +6,8 @@ from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
 
 
-def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
-    """Add extended custom field."""
+def custom_fields_extension(sender, **kwargs):  # pylint: disable=unused-argument
+    """Add extended custom fields."""
     # pylint: disable=import-outside-toplevel
     from django.contrib.contenttypes.models import ContentType
     from nautobot.circuits.models import Provider
@@ -18,7 +18,12 @@ def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
         {
             "name": "emails_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
-            "label": "Emails for Circuit Maintenance plugin",
+            "label": "Emails for Circuit Maintenance plugin.",
+        },
+        {
+            "name": "provider_parser_circuit_maintenances",
+            "type": CustomFieldTypeChoices.TYPE_TEXT,
+            "label": "Provider Parser for Circuit Maintenance plugin.",
         },
     ]:
         field, _ = CustomField.objects.get_or_create(name=provider_cf_dict["name"], defaults=provider_cf_dict)
@@ -66,7 +71,7 @@ class CircuitMaintenanceConfig(PluginConfig):
 
     def ready(self):
         super().ready()
-        post_migrate.connect(custom_field_extension, sender=self)
+        post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)
 
 

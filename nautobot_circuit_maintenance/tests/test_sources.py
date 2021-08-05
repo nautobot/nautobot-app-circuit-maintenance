@@ -141,17 +141,20 @@ class TestEmailSource(TestCase):
 
     @parameterized.expand(
         [
-            ["ntt", {"text/calendar"}, False],
-            ["telstra", {"text/html", "text/calendar"}, False],
-            ["zayo", {"text/html"}, False],
-            ["unknown", "unknown", True],
+            ["ntt", {"text/calendar"}, "", False],
+            ["ntt", {"text/calendar"}, "eunetworks", False],
+            ["telstra", {"text/html", "text/calendar"}, "", False],
+            ["zayo", {"text/html"}, "", False],
+            ["unknown", "unknown", "", True],
         ]
     )
-    def test_extract_provider_data_types_ok(self, provider_type, data_types, error_message):
+    def test_extract_provider_data_types_ok(self, provider_type, data_types, provider_mapping, error_message):
         """Test for extract_provider_data_types."""
         email_source = "user@example.com"
         provider = Provider.objects.create(name=provider_type, slug=provider_type)
         provider.cf["emails_circuit_maintenances"] = email_source
+        if provider_mapping:
+            provider.cf["provider_parser_circuit_maintenances"] = provider_mapping
         provider.save()
 
         self.assertEqual(

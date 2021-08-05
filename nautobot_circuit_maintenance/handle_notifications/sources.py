@@ -266,12 +266,20 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             ]
             if email_source in sources:
                 provider_type = provider.slug
+                # If there is no custom provider mapping defined, we take the provider slug as default mapping
+                provider_parser_circuit_maintenances = provider.get_custom_fields().get(
+                    CustomField.objects.get(name="provider_parser_circuit_maintenances")
+                )
+                if provider_parser_circuit_maintenances:
+                    provider_mapping = provider_parser_circuit_maintenances.lower()
+                else:
+                    provider_mapping = provider_type
                 break
         else:
             return "", "", f"Sender email {email_source} is not registered for any circuit provider."
 
         try:
-            provider_data_types = get_provider_data_types(provider_type)
+            provider_data_types = get_provider_data_types(provider_mapping)
         except NonexistentParserError:
             return (
                 "",

@@ -1,6 +1,9 @@
 """Custom Validators definition."""
 from nautobot.circuits.models import Provider
 from nautobot.extras.plugins import PluginCustomValidator
+from nautobot.extras.models import CustomField
+
+from circuit_maintenance_parser import SUPPORTED_PROVIDER_NAMES
 
 
 class ProviderEmailValidator(PluginCustomValidator):
@@ -26,4 +29,28 @@ class ProviderEmailValidator(PluginCustomValidator):
                         )
 
 
-custom_validators = [ProviderEmailValidator]
+class ProviderParserValidator(PluginCustomValidator):
+    """Custom validator to validate that Provider's parser exists in the Parser library."""
+
+    model = "circuits.provider"
+
+    def clean(self):
+        """Validate that the Provider's parser exists in the Parser library."""
+        provider_mapping = (
+            self.context["object"]
+            .get_custom_fields()
+            .get(CustomField.objects.get(name="provider_parser_circuit_maintenances"))
+        )
+
+        if provider_mapping and provider_mapping.lower() not in SUPPORTED_PROVIDER_NAMES:
+            self.validation_error(
+                {
+                    "cf_provider_parser_circuit_maintenances": (
+                        f"{provider_mapping} is not one of the supported Providers in the "
+                        f"circuit-maintenance-parser library: {SUPPORTED_PROVIDER_NAMES}."
+                    )
+                }
+            )
+
+
+custom_validators = [ProviderEmailValidator, ProviderParserValidator]
