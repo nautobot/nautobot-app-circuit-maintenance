@@ -21,6 +21,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 nautobot = "*"
+# nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
 bs4 = "^0.0.1"
 pydantic = "^1.8.1"
 circuit-maintenance-parser = "^1.2.1"

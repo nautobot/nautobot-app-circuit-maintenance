@@ -3,14 +3,19 @@
 # any override will need to include these volumes to use them.
 # see:  https://github.com/docker/compose/issues/3729
 ---
+x-nautobot-base: &nautobot-base
+  volumes:
+    - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
+    - "../:/source"
+
 version: "3.4"
 services:
   nautobot:
+    healthcheck:
+      disable: true
     command: "nautobot-server runserver 0.0.0.0:8080"
-    volumes:
-      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
-      - "../:/source"
+    <<: *nautobot-base
+  celery_worker:
+    <<: *nautobot-base
   worker:
-    volumes:
-      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
-      - "../:/source"
+    <<: *nautobot-base
