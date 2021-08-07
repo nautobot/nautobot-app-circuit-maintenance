@@ -1,15 +1,12 @@
-#########################
-#                       #
-#   Required settings   #
-#                       #
-#########################
+"""Nautobot development configuration file."""
 
 import os
 import sys
 
-from distutils.util import strtobool
 from django.core.exceptions import ImproperlyConfigured
-from nautobot.core import settings
+from nautobot.core.settings import *  # noqa: F403
+from nautobot.core.settings_funcs import is_truthy, parse_redis_connection
+
 
 # Enforce required configuration parameters
 for key in [
@@ -18,27 +15,10 @@ for key in [
     "POSTGRES_USER",
     "POSTGRES_HOST",
     "POSTGRES_PASSWORD",
-    "REDIS_HOST",
-    "REDIS_PASSWORD",
     "SECRET_KEY",
 ]:
     if not os.environ.get(key):
         raise ImproperlyConfigured(f"Required environment variable {key} is missing.")
-
-
-def is_truthy(arg):
-    """Convert "truthy" strings into Booleans.
-
-    Examples:
-        >>> is_truthy('yes')
-        True
-    Args:
-        arg (str): Truthy string (True values are y, yes, t, true, on and 1; false values are n, no,
-        f, false, off and 0. Raises ValueError if val is anything else.
-    """
-    if isinstance(arg, bool):
-        return arg
-    return bool(strtobool(arg))
 
 
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
@@ -63,62 +43,22 @@ DATABASES = {
     }
 }
 
-# Nautobot uses RQ for task scheduling. These are the following defaults.
-# For detailed configuration see: https://github.com/rq/django-rq#installation
-RQ_QUEUES = {
-    "default": {
-        "HOST": os.getenv("REDIS_HOST", "localhost"),
-        "PORT": os.getenv("REDIS_PORT", 6379),
-        "DB": 0,
-        "PASSWORD": os.getenv("REDIS_PASSWORD", ""),
-        "SSL": os.getenv("REDIS_SSL", False),
-        "DEFAULT_TIMEOUT": 300,
-    },
-    "webhooks": {
-        "HOST": os.getenv("REDIS_HOST", "localhost"),
-        "PORT": os.getenv("REDIS_PORT", 6379),
-        "DB": 0,
-        "PASSWORD": os.getenv("REDIS_PASSWORD", ""),
-        "SSL": os.getenv("REDIS_SSL", False),
-        "DEFAULT_TIMEOUT": 300,
-    },
-    "custom_fields": {
-        "HOST": os.getenv("REDIS_HOST", "localhost"),
-        "PORT": os.getenv("REDIS_PORT", 6379),
-        "DB": 0,
-        "PASSWORD": os.getenv("REDIS_PASSWORD", ""),
-        "SSL": os.getenv("REDIS_SSL", False),
-        "DEFAULT_TIMEOUT": 300,
-    },
-    # "with-sentinel": {
-    #     "SENTINELS": [
-    #         ("mysentinel.redis.example.com", 6379)
-    #         ("othersentinel.redis.example.com", 6379)
-    #     ],
-    #     "MASTER_NAME": 'nautobot",
-    #     "DB": 0,
-    #     "PASSWORD": "",
-    #     "SOCKET_TIMEOUT": None,
-    #     'CONNECTION_KWARGS': {
-    #         'socket_connect_timeout': 10,
-    #     },
-    # },
-    "check_releases": {
-        "HOST": os.getenv("REDIS_HOST", "localhost"),
-        "PORT": os.getenv("REDIS_PORT", 6379),
-        "DB": 0,
-        "PASSWORD": os.getenv("REDIS_PASSWORD", ""),
-        "SSL": os.getenv("REDIS_SSL", False),
-        "DEFAULT_TIMEOUT": 300,
-    },
-}
 
 # Nautobot uses Cacheops for database query caching. These are the following defaults.
 # For detailed configuration see: https://github.com/Suor/django-cacheops#setup
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = os.getenv("REDIS_PORT", 6379)
-REDIS_PASS = os.getenv("REDIS_PASSWORD", "")
-CACHEOPS_REDIS = f"redis://:{REDIS_PASS}@{REDIS_HOST}:{REDIS_PORT}/1"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": parse_redis_connection(redis_database=0),
+        "TIMEOUT": 300,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+CACHEOPS_REDIS = parse_redis_connection(redis_database=1)
+
 
 # This key is used for secure generation of random numbers and strings. It must never be exposed outside of this file.
 # For optimal security, SECRET_KEY should be at least 50 characters in length and contain a mix of letters, numbers, and
@@ -383,7 +323,7 @@ EXTRA_INSTALLED_APPS = os.environ["EXTRA_INSTALLED_APPS"].split(",") if os.envir
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}
 
-if "debug_toolbar" not in EXTRA_INSTALLED_APPS:
-    EXTRA_INSTALLED_APPS.append("debug_toolbar")
-if "debug_toolbar.middleware.DebugToolbarMiddleware" not in settings.MIDDLEWARE:
-    settings.MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
+    INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
+if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:  # noqa: F405
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
