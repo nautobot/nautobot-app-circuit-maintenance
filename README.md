@@ -45,9 +45,11 @@ PLUGINS_CONFIG = {
 
 ### 1. Define source emails per Provider
 
-In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance plugin, we must configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance plugin** field.
+In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance plugin, we **must** configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance plugin** field.
 
 These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
+
+Also, by default, the Provider **slug** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CentruryLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
 
 ### 2. Configure Notification Sources
 
@@ -146,14 +148,13 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 
 > Typically the `url` setting to configure in your `nautobot_config.py` for use with OAuth integration will be `"https://accounts.google.com/o/oauth2/auth"`.
 
-
 #### 2.2 Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
 
-> Note that for emails from a given Provider to be processed, you must *both* define a source email address(es) for that Provider (Usage section 1, above) *and* add that provider to a specific Notification Source as described in this section.
+> Note that for emails from a given Provider to be processed, you must _both_ define a source email address(es) for that Provider (Usage section 1, above) _and_ add that provider to a specific Notification Source as described in this section.
 
 ### 3. Run Handle Notifications Job
 
