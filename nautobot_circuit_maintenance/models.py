@@ -216,7 +216,7 @@ class NotificationSource(OrganizationalModel):
 class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
-    raw = models.TextField()
+    raw = models.BinaryField()
     _raw_md5 = models.TextField(unique=True)
     subject = models.CharField(max_length=200)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
