@@ -27,11 +27,10 @@ Once installed, the plugin needs to be enabled in your `configuration.py`.
 PLUGINS = ["nautobot_circuit_maintenance"]
 ```
 
-Extra configuration to define notification sources is defined in the [Usage](#Usage) section.
-
 ```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
+        "raw_notifications": {"initial_days_since": 100},
         "notification_sources": [
             {
               ...
@@ -40,6 +39,15 @@ PLUGINS_CONFIG = {
     }
 }
 ```
+
+In the `raw_notifications` section, you can define:
+
+- `initial_days_since`: define how many days back the plugin will check for `RawNotification`s for each
+  `NotificationSource`, in order to limit the number of notifications to be processed on the first run of the plugin.
+  In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to
+  **365 days**.
+
+The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [Usage](#Usage) section.
 
 ## Usage
 
