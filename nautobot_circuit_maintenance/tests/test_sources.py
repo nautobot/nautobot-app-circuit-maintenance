@@ -1,4 +1,4 @@
-"""Test sourcess utils."""
+"""Test sources utils."""
 import base64
 from email.message import EmailMessage
 import json
@@ -632,7 +632,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id=b"abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")
@@ -663,7 +663,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id=b"abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")

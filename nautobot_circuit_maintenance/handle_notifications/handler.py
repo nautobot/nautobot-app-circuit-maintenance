@@ -225,7 +225,8 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         return None
 
     if not created:
-        logger.log_warning(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
+        # If the RawNotification was already created, we ignore it.
+        logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
