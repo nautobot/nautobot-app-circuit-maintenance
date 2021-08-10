@@ -204,7 +204,12 @@ class RawNotificationView(generic.ObjectView):
             parsed_notification = models.ParsedNotification.objects.filter(raw_notification=instance).last()
         else:
             parsed_notification = None
-        raw_repr = instance.raw.tobytes().decode()
+        try:
+            raw_repr = instance.raw.tobytes().decode("utf-8", "strict")
+        except UnicodeDecodeError as exc:
+            raw_repr = "Raw content was not able to be decoded with utf-8"
+            logger.warning(raw_repr + ": %s", exc)
+
         return {"parsed_notification": parsed_notification, "raw_repr": raw_repr}
 
 
