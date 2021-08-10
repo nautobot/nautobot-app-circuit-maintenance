@@ -4,11 +4,16 @@
 
 ### Added
 
-- #51: Add a Custom Field in Provider, `provider_parser_circuit_maintenances` to allow custom mapping of the provider type class used from the `circuit-maintenance-parser` library
+- #51: Add a Custom Field in Provider, `provider_parser_circuit_maintenances` to allow custom mapping of the provider type class used from the `circuit-maintenance-parser` library.
+- #54: Add a plugin option to define the number of days back to retrieve notifications on the first run of the plugin, before it has one previous notification as a reference.
 
 ### Changed
 
 - #51: Improve Development Environment and upgrade Nautobot version to 1.1.0
+
+### Fixed
+
+- #53: The **SINCE** filter to receive email notifications is extended on day in the past in order to get notifications from the same day as the last notifications stored.
 
 ## v0.1.7 - 2021-07-27
 
