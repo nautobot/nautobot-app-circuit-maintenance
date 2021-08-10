@@ -204,10 +204,7 @@ class RawNotificationView(generic.ObjectView):
             parsed_notification = models.ParsedNotification.objects.filter(raw_notification=instance).last()
         else:
             parsed_notification = None
-        raw_bytes = instance.raw.tobytes()
-        # TODO: Using unicode-escape to handle bytes converted from string from migration 0007
-        # This can be removed when squashing migrations on release 1.0.0
-        raw_repr = raw_bytes.decode("unicode-escape")
+        raw_repr = instance.raw.tobytes().decode()
         return {"parsed_notification": parsed_notification, "raw_repr": raw_repr}
 
 

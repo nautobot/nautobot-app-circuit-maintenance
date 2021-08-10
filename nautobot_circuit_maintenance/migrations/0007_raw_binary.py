@@ -9,7 +9,8 @@ def convert_raw_from_str_to_bytes(apps, schema_editor):
 
     for raw_notification in RawNotificationModel.objects.all():
         raw_txt = raw_notification.raw
-        raw_txt = raw_txt.strip("b''").strip("''")
+        # Removing b'' from previous literal conversion from bytes to TextField
+        raw_txt = raw_txt.strip("b'").strip("'")
         raw_notification.raw_b = raw_txt.encode()
         raw_notification.save(update_fields=["raw_b"])
 
