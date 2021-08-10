@@ -621,19 +621,15 @@ class GmailAPIServiceAccount(GmailAPI):
 
 
 def get_notifications(
-    job_logger: Job, notification_sources: Iterable[NotificationSource], since: int = None
+    job_logger: Job, notification_sources: Iterable[NotificationSource], since: int
 ) -> Iterable[MaintenanceNotification]:
     """Method to fetch notifications from multiple sources and return MaintenanceNotification objects."""
     received_notifications = []
 
     for notification_source in notification_sources:
         try:
-            if since:
-                since_date = datetime.datetime.fromtimestamp(since)
-                since_txt = since_date.strftime("%d-%b-%Y")
-            else:
-                since_date = None
-                since_txt = "always"
+            since_date = datetime.datetime.fromtimestamp(since)
+            since_txt = since_date.strftime("%d-%b-%Y")
 
             try:
                 source = Source.init(name=notification_source.name)
