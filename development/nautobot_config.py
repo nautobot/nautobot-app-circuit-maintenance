@@ -248,6 +248,7 @@ PLUGINS_CONFIG = {
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
                 "url": os.environ.get("CM_NS_1_URL", ""),
+                "attach_all_providers": True,
             },
             {
                 "name": "my gmail service account api source",
