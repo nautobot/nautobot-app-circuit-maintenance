@@ -37,17 +37,25 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
     For now, we create the Notification Sources in the DB but the secrets are fetched via ENV.
     """
     # pylint: disable=import-outside-toplevel
-
+    from nautobot.circuits.models import Provider
     from nautobot_circuit_maintenance.models import NotificationSource
 
     desired_notification_sources_names = []
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
-        NotificationSource.objects.get_or_create(
-            name=notification_source["name"], slug=slugify(notification_source["name"])
+        instance, _ = NotificationSource.objects.get_or_create(
+            name=notification_source["name"],
+            slug=slugify(
+                notification_source["name"],
+            ),
+            attach_all_providers=notification_source.get("attach_all_providers", False),
         )
         desired_notification_sources_names.append(notification_source["name"])
+
+        if instance.attach_all_providers:
+            for provider in Provider.objects.all():
+                instance.providers.add(provider)
 
     # We remove old Notification Sources that could be in Nautobot but removed from configuration
     NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
