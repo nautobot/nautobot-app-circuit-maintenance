@@ -14,6 +14,7 @@
 ### Fixed
 
 - #53: The **SINCE** filter to receive email notifications is extended on day in the past in order to get notifications from the same day as the last notifications stored.
+- #61: Add rendering of `custom_fields` and `relationships` in all the detail_views of the plugin.
 
 ## v0.1.7 - 2021-07-27
 
