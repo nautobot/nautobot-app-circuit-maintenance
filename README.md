@@ -74,7 +74,7 @@ There are two mandatory attributes (other keys are dependent on the integration 
 
 There is also one optional attribute:
 
-- `attach_all_providers`: Flag that enable auto link of new created `Providers`.
+- `attach_all_providers`: Flag that enables auto linking of newly created `Providers` to this Notification Source.
 
 > Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as URL scheme
 

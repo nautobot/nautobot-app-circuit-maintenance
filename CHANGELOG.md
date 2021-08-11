@@ -15,6 +15,7 @@
 ### Fixed
 
 - #53: The **SINCE** filter to receive email notifications is extended on day in the past in order to get notifications from the same day as the last notifications stored.
+- #62: Fix Href from Circuit to related Circuit Maintenances.
 
 ## v0.1.7 - 2021-07-27
 
