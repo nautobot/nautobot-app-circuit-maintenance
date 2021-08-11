@@ -72,6 +72,10 @@ There are two mandatory attributes (other keys are dependent on the integration 
 - `name`: Name to identify the Source and will be available in the UI.
 - `url`: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 
+There is also one optional attribute:
+
+- `attach_all_providers`: Flag that enable auto link of new created `Providers`.
+
 > Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as URL scheme
 
 ##### 2.1.1 IMAP
@@ -97,6 +101,7 @@ PLUGINS_CONFIG = {
                 "secret": os.getenv("CM_NS_1_SECRET", ""),
                 "url": os.getenv("CM_NS_1_URL", ""),
                 "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),  # optional
+                "attach_all_providers": True,  # optional
             }
         ]
     }
