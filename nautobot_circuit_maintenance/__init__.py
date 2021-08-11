@@ -45,7 +45,11 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
         "notification_sources", []
     ):
         NotificationSource.objects.get_or_create(
-            name=notification_source["name"], slug=slugify(notification_source["name"])
+            name=notification_source["name"],
+            slug=slugify(
+                notification_source["name"],
+            ),
+            attach_all_providers=notification_source.get("attach_all_providers", False),
         )
         desired_notification_sources_names.append(notification_source["name"])
 
