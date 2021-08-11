@@ -18,7 +18,7 @@ def convert_raw_from_str_to_bytes(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("nautobot_circuit_maintenance", "0006_fake_migration_to_update_custom_fields"),
+        ("nautobot_circuit_maintenance", "0007_notificationsource_attach_all_providers"),
     ]
 
     operations = [
