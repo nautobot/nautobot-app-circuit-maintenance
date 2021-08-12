@@ -22,7 +22,7 @@ class CircuitMaintenanceListView(generic.ObjectListView):
     table = tables.CircuitMaintenanceTable
     filterset = filters.CircuitMaintenanceFilterSet
     filterset_form = forms.CircuitMaintenanceFilterForm
-    action_buttons = ("add",)
+    action_buttons = ("add", "export")
 
 
 class CircuitMaintenanceView(generic.ObjectView):
@@ -98,7 +98,7 @@ class CircuitImpactListView(generic.ObjectListView):
 
     table = tables.CircuitImpactTable
     queryset = models.CircuitImpact.objects.all()
-    action_buttons = ("add",)
+    action_buttons = ("add", "export")
 
 
 class CircuitImpactView(generic.ObjectView):
@@ -148,7 +148,7 @@ class NoteListView(generic.ObjectListView):
 
     table = tables.NoteTable
     queryset = models.Note.objects.all()
-    action_buttons = ("add",)
+    action_buttons = ("add", "export")
 
 
 class NoteEditView(generic.ObjectEditView):
@@ -220,7 +220,7 @@ class RawNotificationListView(generic.ObjectListView):
     queryset = models.RawNotification.objects.all()
     filterset = filters.RawNotificationFilterSet
     filterset_form = forms.RawNotificationFilterSetForm
-    action_buttons = ()
+    action_buttons = ("export",)
 
 
 class RawNotificationBulkDeleteView(generic.BulkDeleteView):
@@ -250,7 +250,7 @@ class NotificationSourceListView(generic.ObjectListView):
     queryset = models.NotificationSource.objects.all()
     filterset = filters.NotificationSourceFilterSet
     filterset_form = forms.NotificationSourceFilterSetForm
-    action_buttons = ("edit",)
+    action_buttons = ("edit", "export")
 
 
 class NotificationSourceView(generic.ObjectView):
