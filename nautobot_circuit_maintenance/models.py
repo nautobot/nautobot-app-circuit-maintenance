@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 from nautobot.extras.utils import extras_features
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
@@ -176,6 +179,10 @@ class NotificationSource(OrganizationalModel):
     _token = models.BinaryField(
         blank=True,
     )
+    attach_all_providers = models.BooleanField(
+        default=False,
+        help_text="Attach all the Providers to this Notification Source",
+    )
 
     csv_headers = ["name", "slug", "providers"]
 
@@ -205,6 +212,14 @@ class NotificationSource(OrganizationalModel):
         self._token = pickle.dumps(value)
 
 
+@receiver(post_save, sender=Provider)
+def add_provider_to_email_sources(sender, instance, created, **kwargs):  # pylint: disable=unused-argument
+    """Listen to Provider's creation to add them to the NotificationSources that have the attach_all_providers flag."""
+    if created:
+        for notification_source in NotificationSource.objects.filter(attach_all_providers=True):
+            notification_source.providers.add(instance)
+
+
 @extras_features(
     "custom_fields",
     "custom_links",
@@ -216,7 +231,7 @@ class NotificationSource(OrganizationalModel):
 class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
-    raw = models.TextField()
+    raw = models.BinaryField()
     _raw_md5 = models.TextField(unique=True)
     subject = models.CharField(max_length=200)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)

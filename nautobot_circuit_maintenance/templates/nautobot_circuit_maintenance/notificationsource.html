@@ -51,6 +51,15 @@
           </ul>
       </td>
       </tr>
+      <td>Attach all providers</td>
+      <td>
+        {% if object.attach_all_providers %}
+            <span class="text-success"><i class="mdi mdi-check-bold"></i></span>
+        {% else %}
+            <span class="text-danger"><i class="mdi mdi-close"></i></span>
+        {% endif %}
+      </td>
+      </tr>
       {% if authentication_message %}
       <tr>
       <td>Authentication Status</td>
@@ -72,7 +81,8 @@
   </div>
   </div>
 </div>
-
+{% include 'inc/custom_fields_panel.html' %}
+{% include 'inc/relationships_panel.html' %}
 
 
 {% endblock %}

@@ -1,21 +1,38 @@
 # Changelog
 
+## v0.1.8 - 2021-08-12
+
+### Added
+
+- #51: Add a Custom Field in Provider, `provider_parser_circuit_maintenances` to allow custom mapping of the provider type class used from the `circuit-maintenance-parser` library.
+- #54: Add a plugin option to define the number of days back to retrieve notifications on the first run of the plugin, before it has one previous notification as a reference.
+- #63: Add a `attach_all_providers` flag in the `NotificationSource` plugin config to signal that any new Provider added will be automatically attached to the `NotificationSource`.
+
+### Changed
+
+- #51: Improve Development Environment and upgrade Nautobot version to 1.1.0
+
+### Fixed
+
+- #53: The **SINCE** filter to receive email notifications is extended on day in the past in order to get notifications from the same day as the last notifications stored.
+- #61: Add rendering of `custom_fields` and `relationships` in all the detail_views of the plugin, `tags` in `PrimaryModel` detail view and the `export` action button on the object list views.
+- #62: Fix Href from Circuit to related Circuit Maintenances.
+
 ## v0.1.7 - 2021-07-27
 
 ### Added
 
 - #42:
-    - Add stack trace to job log on exception
-    - IMAP and GMail notification sources now support a `source_header` configuration parameter to allow for cases where `From` is not the relevant header to inspect.
-
+  - Add stack trace to job log on exception
+  - IMAP and GMail notification sources now support a `source_header` configuration parameter to allow for cases where `From` is not the relevant header to inspect.
 
 ### Fixed
 
 - #42:
-    - Avoid an exception if some Providers do not have a populated `emails_circuit_maintenance` value
-    - `extract_email_source()` now correctly handles email addresses containing dash characters.
-    - Avoid an exception on processing a non-multipart email payload
-    - Don't try to create a `RawNotification` if no `raw_payload` could be extracted from the notification.
+  - Avoid an exception if some Providers do not have a populated `emails_circuit_maintenance` value
+  - `extract_email_source()` now correctly handles email addresses containing dash characters.
+  - Avoid an exception on processing a non-multipart email payload
+  - Don't try to create a `RawNotification` if no `raw_payload` could be extracted from the notification.
 
 ## v0.1.6 - 2021-07-14
 

@@ -328,7 +328,11 @@ class ParsedNotificationTest(
         source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
 
         raw_notification = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
+            subject="whatever subject 1",
+            provider=providers[0],
+            sender="whatever sender 1",
+            source=source,
+            raw=b"whatever raw 1",
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
@@ -336,7 +340,11 @@ class ParsedNotificationTest(
         ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
 
         raw_notification_2 = RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 2"
+            subject="whatever subject 2",
+            provider=providers[0],
+            sender="whatever sender 2",
+            source=source,
+            raw=b"whatever raw 2",
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"

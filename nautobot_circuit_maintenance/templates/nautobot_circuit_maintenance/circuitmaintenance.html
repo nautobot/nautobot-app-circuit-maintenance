@@ -34,7 +34,7 @@
     </div>
     <ul class="nav nav-tabs">
         <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
-            <a href="{{ object.get_absolute_url }}">Autonomous System</a>
+            <a href="{{ object.get_absolute_url }}">Circuit Maintenance</a>
         </li>
         {% if perms.extras.view_objectchange %}
             <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
@@ -244,5 +244,8 @@
         </table>
         {% endif %}
     </div>
+    {% include 'inc/custom_fields_panel.html' %}
+    {% include 'inc/relationships_panel.html' %}
+    {% include 'extras/inc/tags_panel.html' with tags=object.tags.all url='nautobot_circuit_maintenance:circuitmaintenance_list' %}
 
 {% endblock %}

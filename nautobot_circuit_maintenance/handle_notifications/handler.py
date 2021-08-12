@@ -18,7 +18,8 @@ from .sources import get_notifications, MaintenanceNotification
 
 
 # pylint: disable=broad-except
-PLUGIN_SETTINGS = settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]
+PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+MAX_INITIAL_DAYS_SINCE = 365
 
 
 def create_circuit_maintenance(
@@ -224,7 +225,8 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         return None
 
     if not created:
-        logger.log_warning(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
+        # If the RawNotification was already created, we ignore it.
+        logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
@@ -268,16 +270,20 @@ class HandleCircuitMaintenanceNotifications(Job):
         # Latest retrieved notification will limit the scope of notifications to retrieve
         last_raw_notification = RawNotification.objects.last()
         if last_raw_notification:
-            last_time_processed = last_raw_notification.date.timestamp()
-            self.log_info(message=f"Processing notifications since {last_raw_notification.date}")
+            since_reference = last_raw_notification.date.timestamp()
         else:
-            last_time_processed = None
+            since_reference = datetime.datetime.utcnow() - datetime.timedelta(
+                days=PLUGIN_SETTINGS.get("raw_notifications", {}).get("initial_days_since", MAX_INITIAL_DAYS_SINCE)
+            )
+            since_reference = int(since_reference.timestamp())
+
+        self.log_info(message=f"Processing notifications since {since_reference}")
 
         try:
             notifications = get_notifications(
                 job_logger=self,
                 notification_sources=notification_sources,
-                since=last_time_processed,
+                since=since_reference,
             )
             if not notifications:
                 self.log_info(message="No notifications received.")

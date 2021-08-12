@@ -1,10 +1,11 @@
-"""Test sourcess utils."""
+"""Test sources utils."""
 import base64
 from email.message import EmailMessage
 import json
 import os
 from unittest.mock import Mock, patch
 import uuid
+import datetime
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -141,17 +142,20 @@ class TestEmailSource(TestCase):
 
     @parameterized.expand(
         [
-            ["ntt", {"text/calendar"}, False],
-            ["telstra", {"text/html", "text/calendar"}, False],
-            ["zayo", {"text/html"}, False],
-            ["unknown", "unknown", True],
+            ["ntt", {"text/calendar"}, "", False],
+            ["ntt", {"text/calendar"}, "eunetworks", False],
+            ["telstra", {"text/html", "text/calendar"}, "", False],
+            ["zayo", {"text/html"}, "", False],
+            ["unknown", "unknown", "", True],
         ]
     )
-    def test_extract_provider_data_types_ok(self, provider_type, data_types, error_message):
+    def test_extract_provider_data_types_ok(self, provider_type, data_types, provider_mapping, error_message):
         """Test for extract_provider_data_types."""
         email_source = "user@example.com"
         provider = Provider.objects.create(name=provider_type, slug=provider_type)
         provider.cf["emails_circuit_maintenances"] = email_source
+        if provider_mapping:
+            provider.cf["provider_parser_circuit_maintenances"] = provider_mapping
         provider.save()
 
         self.assertEqual(
@@ -224,7 +228,7 @@ class TestIMAPSource(TestCase):
         notification_source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
         notification_source.providers.set([])
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
         self.assertEqual([], res)
         source_name = SOURCE_IMAP["name"]
         self.logger.log_warning.assert_called_with(
@@ -241,20 +245,21 @@ class TestIMAPSource(TestCase):
         notification_source.providers.add(original_provider)
         notification_source.providers.add(new_provider)
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        since = 0
+        res = get_notifications(self.logger, NotificationSource.objects.all(), since)
         self.assertEqual([], res)
 
         self.logger.log_warning.assert_called_with(
             message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}"
         )
 
     def test_get_notifications_no_imap_account(self):
         """Test get_notifications without IMAP account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
-        get_notifications(self.logger, NotificationSource.objects.all())
+        get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.logger.log_warning.assert_called_with(
             message=f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
@@ -268,7 +273,7 @@ class TestIMAPSource(TestCase):
 
         mock_receive_notifications.return_value = [notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.assertEqual(1, len(res))
         self.logger.log_warning.assert_not_called()
@@ -281,7 +286,7 @@ class TestIMAPSource(TestCase):
 
         mock_receive_notifications.return_value = [notification, notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.assertEqual(2, len(res))
         self.logger.log_warning.assert_not_called()
@@ -473,7 +478,7 @@ class TestGmailAPISource(TestCase):
         notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         notification_source.providers.set([])
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
         self.assertEqual([], res)
         source_name = SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]
         self.logger.log_warning.assert_called_with(
@@ -490,20 +495,21 @@ class TestGmailAPISource(TestCase):
         notification_source.providers.add(original_provider)
         notification_source.providers.add(new_provider)
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        since = 0
+        res = get_notifications(self.logger, NotificationSource.objects.all(), since)
         self.assertEqual([], res)
 
         self.logger.log_warning.assert_called_with(
             message=f"Skipping {new_provider.name} because these providers have no email configured."
         )
         self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since always from {notification_source.name}"
+            message=f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}"
         )
 
     def test_get_notifications_no_account(self):
         """Test get_notifications without account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
-        get_notifications(self.logger, NotificationSource.objects.all())
+        get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.logger.log_warning.assert_called_with(
             message=f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
@@ -517,7 +523,7 @@ class TestGmailAPISource(TestCase):
 
         mock_receive_notifications.return_value = [notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.assertEqual(1, len(res))
         self.logger.log_warning.assert_not_called()
@@ -530,7 +536,7 @@ class TestGmailAPISource(TestCase):
 
         mock_receive_notifications.return_value = [notification, notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all())
+        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
         self.assertEqual(2, len(res))
         self.logger.log_warning.assert_not_called()
@@ -626,7 +632,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id=b"abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")
@@ -657,7 +663,7 @@ class TestGmailAPISource(TestCase):
             "internalDate": 1000,
         }
 
-        notification = source.process_email(job, received_email, msg_id="abc", since=0)
+        notification = source.process_email(job, received_email, msg_id=b"abc")
         self.assertIsNotNone(notification)
         self.assertEqual(notification.source, source.name)
         self.assertEqual(notification.sender, "user@example.com")

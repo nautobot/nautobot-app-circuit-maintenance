@@ -19,7 +19,7 @@
             {% for circuitimpact in circuitimpacts %}
             <tr>
                 <td>
-                    <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance' pk=circuitimpact.maintenance.id %}"></a>{{ circuitimpact.maintenance.name }}</a>
+                    <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance' pk=circuitimpact.maintenance.id %}">{{ circuitimpact.maintenance.name }}</a>
                 </td>
                 <td>
                     {{ circuitimpact.impact }}

@@ -1,13 +1,13 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
 
 
-def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
-    """Add extended custom field."""
+def custom_fields_extension(sender, **kwargs):  # pylint: disable=unused-argument
+    """Add extended custom fields."""
     # pylint: disable=import-outside-toplevel
     from django.contrib.contenttypes.models import ContentType
     from nautobot.circuits.models import Provider
@@ -18,7 +18,12 @@ def custom_field_extension(sender, **kwargs):  # pylint: disable=unused-argument
         {
             "name": "emails_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
-            "label": "Emails for Circuit Maintenance plugin",
+            "label": "Emails for Circuit Maintenance plugin.",
+        },
+        {
+            "name": "provider_parser_circuit_maintenances",
+            "type": CustomFieldTypeChoices.TYPE_TEXT,
+            "label": "Provider Parser for Circuit Maintenance plugin.",
         },
     ]:
         field, _ = CustomField.objects.get_or_create(name=provider_cf_dict["name"], defaults=provider_cf_dict)
@@ -32,17 +37,25 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
     For now, we create the Notification Sources in the DB but the secrets are fetched via ENV.
     """
     # pylint: disable=import-outside-toplevel
-
+    from nautobot.circuits.models import Provider
     from nautobot_circuit_maintenance.models import NotificationSource
 
     desired_notification_sources_names = []
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
-        NotificationSource.objects.get_or_create(
-            name=notification_source["name"], slug=slugify(notification_source["name"])
+        instance, _ = NotificationSource.objects.get_or_create(
+            name=notification_source["name"],
+            slug=slugify(
+                notification_source["name"],
+            ),
+            attach_all_providers=notification_source.get("attach_all_providers", False),
         )
         desired_notification_sources_names.append(notification_source["name"])
+
+        if instance.attach_all_providers:
+            for provider in Provider.objects.all():
+                instance.providers.add(provider)
 
     # We remove old Notification Sources that could be in Nautobot but removed from configuration
     NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
@@ -66,7 +79,7 @@ class CircuitMaintenanceConfig(PluginConfig):
 
     def ready(self):
         super().ready()
-        post_migrate.connect(custom_field_extension, sender=self)
+        post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)
 
 
