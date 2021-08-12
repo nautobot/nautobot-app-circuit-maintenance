@@ -156,7 +156,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "circuit-maintenance-parser"
-version = "1.2.2"
+version = "1.2.3"
 description = "Python library to parse Circuit Maintenance notifications and return a structured data back"
 category = "main"
 optional = false
@@ -164,7 +164,7 @@ python-versions = ">=3.6.1,<4.0.0"
 
 [package.dependencies]
 bs4 = ">=0.0.1,<0.0.2"
-click = ">=8.0,<9.0"
+click = ">=7.1,<9.0"
 geopy = ">=2.1.0,<3.0.0"
 icalendar = ">=4.0.7,<5.0.0"
 lxml = ">=4.6.2,<5.0.0"
@@ -1660,7 +1660,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.1"
-content-hash = "cc3f26deff575c73003833d0658ed97daede0df28a3dee1d4f853c2495f1f4de"
+content-hash = "188171e5c9a92643845b7208ffcb9724e00e4aaf7675d825ad976144e1e8dd12"
 
 [metadata.files]
 aniso8601 = [
@@ -1750,8 +1750,8 @@ chardet = [
     {file = "chardet-4.0.0.tar.gz", hash = "sha256:0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa"},
 ]
 circuit-maintenance-parser = [
-    {file = "circuit-maintenance-parser-1.2.2.tar.gz", hash = "sha256:2e171761b39ccf03f3d854e0fdec2895274396877ccb31e516e8006e1efb5b74"},
-    {file = "circuit_maintenance_parser-1.2.2-py3-none-any.whl", hash = "sha256:d2fbec46b70c49517ae9b6560db46432a57cc93642fea1b36ca4b0fbf3d11f34"},
+    {file = "circuit-maintenance-parser-1.2.3.tar.gz", hash = "sha256:c92c5ba335698d836dc131545ca343828bd211c064a56163443fc2aabbebbce9"},
+    {file = "circuit_maintenance_parser-1.2.3-py3-none-any.whl", hash = "sha256:ab73554d4be6db89de412a514f2ebe4a6398250fa512ffb6a427f454f88a779b"},
 ]
 click = [
     {file = "click-8.0.1-py3-none-any.whl", hash = "sha256:fba402a4a47334742d782209a7c79bc448911afe1149d07bdabdf480b3e2f4b6"},

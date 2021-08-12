@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.9 - 2021-08-12
+
+### Changed
+
+- Bump `circuit-maintenance-parser` to v1.2.3 to accept more `click` versions and do not conflict with `nautobot` 1.1.2.
+
 ## v0.1.8 - 2021-08-12
 
 ### Added
