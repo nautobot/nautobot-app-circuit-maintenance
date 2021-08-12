@@ -24,7 +24,7 @@ nautobot = "*"
 # nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
 bs4 = "^0.0.1"
 pydantic = "^1.8.1"
-circuit-maintenance-parser = "^1.2.2"
+circuit-maintenance-parser = "^1.2.3"
 google-api-python-client = "^2.9.0"
 google-oauth = "^1.0.0"
 google-auth-httplib2 = "^0.1.0"
