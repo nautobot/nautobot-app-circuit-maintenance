@@ -7,7 +7,7 @@ from nautobot.circuits.models import CircuitTermination
 from .models import CircuitMaintenance, CircuitImpact
 
 
-def metric_maintenance_status():
+def metric_active_maintenances():
     """Expose the operational state of CircuitImpacts when a Maintenance is ongoing.
 
     # Circuit in maintenance mode
