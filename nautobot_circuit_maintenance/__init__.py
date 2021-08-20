@@ -82,5 +82,11 @@ class CircuitMaintenanceConfig(PluginConfig):
         post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)
 
+        # pylint: disable=import-outside-toplevel
+        from nautobot_capacity_metrics import register_metric_func
+        from .metrics_app import metric_maintenance_status
+
+        register_metric_func(metric_maintenance_status)
+
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name
