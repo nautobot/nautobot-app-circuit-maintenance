@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.10
+
+### Added
+
+- #73: Add new application metric: `Active Circuit Maintenances per circuit` to show the circuit with currently active maintenances.
+
 ## v0.1.9 - 2021-08-12
 
 ### Changed

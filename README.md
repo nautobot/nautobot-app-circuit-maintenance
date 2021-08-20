@@ -204,6 +204,18 @@ Attributes:
 <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_maintenance.png" width="800" class="center">
 </p>
 
+### Metrics
+
+Leveraging on `nautobot-capacity-metrics` plugin, the `nautobot-circuit-maintenance` plugin will expose application metrics at `/api/plugins/capacity-metrics/app-metrics`
+
+Current exposed metric is the `Active Circuit Maintenances per circuit` which shows all the circuits that have an active maintenance:
+
+```
+# HELP nautobot_circuit_maintenance_total Active Circuit Maintenances per circuit
+# TYPE nautobot_circuit_maintenance_total counter
+nautobot_circuit_maintenance_total{circuit="1111111",circuit_maintenance="123412341234",circuit_type="asdfgfdg",impact="OUTAGE",provider="ntt",site="site a"} 1.0
+```
+
 ### Rest API
 
 The plugin includes 6 API endpoints to manage its related objects, complete info in the Swagger section.
