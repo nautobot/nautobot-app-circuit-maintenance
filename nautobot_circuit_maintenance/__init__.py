@@ -84,9 +84,9 @@ class CircuitMaintenanceConfig(PluginConfig):
 
         # pylint: disable=import-outside-toplevel
         from nautobot_capacity_metrics import register_metric_func
-        from .metrics_app import metric_active_maintenances
+        from .metrics_app import metric_circuit_operational
 
-        register_metric_func(metric_active_maintenances)
+        register_metric_func(metric_circuit_operational)
 
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name

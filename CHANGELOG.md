@@ -4,7 +4,7 @@
 
 ### Added
 
-- #73: Add new application metric: `Active Circuit Maintenances per circuit` to show the circuit with currently active maintenances.
+- #73: Add new application metric: `Circuit Operational status` to show the circuit status depending on related Circuit Maintenances.
 
 ## v0.1.9 - 2021-08-12
 
