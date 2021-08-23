@@ -31,7 +31,9 @@ def metric_circuit_operational():
 
     for circuit in Circuit.objects.all():
         status = 1
-        if CircuitImpact.objects.filter(circuit=circuit, maintenance__in=active_circuit_maintenances):
+        if CircuitImpact.objects.filter(circuit=circuit, maintenance__in=active_circuit_maintenances).exclude(
+            impact="NO-IMPACT"
+        ):
             status = 2
 
         try:
