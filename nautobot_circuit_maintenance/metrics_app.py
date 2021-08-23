@@ -1,10 +1,44 @@
 """Nautobot Circuit Maintenance plugin application level metrics exposed through nautobot_capacity_metrics."""
+from collections import OrderedDict
+import functools
 from datetime import datetime
 from prometheus_client.core import CounterMetricFamily
-from django.core.exceptions import ObjectDoesNotExist
-from nautobot.circuits.models import CircuitTermination, Circuit
+from nautobot.circuits.models import Circuit
+from django.conf import settings
 
 from .models import CircuitMaintenance, CircuitImpact
+
+
+def rgetattr(obj, attr, *args):
+    """Recursive GetAttr to look for nested attributes."""
+
+    def _getattr(obj, attr):
+        """Extract the nested value. If the value supports `all()` we return the first valid object."""
+        value = getattr(obj, attr, *args)
+
+        try:
+            for item in value.all():
+                try:
+                    return item
+                except AttributeError:
+                    pass
+        except AttributeError:
+            pass
+
+        return value
+
+    return functools.reduce(_getattr, [obj] + attr.split("."))
+
+
+PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+DEFAULT_LABELS = OrderedDict(
+    {
+        "circuit": "cid",
+        "provider": "provider.name",
+        "circuit_type": "type.name",
+        "site": "terminations.site.name",
+    }
+)
 
 
 def metric_circuit_operational():
@@ -16,10 +50,12 @@ def metric_circuit_operational():
     # Circuit in maintenance mode
     circuit_maintenance_status{"circuit": "YYYYYY", provider="ntt", circuit_type="peering", site='YY"} 2.0
     """
+    labels = PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", OrderedDict(DEFAULT_LABELS))
+
     counters = CounterMetricFamily(
         "nautobot_circuit_maintenance",
         "Circuit operational status",
-        labels=["circuit", "provider", "circuit_type", "site"],
+        labels=list(labels.keys()),
     )
 
     # Statuses that we understand a Circuit Maintenance is expected to run
@@ -36,19 +72,17 @@ def metric_circuit_operational():
         ):
             status = 2
 
-        try:
-            circuit_termination = CircuitTermination.objects.get(circuit_id=circuit.id)
-            site_name = circuit_termination.site.name
-        except ObjectDoesNotExist:
-            site_name = "n/a"
+        values = []
+
+        for _, attr in labels.items():
+            try:
+                label_value = rgetattr(circuit, attr)
+            except AttributeError:
+                label_value = "n/a"
+            values.append(label_value)
 
         counters.add_metric(
-            [
-                circuit.cid,
-                circuit.provider.name,
-                circuit.type.name,
-                site_name,
-            ],
+            values,
             status,
         )
 

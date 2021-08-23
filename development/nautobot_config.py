@@ -263,6 +263,14 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
             },
         ],
+        "metrics": {
+            "labels_attached": {
+                "circuit": "cid",
+                "provider": "provider.name",
+                "circuit_type": "type.name",
+                "site": "terminations.site.name",
+            }
+        },
     }
 }
 

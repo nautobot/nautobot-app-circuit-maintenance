@@ -208,13 +208,31 @@ Attributes:
 
 Leveraging on `nautobot-capacity-metrics` plugin, the `nautobot-circuit-maintenance` plugin will expose application metrics at `/api/plugins/capacity-metrics/app-metrics`
 
-Current exposed metric is the `ircuit operational status` which shows the operational status for each Circuit depending on related Circuit Maintenances (1: Operational, 2: Under active maintenance):
+Current exposed metric is the `circuit operational status` which shows the operational status for each Circuit depending on related Circuit Maintenances (1: Operational, 2: Under active maintenance):
 
 ```
 # HELP nautobot_circuit_maintenance_total Circuit operational status
 # TYPE nautobot_circuit_maintenance_total counter
 nautobot_circuit_maintenance_total{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
 nautobot_circuit_maintenance_total{circuit="2222222",circuit_type="Peering",provider="colt",site="n/a"} 1.0
+```
+
+By default, each circuit has attached some labels and values (cid, provider, type and site), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object. (Note: in case of a value that can be multiple values, such as `terminations`, the first defined one will be used)
+
+```
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        ...
+        "metrics": {
+            "labels_attached": {
+                "circuit": "cid",
+                "provider": "provider.name",
+                "circuit_type": "type.name",
+                "site": "terminations.site.name",
+            }
+        },
+    }
+}
 ```
 
 ### Rest API
