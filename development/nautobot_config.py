@@ -264,12 +264,13 @@ PLUGINS_CONFIG = {
             },
         ],
         "metrics": {
+            "enable": False,
             "labels_attached": {
                 "circuit": "cid",
                 "provider": "provider.name",
                 "circuit_type": "type.name",
                 "site": "terminations.site.name",
-            }
+            },
         },
     }
 }

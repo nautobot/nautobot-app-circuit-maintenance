@@ -217,6 +217,8 @@ nautobot_circuit_maintenance_total{circuit="1111111",circuit_type="Transit",prov
 nautobot_circuit_maintenance_total{circuit="2222222",circuit_type="Peering",provider="colt",site="n/a"} 1.0
 ```
 
+Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict.
+
 By default, each circuit has attached some labels and values (cid, provider, type and site), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object. (Note: in case of a value that can be multiple values, such as `terminations`, the first defined one will be used)
 
 ```
@@ -224,6 +226,7 @@ PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         ...
         "metrics": {
+            "enable": True,
             "labels_attached": {
                 "circuit": "cid",
                 "provider": "provider.name",

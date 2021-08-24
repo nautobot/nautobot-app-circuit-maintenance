@@ -86,7 +86,9 @@ class CircuitMaintenanceConfig(PluginConfig):
         from nautobot_capacity_metrics import register_metric_func
         from .metrics_app import metric_circuit_operational
 
-        register_metric_func(metric_circuit_operational)
+        # App metrics are disabled by default
+        if settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
+            register_metric_func(metric_circuit_operational)
 
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name
