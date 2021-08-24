@@ -31,14 +31,12 @@ def rgetattr(obj, attr, *args):
 
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
-DEFAULT_LABELS = OrderedDict(
-    {
-        "circuit": "cid",
-        "provider": "provider.name",
-        "circuit_type": "type.name",
-        "site": "terminations.site.name",
-    }
-)
+DEFAULT_LABELS = {
+    "circuit": "cid",
+    "provider": "provider.name",
+    "circuit_type": "type.name",
+    "site": "terminations.site.name",
+}
 
 
 def metric_circuit_operational():
@@ -50,7 +48,7 @@ def metric_circuit_operational():
     # Circuit in maintenance mode
     circuit_maintenance_status{"circuit": "YYYYYY", provider="ntt", circuit_type="peering", site='YY"} 2.0
     """
-    labels = PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", OrderedDict(DEFAULT_LABELS))
+    labels = OrderedDict(PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", DEFAULT_LABELS))
 
     counters = CounterMetricFamily(
         "nautobot_circuit_maintenance",
