@@ -6,7 +6,7 @@ from prometheus_client.core import CounterMetricFamily
 from nautobot.circuits.models import Circuit
 from django.conf import settings
 
-from .models import CircuitMaintenance, CircuitImpact
+from .models import CircuitImpact, CircuitMaintenance
 
 
 def rgetattr(obj, attr, *args):
@@ -65,15 +65,16 @@ def metric_circuit_operational():
         status__in=active_statuses, start_time__lte=datetime.utcnow(), end_time__gte=datetime.utcnow()
     )
 
-    for circuit in Circuit.objects.all():
+    active_circuit_impacts = CircuitImpact.objects.filter(maintenance__in=active_circuit_maintenances).exclude(
+        impact="NO-IMPACT"
+    )
+
+    for circuit in Circuit.objects.all().prefetch_related("circuitimpact_set"):
         status = 1
-        if CircuitImpact.objects.filter(circuit=circuit, maintenance__in=active_circuit_maintenances).exclude(
-            impact="NO-IMPACT"
-        ):
+        if any(circuit_impact in active_circuit_impacts for circuit_impact in circuit.circuitimpact_set.all()):
             status = 2
 
         values = []
-
         for _, attr in labels.items():
             try:
                 label_value = rgetattr(circuit, attr)
