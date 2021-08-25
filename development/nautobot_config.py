@@ -266,10 +266,10 @@ PLUGINS_CONFIG = {
         "metrics": {
             "enable": False,
             "labels_attached": {
-                "circuit": "cid",
-                "provider": "provider.name",
-                "circuit_type": "type.name",
-                "site": "terminations.site.name",
+                "circuit": "circuit.cid",
+                "provider": "circuit.provider.name",
+                "circuit_type": "circuit.type.name",
+                "site": "site.name",
             },
         },
     }

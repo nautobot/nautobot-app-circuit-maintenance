@@ -20,6 +20,7 @@ class AppMetricTests(TestCase):
         self.circuit_3 = Circuit.objects.create(cid="Circuit 3", provider=self.provider, type=self.circuit_type)
         self.site = Site.objects.create(name="Site 1", slug="site-1")
         CircuitTermination.objects.create(circuit=self.circuit, term_side="A", site=self.site)
+        CircuitTermination.objects.create(circuit=self.circuit_2, term_side="Z", site=self.site)
         self.circuit_maintenance = CircuitMaintenance.objects.create(
             name="Circuit Maintenance 1",
             status="CONFIRMED",
@@ -35,13 +36,13 @@ class AppMetricTests(TestCase):
         for circuit_metric in circuit_metrics:
             self.assertIsInstance(circuit_metric.name, str)
             self.assertIsInstance(circuit_metric.samples, list)
-            self.assertEqual(len(circuit_metric.samples), 3)
+            self.assertEqual(len(circuit_metric.samples), 2)
             for sample in circuit_metric.samples:
                 self.assertEqual(sample.labels["provider"], self.provider.name)
                 self.assertEqual(sample.labels["circuit_type"], self.circuit_type.name)
                 if sample.labels["circuit"] == self.circuit.cid:
                     self.assertEqual(sample.labels["site"], self.site.name)
                     self.assertEqual(sample.value, 2)
-                else:
-                    self.assertEqual(sample.labels["site"], "n/a")
+                elif sample.labels["circuit"] == self.circuit_2.cid:
+                    self.assertEqual(sample.labels["site"], self.site.name)
                     self.assertEqual(sample.value, 1)

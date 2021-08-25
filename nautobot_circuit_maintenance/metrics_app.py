@@ -3,7 +3,7 @@ from collections import OrderedDict
 import functools
 from datetime import datetime
 from prometheus_client.core import CounterMetricFamily
-from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import CircuitTermination
 from django.conf import settings
 
 from .models import CircuitImpact, CircuitMaintenance
@@ -16,15 +16,6 @@ def rgetattr(obj, attr, *args):
         """Extract the nested value. If the value supports `all()` we return the first valid object."""
         value = getattr(obj, attr, *args)
 
-        try:
-            for item in value.all():
-                try:
-                    return item
-                except AttributeError:
-                    pass
-        except AttributeError:
-            pass
-
         return value
 
     return functools.reduce(_getattr, [obj] + attr.split("."))
@@ -32,15 +23,15 @@ def rgetattr(obj, attr, *args):
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 DEFAULT_LABELS = {
-    "circuit": "cid",
-    "provider": "provider.name",
-    "circuit_type": "type.name",
-    "site": "terminations.site.name",
+    "circuit": "circuit.cid",
+    "provider": "circuit.provider.name",
+    "circuit_type": "circuit.type.name",
+    "site": "site.name",
 }
 
 
 def metric_circuit_operational():
-    """Expose the operational state of CircuitImpacts when a Maintenance is ongoing.
+    """Expose the operational state of Circuits with a CircuitTermination when a Maintenance is ongoing.
 
     # Circuit operational
     circuit_maintenance_status{"circuit": "XXXXX", provider="ntt", circuit_type="peering", site='XX"} 1.0
@@ -67,15 +58,17 @@ def metric_circuit_operational():
         impact="NO-IMPACT"
     )
 
-    for circuit in Circuit.objects.all().prefetch_related("circuitimpact_set"):
+    for termination in CircuitTermination.objects.all().prefetch_related("circuit"):
         status = 1
-        if any(circuit_impact in active_circuit_impacts for circuit_impact in circuit.circuitimpact_set.all()):
+        if any(
+            circuit_impact in active_circuit_impacts for circuit_impact in termination.circuit.circuitimpact_set.all()
+        ):
             status = 2
 
         values = []
         for _, attr in labels.items():
             try:
-                label_value = rgetattr(circuit, attr)
+                label_value = rgetattr(termination, attr)
             except AttributeError:
                 label_value = "n/a"
             values.append(label_value)
