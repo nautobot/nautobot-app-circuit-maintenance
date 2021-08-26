@@ -411,7 +411,7 @@ class IMAP(EmailSource):
         else:
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
-            msg_ids.extend = messages.split()
+            msg_ids.extend(messages.split())
             if settings.DEBUG:
                 job_logger.log_debug(
                     message=(
