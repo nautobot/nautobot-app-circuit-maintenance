@@ -401,16 +401,30 @@ class IMAP(EmailSource):
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
+                job_logger.log_debug(
+                    message=(
+                        f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
+                    ),
+                )
         else:
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend = messages.split()
+            job_logger.log_debug(
+                message=(
+                    f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
+                ),
+            )
 
         received_notifications = []
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
+        job_logger.log_debug(
+            message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
+        )
 
         self.close_session()
         return received_notifications
@@ -560,11 +574,19 @@ class GmailAPI(EmailSource):
         )
         msg_ids = [msg["id"] for msg in res.get("messages", [])]
 
+        job_logger.log_debug(
+            message=(f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."),
+        )
+
         received_notifications = []
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
+        job_logger.log_debug(
+            message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
+        )
 
         # job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
 
