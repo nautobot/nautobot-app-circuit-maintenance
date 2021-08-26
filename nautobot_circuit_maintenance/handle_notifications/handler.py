@@ -168,7 +168,9 @@ def process_parsed_notification(logger: Job, parsed_notification: ParsedNotifica
     logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {maintenance_id}.")
 
 
-def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Union[int, None]:
+def process_raw_notification(  # pylint: disable=too-many-branches
+    logger: Job, notification: MaintenanceNotification
+) -> Union[int, None]:
     """Processes a raw notification (maybe containing multiple parsed notifications).
 
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
