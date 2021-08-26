@@ -409,7 +409,7 @@ class IMAP(EmailSource):
         else:
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
-            msg_ids.extend = messages.split()
+            msg_ids.extend(messages.split())
             job_logger.log_debug(
                 message=(
                     f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
