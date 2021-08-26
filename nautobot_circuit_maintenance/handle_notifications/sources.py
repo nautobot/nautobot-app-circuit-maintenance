@@ -224,7 +224,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 ),
             )
             return False
-        if job_logger.debug:
+        if job_logger.debug is True:
             job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
@@ -356,7 +356,7 @@ class IMAP(EmailSource):
                     raw_payloads.append(part.get_payload())
                     break
             else:
-                if job_logger.debug:
+                if job_logger.debug is True:
                     job_logger.log_debug(
                         message=f"Payload type {provider_data_type} not found in email payload.",
                     )
@@ -402,7 +402,7 @@ class IMAP(EmailSource):
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
-                if job_logger.debug:
+                if job_logger.debug is True:
                     job_logger.log_debug(
                         message=(
                             f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
@@ -412,7 +412,7 @@ class IMAP(EmailSource):
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend(messages.split())
-            if job_logger.debug:
+            if job_logger.debug is True:
                 job_logger.log_debug(
                     message=(
                         f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
@@ -540,7 +540,7 @@ class GmailAPI(EmailSource):
                 message=f"Payload types {provider_data_types} not found in email payload.",
             )
             return None
-        if job_logger.debug:
+        if job_logger.debug is True:
             job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
         return MaintenanceNotification(
             source=self.name,
@@ -577,7 +577,7 @@ class GmailAPI(EmailSource):
         )
         msg_ids = [msg["id"] for msg in res.get("messages", [])]
 
-        if job_logger.debug:
+        if job_logger.debug is True:
             job_logger.log_debug(
                 message=(
                     f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."
@@ -590,7 +590,7 @@ class GmailAPI(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        if job_logger.debug:
+        if job_logger.debug is True:
             job_logger.log_debug(
                 message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
             )

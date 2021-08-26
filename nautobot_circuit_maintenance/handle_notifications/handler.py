@@ -265,7 +265,7 @@ class HandleCircuitMaintenanceNotifications(Job):
 
     def run(self, data=None, commit=None):
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
-        if self.debug:
+        if self.debug is True:
             self.log_debug("Starting Handle Notifications job.")
         raw_notification_ids = []
         notification_sources = NotificationSource.objects.all()
@@ -303,6 +303,6 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         except Exception as error:
             self.log_failure(message=f"Unexpected exception in Handle Notifications Job: {error}")
-        if self.debug:
+        if self.debug is True:
             self.log_debug(f"{len(raw_notification_ids)} notifications processed.")
         return raw_notification_ids
