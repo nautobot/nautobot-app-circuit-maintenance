@@ -5,7 +5,7 @@ from typing import Union
 from django.conf import settings
 from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.extras.jobs import Job
+from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -196,17 +196,13 @@ def process_raw_notification(  # pylint: disable=too-many-branches
             parsed_notifications = parser.process()
             break
         except ParsingError:
-            if settings.DEBUG:
-                tb_str = traceback.format_exc()
-                logger.log_debug(
-                    message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```"
-                )
+            tb_str = traceback.format_exc()
+            logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
         except Exception:
-            if settings.DEBUG:
-                tb_str = traceback.format_exc()
-                logger.log_debug(
-                    message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
-                )
+            tb_str = traceback.format_exc()
+            logger.log_info(
+                message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
+            )
     else:
         parsed_notifications = []
         logger.log_warning(message=f"Parsed failed for all the raw payloads for `{notification.subject}`.")
@@ -232,7 +228,7 @@ def process_raw_notification(  # pylint: disable=too-many-branches
 
     if not created:
         # If the RawNotification was already created, we ignore it.
-        if settings.DEBUG:
+        if logger.debug:
             logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
 
@@ -257,6 +253,8 @@ def process_raw_notification(  # pylint: disable=too-many-branches
 class HandleCircuitMaintenanceNotifications(Job):
     """Job to handle external circuit maintenance notifications and turn them into Circuit Maintenances."""
 
+    debug = BooleanVar(default=False, description="Enable getting debug Job messages.")
+
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
@@ -267,7 +265,7 @@ class HandleCircuitMaintenanceNotifications(Job):
 
     def run(self, data=None, commit=None):
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
-        if settings.DEBUG:
+        if self.debug:
             self.log_debug("Starting Handle Notifications job.")
         raw_notification_ids = []
         notification_sources = NotificationSource.objects.all()
@@ -305,6 +303,6 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         except Exception as error:
             self.log_failure(message=f"Unexpected exception in Handle Notifications Job: {error}")
-        if settings.DEBUG:
+        if self.debug:
             self.log_debug(f"{len(raw_notification_ids)} notifications processed.")
         return raw_notification_ids

@@ -1,7 +1,6 @@
 """Tests for Handle Notifications methods."""
 from unittest.mock import Mock, patch
 from django.test import TestCase
-from django.conf import settings
 from jinja2 import Template
 
 from nautobot.circuits.models import Circuit, Provider
@@ -85,8 +84,8 @@ class TestHandleNotificationsJob(TestCase):
     """Test case for all the related methods in Handle Notifications."""
 
     fixtures = ["handle_notifications_job.yaml"]
-    settings.DEBUG = True
     job = HandleCircuitMaintenanceNotifications()
+    job.debug = True
     job._job_result = Mock()  # pylint: disable=protected-access
     job.log_debug = Mock()
     job.log_info = Mock()

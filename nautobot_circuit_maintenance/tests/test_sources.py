@@ -353,6 +353,7 @@ class TestIMAPSource(TestCase):
         )
 
         job = Job()
+        job.debug = True
         job.job_result = JobResult.objects.create(
             name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
         )
@@ -387,6 +388,7 @@ class TestIMAPSource(TestCase):
         )
 
         job = Job()
+        job.debug = True
         job.job_result = JobResult.objects.create(
             name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
         )
@@ -599,6 +601,7 @@ class TestGmailAPISource(TestCase):
         provider.save()
 
         job = Job()
+        job.debug = True
         job.job_result = JobResult.objects.create(
             name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
         )
