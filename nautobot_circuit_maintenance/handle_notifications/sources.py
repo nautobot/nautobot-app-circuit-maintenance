@@ -556,14 +556,14 @@ class GmailAPI(EmailSource):
 
         search_criteria = ""
         if since_timestamp:
-            since_txt = since_timestamp.strftime("%Y/%b/%d")
-            search_criteria = f'after:"{since_txt}"'
+            since_txt = since_timestamp.strftime("%Y/%m/%d")
+            search_criteria = f"after:{since_txt}"
 
         # If source_header is not "from" but some other custom header such as X-Original-Sender,
         # the GMail API doesn't let us filter by that.
         if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
-            search_criteria += f'({" OR ".join(emails_with_from)})'
+            search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         # TODO: For now not covering pagination as a way to limit the number of messages
         res = (
