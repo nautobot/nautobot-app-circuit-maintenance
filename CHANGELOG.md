@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.1.10
+
+### Fixed
+
+- #74: Fix Gmail API `after` format.
+
 ## v0.1.9 - 2021-08-12
 
 ### Changed
