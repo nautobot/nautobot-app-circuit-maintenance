@@ -5,7 +5,7 @@ from typing import Union
 from django.conf import settings
 from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.extras.jobs import Job
+from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -168,7 +168,9 @@ def process_parsed_notification(logger: Job, parsed_notification: ParsedNotifica
     logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {maintenance_id}.")
 
 
-def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Union[int, None]:
+def process_raw_notification(  # pylint: disable=too-many-branches
+    logger: Job, notification: MaintenanceNotification
+) -> Union[int, None]:
     """Processes a raw notification (maybe containing multiple parsed notifications).
 
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
@@ -195,10 +197,10 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             break
         except ParsingError:
             tb_str = traceback.format_exc()
-            logger.log_debug(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
+            logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
         except Exception:
             tb_str = traceback.format_exc()
-            logger.log_debug(
+            logger.log_info(
                 message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
             )
     else:
@@ -226,7 +228,8 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
 
     if not created:
         # If the RawNotification was already created, we ignore it.
-        logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
+        if logger.debug:
+            logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
@@ -250,6 +253,8 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
 class HandleCircuitMaintenanceNotifications(Job):
     """Job to handle external circuit maintenance notifications and turn them into Circuit Maintenances."""
 
+    debug = BooleanVar(default=False, description="Enable getting debug Job messages.")
+
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
@@ -260,7 +265,8 @@ class HandleCircuitMaintenanceNotifications(Job):
 
     def run(self, data=None, commit=None):
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
-        self.log_debug("Starting Handle Notifications job.")
+        if self.debug is True:
+            self.log_debug("Starting Handle Notifications job.")
         raw_notification_ids = []
         notification_sources = NotificationSource.objects.all()
         if not notification_sources:
@@ -297,6 +303,6 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         except Exception as error:
             self.log_failure(message=f"Unexpected exception in Handle Notifications Job: {error}")
-
-        self.log_debug(f"{len(raw_notification_ids)} notifications processed.")
+        if self.debug is True:
+            self.log_debug(f"{len(raw_notification_ids)} notifications processed.")
         return raw_notification_ids
