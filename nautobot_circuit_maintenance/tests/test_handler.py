@@ -84,8 +84,8 @@ class TestHandleNotificationsJob(TestCase):
     """Test case for all the related methods in Handle Notifications."""
 
     fixtures = ["handle_notifications_job.yaml"]
-
     job = HandleCircuitMaintenanceNotifications()
+    job.debug = True
     job._job_result = Mock()  # pylint: disable=protected-access
     job.log_debug = Mock()
     job.log_info = Mock()
