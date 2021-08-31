@@ -2,6 +2,10 @@
 
 ## v0.1.10
 
+### Added
+
+- #78: Add optional `extra_scopes` config parameter to use with Gmail notification sources.
+
 ### Fixed
 
 - #74: Fix Gmail API `after` format.
