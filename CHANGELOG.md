@@ -4,7 +4,7 @@
 
 ### Added
 
-- #73: Add new application metric: `Circuit Operational status` to show the circuit status depending on related Circuit Maintenances.
+- #73: Add new application metric: `circuit_maintenance_status` to show the circuit status depending on related Circuit Maintenances.
 
 ### Fixed
 
