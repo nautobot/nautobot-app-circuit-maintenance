@@ -8,7 +8,7 @@ import email
 import json
 import traceback
 from urllib.parse import urlparse
-from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
+from typing import Iterable, List, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
@@ -444,7 +444,7 @@ class GmailAPI(EmailSource):
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
-    extra_scopes: Iterable[str] = []
+    extra_scopes: List[str] = []
 
     class Config:
         """Pydantic BaseModel config."""
