@@ -42,8 +42,8 @@ def metric_circuit_operational():
     labels = OrderedDict(PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", DEFAULT_LABELS))
 
     gauges = GaugeMetricFamily(
-        "nautobot_circuit_status",
-        "Circuit operational status",
+        "circuit_maintenance_status",
+        "Circuit Maintenance status",
         labels=list(labels.keys()),
     )
 
@@ -54,24 +54,24 @@ def metric_circuit_operational():
         status__in=active_statuses, start_time__lte=datetime.utcnow(), end_time__gte=datetime.utcnow()
     )
 
-    active_circuit_impacts = CircuitImpact.objects.filter(maintenance__in=active_circuit_maintenances).exclude(
-        impact="NO-IMPACT"
+    active_circuit_impacts = (
+        CircuitImpact.objects.filter(maintenance__in=active_circuit_maintenances)
+        .exclude(impact="NO-IMPACT")
+        .prefetch_related("circuit")
     )
 
     for termination in CircuitTermination.objects.all().prefetch_related("circuit"):
         status = 1
-        if any(
-            circuit_impact in active_circuit_impacts for circuit_impact in termination.circuit.circuitimpact_set.all()
-        ):
-            status = 0
+        if any(circuit_impact.circuit == termination.circuit for circuit_impact in active_circuit_impacts):
+            status = 2
 
         values = []
         for _, attr in labels.items():
             try:
                 label_value = rgetattr(termination, attr)
+                values.append(label_value)
             except AttributeError:
-                label_value = "n/a"
-            values.append(label_value)
+                pass
 
         gauges.add_metric(
             values,

@@ -213,10 +213,8 @@ Current exposed metric is the `circuit operational status` which shows the opera
 ```
 # HELP circuit_maintenance_status Circuit operational status
 # TYPE circuit_maintenance_status gauge
-circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona",status="operational"} 0.0
-circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona",status="active-maintenance"} 1.0
-circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona",status="operational"} 1.0
-circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona",status="active-maintenance"} 0.0
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona"} 1.0
 ```
 
 Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict. (Of course you must also install the `nautobot_capacity_metrics` plugin and ensure that it is included in `PLUGINS` as a prerequisite to enabling this feature.)

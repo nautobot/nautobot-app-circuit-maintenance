@@ -13,22 +13,64 @@ class AppMetricTests(TestCase):
 
     def setUp(self):
         """Setup objects to run the test."""
-        self.provider = Provider.objects.create(name="Provider 1", slug="provider-1")
-        self.circuit_type = CircuitType.objects.create(name="Circuit Type 1", slug="circuit-type-1")
-        self.circuit = Circuit.objects.create(cid="Circuit 1", provider=self.provider, type=self.circuit_type)
-        self.circuit_2 = Circuit.objects.create(cid="Circuit 2", provider=self.provider, type=self.circuit_type)
-        self.circuit_3 = Circuit.objects.create(cid="Circuit 3", provider=self.provider, type=self.circuit_type)
-        self.site = Site.objects.create(name="Site 1", slug="site-1")
-        CircuitTermination.objects.create(circuit=self.circuit, term_side="A", site=self.site)
-        CircuitTermination.objects.create(circuit=self.circuit_2, term_side="Z", site=self.site)
-        self.circuit_maintenance = CircuitMaintenance.objects.create(
+        for test_id in range(5):
+            # Creating 5 Providers
+            setattr(
+                self,
+                f"provider_{test_id}",
+                Provider.objects.create(name=f"Provider {test_id}", slug=f"provider-{test_id}"),
+            )
+            # Creating 5 CircuitTypes
+            setattr(
+                self,
+                f"circuit_type_{test_id}",
+                CircuitType.objects.create(name=f"Circuit Type {test_id}", slug=f"circuit-type-{test_id}"),
+            )
+            # Createing 5 Circuits
+            setattr(
+                self,
+                f"circuit_{test_id}",
+                Circuit.objects.create(
+                    cid=f"Circuit {test_id}",
+                    provider=getattr(self, f"provider_{test_id}"),
+                    type=getattr(self, f"circuit_type_{test_id}"),
+                ),
+            )
+
+            if test_id < 4:
+                # Creating 4 Sites
+                setattr(
+                    self,
+                    f"site_{test_id}",
+                    Site.objects.create(name=f"Site {test_id}", slug=f"site-{test_id}"),
+                )
+                # Creating 4 CircuitTerminations
+                term_side = "A" if (test_id % 2) == 0 else "Z"
+                CircuitTermination.objects.create(
+                    circuit=getattr(self, f"circuit_{test_id}"),
+                    term_side=term_side,
+                    site=getattr(self, f"site_{test_id}"),
+                )
+
+        self.circuit_maintenance_1 = CircuitMaintenance.objects.create(
             name="Circuit Maintenance 1",
             status="CONFIRMED",
             start_time=datetime.utcnow() - timedelta(minutes=1),
             end_time=datetime.utcnow() + timedelta(minutes=1),
         )
-        CircuitImpact.objects.create(circuit=self.circuit, maintenance=self.circuit_maintenance)
-        CircuitImpact.objects.create(circuit=self.circuit_3, maintenance=self.circuit_maintenance, impact="NO-IMPACT")
+        self.circuit_maintenance_3 = CircuitMaintenance.objects.create(
+            name="Circuit Maintenance 3",
+            status="CONFIRMED",
+            start_time=datetime.utcnow() + timedelta(minutes=20),
+            end_time=datetime.utcnow() + timedelta(minutes=21),
+        )
+
+        CircuitImpact.objects.create(circuit=getattr(self, "circuit_1"), maintenance=self.circuit_maintenance_1)
+        CircuitImpact.objects.create(
+            circuit=getattr(self, "circuit_2"), maintenance=self.circuit_maintenance_1, impact="NO-IMPACT"
+        )
+        CircuitImpact.objects.create(circuit=getattr(self, "circuit_3"), maintenance=self.circuit_maintenance_3)
+        # Circuit 4 and 5 have no maintenance attached
 
     def test_metric_circuit_operational(self):
         """Ensure the metric_circuit_operational command is working properly."""
@@ -36,13 +78,14 @@ class AppMetricTests(TestCase):
         for circuit_metric in circuit_metrics:
             self.assertIsInstance(circuit_metric.name, str)
             self.assertIsInstance(circuit_metric.samples, list)
-            self.assertEqual(len(circuit_metric.samples), 2)
+            # Circuit 5 has not Termination, so it should not appear in the metrics
+            self.assertEqual(len(circuit_metric.samples), 4)
             for sample in circuit_metric.samples:
-                self.assertEqual(sample.labels["provider"], self.provider.name)
-                self.assertEqual(sample.labels["circuit_type"], self.circuit_type.name)
-                if sample.labels["circuit"] == self.circuit.cid:
-                    self.assertEqual(sample.labels["site"], self.site.name)
-                    self.assertEqual(sample.value, 0)
-                elif sample.labels["circuit"] == self.circuit_2.cid:
-                    self.assertEqual(sample.labels["site"], self.site.name)
+                test_id = sample.labels["circuit"].split(" ")[-1]
+                self.assertEqual(sample.labels["provider"], getattr(self, f"provider_{test_id}").name)
+                self.assertEqual(sample.labels["circuit_type"], getattr(self, f"circuit_type_{test_id}").name)
+                self.assertEqual(sample.labels["site"], getattr(self, f"site_{test_id}").name)
+                if test_id == "1":
+                    self.assertEqual(sample.value, 2)
+                else:
                     self.assertEqual(sample.value, 1)
