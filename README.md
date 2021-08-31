@@ -208,13 +208,15 @@ Attributes:
 
 Leveraging on `nautobot-capacity-metrics` plugin, the `nautobot-circuit-maintenance` plugin will expose application metrics at `/api/plugins/capacity-metrics/app-metrics`
 
-Current exposed metric is the `circuit operational status` which shows the operational status for each `Circuit`(attached to a `CircuitTermination`) depending on related Circuit Maintenances (1: Operational, 2: Under active maintenance):
+Current exposed metric is the `circuit operational status` which shows the operational status for each `Circuit`(attached to a `CircuitTermination`) depending on related Circuit Maintenances (1: Operational, 0: Under active maintenance):
 
 ```
-# HELP nautobot_circuit_maintenance_total Circuit operational status
-# TYPE nautobot_circuit_maintenance_total counter
-nautobot_circuit_maintenance_total{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
-nautobot_circuit_maintenance_total{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona"} 1.0
+# HELP circuit_maintenance_status Circuit operational status
+# TYPE circuit_maintenance_status gauge
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona",status="operational"} 0.0
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona",status="active-maintenance"} 1.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona",status="operational"} 1.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona",status="active-maintenance"} 0.0
 ```
 
 Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict.

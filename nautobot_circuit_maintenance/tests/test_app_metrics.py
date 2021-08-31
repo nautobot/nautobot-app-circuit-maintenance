@@ -42,7 +42,7 @@ class AppMetricTests(TestCase):
                 self.assertEqual(sample.labels["circuit_type"], self.circuit_type.name)
                 if sample.labels["circuit"] == self.circuit.cid:
                     self.assertEqual(sample.labels["site"], self.site.name)
-                    self.assertEqual(sample.value, 2)
+                    self.assertEqual(sample.value, 0)
                 elif sample.labels["circuit"] == self.circuit_2.cid:
                     self.assertEqual(sample.labels["site"], self.site.name)
                     self.assertEqual(sample.value, 1)

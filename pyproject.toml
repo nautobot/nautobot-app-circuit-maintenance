@@ -21,7 +21,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.6.1"
 nautobot = "*"
-nautobot-capacity-metrics = "*"
+nautobot-capacity-metrics = {version = "*", optional = true }
 # nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
 bs4 = "^0.0.1"
 pydantic = "^1.8.1"
@@ -42,6 +42,9 @@ pylint-django = "*"
 pydocstyle = "*"
 flake8 = "*"
 parameterized = "*"
+
+[tool.poetry.extras]
+metrics = ["nautobot-capacity-metrics"]
 
 [tool.black]
 line-length = 120

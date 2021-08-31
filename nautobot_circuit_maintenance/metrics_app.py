@@ -2,7 +2,7 @@
 from collections import OrderedDict
 import functools
 from datetime import datetime
-from prometheus_client.core import CounterMetricFamily
+from prometheus_client.core import GaugeMetricFamily
 from nautobot.circuits.models import CircuitTermination
 from django.conf import settings
 
@@ -41,8 +41,8 @@ def metric_circuit_operational():
     """
     labels = OrderedDict(PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", DEFAULT_LABELS))
 
-    counters = CounterMetricFamily(
-        "nautobot_circuit_maintenance",
+    gauges = GaugeMetricFamily(
+        "nautobot_circuit_status",
         "Circuit operational status",
         labels=list(labels.keys()),
     )
@@ -63,7 +63,7 @@ def metric_circuit_operational():
         if any(
             circuit_impact in active_circuit_impacts for circuit_impact in termination.circuit.circuitimpact_set.all()
         ):
-            status = 2
+            status = 0
 
         values = []
         for _, attr in labels.items():
@@ -73,9 +73,9 @@ def metric_circuit_operational():
                 label_value = "n/a"
             values.append(label_value)
 
-        counters.add_metric(
+        gauges.add_metric(
             values,
             status,
         )
 
-    yield counters
+    yield gauges
