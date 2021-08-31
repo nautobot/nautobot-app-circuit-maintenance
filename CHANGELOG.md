@@ -5,6 +5,7 @@
 ### Fixed
 
 - #74: Fix Gmail API `after` format.
+- #76: Fix IMAP authentication logic that was not cleaning session after authentication failure.
 
 ## v0.1.9 - 2021-08-12
 
