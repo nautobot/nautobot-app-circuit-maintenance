@@ -8,7 +8,7 @@ import email
 import json
 import traceback
 from urllib.parse import urlparse
-from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
+from typing import Iterable, List, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
@@ -163,6 +163,7 @@ class Source(BaseModel):
                     account=config.get("account"),
                     credentials_file=creds_filename,
                     source_header=config.get("source_header", "From"),
+                    extra_scopes=config.get("extra_scopes", []),
                 )
 
         raise ValueError(
@@ -443,6 +444,8 @@ class GmailAPI(EmailSource):
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
+    extra_scopes: List[str] = []
+
     class Config:
         """Pydantic BaseModel config."""
 
@@ -643,7 +646,7 @@ class GmailAPIServiceAccount(GmailAPI):
         """Load Gmail API Service Account credentials."""
         if not self.credentials:
             self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
-            self.credentials = self.credentials.with_scopes(self.SCOPES)
+            self.credentials = self.credentials.with_scopes(self.SCOPES + self.extra_scopes)
             self.credentials = self.credentials.with_subject(self.account)
             self.credentials.refresh(Request())
 
