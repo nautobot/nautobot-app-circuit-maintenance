@@ -204,6 +204,40 @@ Attributes:
 <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_maintenance.png" width="800" class="center">
 </p>
 
+### Metrics
+
+Leveraging the `nautobot-capacity-metrics` plugin, the `nautobot-circuit-maintenance` plugin can expose application metrics at `/api/plugins/capacity-metrics/app-metrics` if desired.
+
+Current exposed metric is the `circuit operational status` which shows the operational status for each `Circuit`(attached to a `CircuitTermination`) depending on related Circuit Maintenances (1: Operational, 2: Under active maintenance):
+
+```
+# HELP circuit_maintenance_status Circuit operational status
+# TYPE circuit_maintenance_status gauge
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona"} 1.0
+```
+
+Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict. (Of course you must also install the `nautobot_capacity_metrics` plugin and ensure that it is included in `PLUGINS` as a prerequisite to enabling this feature.)
+
+By default, each circuit has attached some labels and values (cid, provider, type and site), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object. (Note: in case of a value that can be multiple values, such as `terminations`, the first defined one will be used)
+
+```
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        ...
+        "metrics": {
+            "enable": True,
+            "labels_attached": {
+                "circuit": "circuit.cid",
+                "provider": "circuit.provider.name",
+                "circuit_type": "circuit.type.name",
+                "site": "site.name",
+            }
+        },
+    }
+}
+```
+
 ### Rest API
 
 The plugin includes 6 API endpoints to manage its related objects, complete info in the Swagger section.

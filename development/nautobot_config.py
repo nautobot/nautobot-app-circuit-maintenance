@@ -263,8 +263,20 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
             },
         ],
+        "metrics": {
+            "enable": True,
+            "labels_attached": {
+                "circuit": "circuit.cid",
+                "provider": "circuit.provider.name",
+                "circuit_type": "circuit.type.name",
+                "site": "site.name",
+            },
+        },
     }
 }
+
+if PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
+    PLUGINS.append("nautobot_capacity_metrics")
 
 # When determining the primary IP address for a device, IPv6 is preferred over IPv4 by default. Set this to True to
 # prefer IPv4 instead.
