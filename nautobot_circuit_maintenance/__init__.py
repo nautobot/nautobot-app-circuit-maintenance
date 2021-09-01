@@ -1,5 +1,5 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
