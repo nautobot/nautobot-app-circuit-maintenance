@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.10 - 2021-09-01
+
+### Added
+
+- #73: Add new application metric: `circuit_maintenance_status` to show the circuit status depending on related Circuit Maintenances.
+- #78: Add optional `extra_scopes` config parameter to use with Gmail notification sources.
+
+### Fixed
+
+- #74: Fix Gmail API `after` format.
+
 ## v0.1.9 - 2021-08-12
 
 ### Changed

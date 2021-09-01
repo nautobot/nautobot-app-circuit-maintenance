@@ -8,7 +8,7 @@ import email
 import json
 import traceback
 from urllib.parse import urlparse
-from typing import Iterable, Optional, TypeVar, Type, Tuple, Dict, Union
+from typing import Iterable, List, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
@@ -163,6 +163,7 @@ class Source(BaseModel):
                     account=config.get("account"),
                     credentials_file=creds_filename,
                     source_header=config.get("source_header", "From"),
+                    extra_scopes=config.get("extra_scopes", []),
                 )
 
         raise ValueError(
@@ -224,8 +225,8 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 ),
             )
             return False
-
-        # job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
+        if job_logger.debug is True:
+            job_logger.log_debug(message=f"Fetching emails from {self.emails_to_fetch}")
         job_logger.log_info(
             message=(
                 f"Retrieving notifications from {notification_source.name} for "
@@ -356,9 +357,10 @@ class IMAP(EmailSource):
                     raw_payloads.append(part.get_payload())
                     break
             else:
-                job_logger.log_debug(
-                    message=f"Payload type {provider_data_type} not found in email payload.",
-                )
+                if job_logger.debug is True:
+                    job_logger.log_debug(
+                        message=f"Payload type {provider_data_type} not found in email payload.",
+                    )
 
         if not raw_payloads:
             job_logger.log_warning(
@@ -401,16 +403,32 @@ class IMAP(EmailSource):
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
+                if job_logger.debug is True:
+                    job_logger.log_debug(
+                        message=(
+                            f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
+                        ),
+                    )
         else:
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
-            msg_ids.extend = messages.split()
+            msg_ids.extend(messages.split())
+            if job_logger.debug is True:
+                job_logger.log_debug(
+                    message=(
+                        f"Fetched {len(messages.split())} emails from {self.name} source using search pattern: {search_criteria}."
+                    ),
+                )
 
         received_notifications = []
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
+        if job_logger.debug:
+            job_logger.log_debug(
+                message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
+            )
 
         self.close_session()
         return received_notifications
@@ -425,6 +443,8 @@ class GmailAPI(EmailSource):
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+
+    extra_scopes: List[str] = []
 
     class Config:
         """Pydantic BaseModel config."""
@@ -523,8 +543,8 @@ class GmailAPI(EmailSource):
                 message=f"Payload types {provider_data_types} not found in email payload.",
             )
             return None
-
-        job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
+        if job_logger.debug is True:
+            job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
         return MaintenanceNotification(
             source=self.name,
             sender=email_source,
@@ -542,14 +562,14 @@ class GmailAPI(EmailSource):
 
         search_criteria = ""
         if since_timestamp:
-            since_txt = since_timestamp.strftime("%Y/%b/%d")
-            search_criteria = f'after:"{since_txt}"'
+            since_txt = since_timestamp.strftime("%Y/%m/%d")
+            search_criteria = f"after:{since_txt}"
 
         # If source_header is not "from" but some other custom header such as X-Original-Sender,
         # the GMail API doesn't let us filter by that.
         if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
-            search_criteria += f'({" OR ".join(emails_with_from)})'
+            search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         # TODO: For now not covering pagination as a way to limit the number of messages
         res = (
@@ -560,13 +580,24 @@ class GmailAPI(EmailSource):
         )
         msg_ids = [msg["id"] for msg in res.get("messages", [])]
 
+        if job_logger.debug is True:
+            job_logger.log_debug(
+                message=(
+                    f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."
+                ),
+            )
+
         received_notifications = []
         for msg_id in msg_ids:
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        # job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
+        if job_logger.debug is True:
+            job_logger.log_debug(
+                message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
+            )
+            job_logger.log_debug(message=f"Raw notifications: {received_notifications}")
 
         self.close_service()
         return received_notifications
@@ -615,7 +646,7 @@ class GmailAPIServiceAccount(GmailAPI):
         """Load Gmail API Service Account credentials."""
         if not self.credentials:
             self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
-            self.credentials = self.credentials.with_scopes(self.SCOPES)
+            self.credentials = self.credentials.with_scopes(self.SCOPES + self.extra_scopes)
             self.credentials = self.credentials.with_subject(self.account)
             self.credentials.refresh(Request())
 
