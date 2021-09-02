@@ -332,7 +332,7 @@ def google_authorize(request, slug):
     notification_source = models.NotificationSource.objects.get(slug=slug)
     source = Source.init(name=notification_source.name)
     request.session["CLIENT_SECRETS_FILE"] = source.credentials_file
-    request.session["SCOPES"] = source.SCOPES
+    request.session["SCOPES"] = source.SCOPES + source.extra_scopes
     request.session["SOURCE_SLUG"] = slug
 
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.

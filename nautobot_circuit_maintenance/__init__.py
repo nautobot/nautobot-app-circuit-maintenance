@@ -1,5 +1,5 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
@@ -81,6 +81,14 @@ class CircuitMaintenanceConfig(PluginConfig):
         super().ready()
         post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)
+
+        # App metrics are disabled by default
+        if settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
+            # pylint: disable=import-outside-toplevel
+            from nautobot_capacity_metrics import register_metric_func
+            from .metrics_app import metric_circuit_operational
+
+            register_metric_func(metric_circuit_operational)
 
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name
