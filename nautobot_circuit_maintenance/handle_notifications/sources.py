@@ -314,10 +314,7 @@ class IMAP(EmailSource):
         if not self.session:
             self.session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
         if self.session.state == "NONAUTH":
-            try:
-                self.session.login(self.account, self.password)
-            except imaplib.IMAP4.error:
-                raise
+            self.session.login(self.account, self.password)
 
     def close_session(self):
         """Close session to IMAP server.
