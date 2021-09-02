@@ -408,6 +408,56 @@ class TestIMAPSource(TestCase):
         self.assertEqual(notification.provider_type, "zayo")
         self.assertEqual(list(notification.raw_payloads), ["Some text goes here"])
 
+    def test_open_session(self):
+        """Test IMAP open_session logic."""
+        imap_source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+
+        self.assertIsNone(imap_source.session)
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+            # First time we don't have a session and when the session is created starts with NONAUTH state
+            mock_session.return_value.state = "NONAUTH"
+            imap_source.open_session()
+            # We expect to have a session created and having called login once.
+            self.assertIsNotNone(imap_source.session)
+            mock_session.return_value.login.assert_called_once()
+
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+            # Now, we assume the login succeeded, and state changed to SELECTED
+            mock_session.return_value.state = "SELECTED"
+            imap_source.open_session()
+            # We expect not extra calls to login
+            mock_session.return_value.login.assert_not_called()
+
+    def test_close_session(self):
+        """Test IMAP close_session logic."""
+        imap_source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+
+        self.assertIsNone(imap_source.session)
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+            imap_source.close_session()
+            mock_session.return_value.close.assert_not_called()
+            mock_session.return_value.logout.assert_not_called()
+
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+            # Now we create the session manually
+            imap_source.session = mock_session()
+            mock_session.return_value.state = "SELECTED"
+            imap_source.close_session()
+            mock_session.return_value.close.assert_called_once()
+            mock_session.return_value.logout.assert_not_called()
+
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+            # Now we create the session manually
+            imap_source.session = mock_session()
+            mock_session.return_value.state = "AUTH"
+            imap_source.close_session()
+            mock_session.return_value.close.assert_not_called()
+            mock_session.return_value.logout.assert_called_once()
+
 
 class TestGmailAPISource(TestCase):
     """Test case for GmailAPI Source."""
