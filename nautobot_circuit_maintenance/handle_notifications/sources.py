@@ -307,17 +307,23 @@ class IMAP(EmailSource):
         arbitrary_types_allowed = True
 
     def open_session(self):
-        """Open session to IMAP server."""
+        """Open session to IMAP server.
+
+        See states: https://github.com/python/cpython/blob/3.9/Lib/imaplib.py#L58
+        """
         if not self.session:
             self.session = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+        if self.session.state == "NONAUTH":
             try:
                 self.session.login(self.account, self.password)
             except imaplib.IMAP4.error:
-                self.session = None
                 raise
 
     def close_session(self):
-        """Close session to IMAP server."""
+        """Close session to IMAP server.
+
+        See states: https://github.com/python/cpython/blob/3.9/Lib/imaplib.py#L58
+        """
         if self.session:
             if self.session.state == "SELECTED":
                 self.session.close()
