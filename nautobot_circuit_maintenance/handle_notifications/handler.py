@@ -151,7 +151,7 @@ def update_circuit_maintenance(
 
 def process_parsed_notification(logger: Job, parsed_notification: ParsedNotification, raw_entry: RawNotification):
     """Processes a Parsed Notification, creating or updating the related Circuit Maintenance."""
-    maintenance_id = str(parsed_notification.maintenance_id)
+    maintenance_id = f"{raw_entry.provider.slug}-{parsed_notification.maintenance_id}"
     circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
 
     if circuit_maintenance_entry:
