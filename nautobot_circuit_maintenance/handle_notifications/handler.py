@@ -6,7 +6,6 @@ from django.conf import settings
 from circuit_maintenance_parser import ParsingError, init_provider
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
-from nautobot.extras.models import CustomField
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -185,11 +184,7 @@ def process_raw_notification(  # pylint: disable=too-many-branches
         )
         return None
 
-    provider_type = (
-        provider.get_custom_fields().get(CustomField.objects.get(name="provider_parser_circuit_maintenances"))
-        or provider.slug
-    )
-    provider_type = provider_type.lower()
+    provider_type = provider.cf.get("provider_parser_circuit_maintenances", "").lower() or provider.slug
 
     raw_payload = b""
     for raw_payload in notification.raw_payloads:
