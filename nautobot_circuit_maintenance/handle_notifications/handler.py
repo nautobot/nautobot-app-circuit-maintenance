@@ -23,11 +23,9 @@ MAX_INITIAL_DAYS_SINCE = 365
 
 
 def create_circuit_maintenance(
-    logger: Job, maintenance_id: str, parsed_notification: ParsedNotification
+    logger: Job, maintenance_id: str, parsed_notification: ParsedNotification, provider: Provider
 ) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
-    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
-
     circuit_maintenance_entry = CircuitMaintenance.objects.create(
         name=maintenance_id,
         start_time=datetime.datetime.fromtimestamp(parsed_notification.start),
@@ -38,7 +36,7 @@ def create_circuit_maintenance(
     logger.log_success(obj=circuit_maintenance_entry, message="Created Circuit Maintenance.")
 
     for circuit in parsed_notification.circuits:
-        circuit_entry = Circuit.objects.filter(cid=circuit.circuit_id, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid=circuit.circuit_id, provider=provider).last()
         if circuit_entry:
             circuit_impact_entry = CircuitImpact.objects.create(
                 maintenance=circuit_maintenance_entry,
@@ -77,10 +75,9 @@ def update_circuit_maintenance(
     circuit_maintenance_entry: CircuitMaintenance,
     maintenance_id: str,
     parsed_notification: ParsedNotification,
+    provider: Provider,
 ):  # pylint: disable=too-many-locals
     """Handles the update of an existent circuit maintenance."""
-    provider = Provider.objects.filter(slug=parsed_notification.slug()).last()
-
     circuit_maintenance_entry.description = parsed_notification.summary
     circuit_maintenance_entry.status = parsed_notification.status
     circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(parsed_notification.start)
@@ -149,15 +146,17 @@ def update_circuit_maintenance(
     logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")
 
 
-def process_parsed_notification(logger: Job, parsed_notification: ParsedNotification, raw_entry: RawNotification):
+def process_parsed_notification(
+    logger: Job, parsed_notification: ParsedNotification, raw_entry: RawNotification, provider: Provider
+):
     """Processes a Parsed Notification, creating or updating the related Circuit Maintenance."""
-    maintenance_id = str(parsed_notification.maintenance_id)
+    maintenance_id = f"{raw_entry.provider.slug}-{parsed_notification.maintenance_id}"
     circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
 
     if circuit_maintenance_entry:
-        update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification)
+        update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parsed_notification, provider)
     else:
-        circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parsed_notification)
+        circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parsed_notification, provider)
 
     # Insert parsed notification in DB
     parsed_entry = ParsedNotification.objects.create(
@@ -185,9 +184,11 @@ def process_raw_notification(  # pylint: disable=too-many-branches
         )
         return None
 
+    provider_type = provider.cf.get("provider_parser_circuit_maintenances", "").lower() or provider.slug
+
     raw_payload = b""
     for raw_payload in notification.raw_payloads:
-        parser = init_provider(raw=raw_payload, provider_type=notification.provider_type)
+        parser = init_provider(raw=raw_payload, provider_type=provider_type)
         if not parser:
             logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
             return None
@@ -236,7 +237,7 @@ def process_raw_notification(  # pylint: disable=too-many-branches
 
     for parsed_notification in parsed_notifications:
         try:
-            process_parsed_notification(logger, parsed_notification, raw_entry)
+            process_parsed_notification(logger, parsed_notification, raw_entry, provider)
             # Update raw notification as properly parsed
             raw_entry.parsed = True
             raw_entry.save()

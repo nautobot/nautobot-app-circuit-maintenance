@@ -242,18 +242,18 @@ class TestHandleNotificationsJob(TestCase):
         """Test create_circuit_maintenance."""
         notification_data = get_base_notification_data()
         test_notification = generate_raw_notification(notification_data, self.source.name)
-
+        provider = Provider.objects.get(slug=test_notification.provider_type)
         for raw_payload in test_notification.raw_payloads:
             parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
             raw_entry, _ = RawNotification.objects.get_or_create(
                 subject=test_notification.subject,
-                provider=Provider.objects.get(slug=test_notification.provider_type),
+                provider=provider,
                 raw=raw_payload,
                 sender=test_notification.sender,
                 source=self.source,
             )
             parsed_maintenance = parser.process()[0]
-            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
+            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(2, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
@@ -263,17 +263,18 @@ class TestHandleNotificationsJob(TestCase):
         notification_data = get_base_notification_data()
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
         test_notification = generate_raw_notification(notification_data, self.source.name)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
         for raw_payload in test_notification.raw_payloads:
             parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
             raw_entry, _ = RawNotification.objects.get_or_create(
                 subject=test_notification.subject,
-                provider=Provider.objects.get(slug=test_notification.provider_type),
+                provider=provider,
                 raw=raw_payload,
                 sender=test_notification.sender,
                 source=self.source,
             )
             parsed_maintenance = parser.process()[0]
-            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance)
+            create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
             self.assertEqual(1, len(Note.objects.all()))
@@ -282,7 +283,7 @@ class TestHandleNotificationsJob(TestCase):
         """Test update_circuit_maintenance."""
         notification_data = get_base_notification_data()
         test_notification = generate_raw_notification(notification_data, self.source.name)
-
+        provider = Provider.objects.get(slug=test_notification.provider_type)
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
         ) as mock_get_notifications:
@@ -296,15 +297,16 @@ class TestHandleNotificationsJob(TestCase):
         notification_data["circuitimpacts"].append({"cid": "nonexistent", "impact": "NO-IMPACT"})
         circuit_to_update["impact"] = "OUTAGE"
         notification_data["circuitimpacts"].append(circuit_to_update)
-
         test_notification = generate_raw_notification(notification_data, self.source.name)
         for raw_payload in test_notification.raw_payloads:
             parser = init_provider(provider_type=test_notification.provider_type, raw=raw_payload)
 
             parsed_maintenance = parser.process()[0]
-            maintenance_id = str(parsed_maintenance.maintenance_id)
+            maintenance_id = f"{provider.slug}-{parsed_maintenance.maintenance_id}"
             circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
-            update_circuit_maintenance(self.job, circuit_maintenance_entry, maintenance_id, parsed_maintenance)
+            update_circuit_maintenance(
+                self.job, circuit_maintenance_entry, maintenance_id, parsed_maintenance, provider
+            )
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(1, len(CircuitImpact.objects.all()))
             self.assertEqual(1, len(Note.objects.all()))

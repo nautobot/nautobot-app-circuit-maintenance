@@ -25,7 +25,6 @@ from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-i
 from circuit_maintenance_parser import NonexistentParserError, get_provider_data_types
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
-from nautobot.extras.models import CustomField
 
 from nautobot_circuit_maintenance.models import NotificationSource
 
@@ -202,8 +201,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             return False
 
         for provider in notification_source.providers.all():
-            cm_cf = CustomField.objects.get(name="emails_circuit_maintenances")
-            provider_emails = provider.get_custom_fields().get(cm_cf)
+            provider_emails = provider.cf.get("emails_circuit_maintenances")
             if provider_emails:
                 self.emails_to_fetch.extend([src.strip().lower() for src in provider_emails.split(",")])
                 providers_with_email.append(provider.name)
@@ -261,17 +259,14 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         """
         email_source = email_source.lower()
         for provider in Provider.objects.all():
-            if not provider.custom_field_data.get("emails_circuit_maintenances"):
+            emails_for_provider = provider.cf.get("emails_circuit_maintenances")
+            if not emails_for_provider:
                 continue
-            sources = [
-                src.strip().lower() for src in provider.custom_field_data["emails_circuit_maintenances"].split(",")
-            ]
+            sources = [src.strip().lower() for src in emails_for_provider.split(",")]
             if email_source in sources:
                 provider_type = provider.slug
                 # If there is no custom provider mapping defined, we take the provider slug as default mapping
-                provider_parser_circuit_maintenances = provider.get_custom_fields().get(
-                    CustomField.objects.get(name="provider_parser_circuit_maintenances")
-                )
+                provider_parser_circuit_maintenances = provider.cf.get("provider_parser_circuit_maintenances")
                 if provider_parser_circuit_maintenances:
                     provider_mapping = provider_parser_circuit_maintenances.lower()
                 else:
