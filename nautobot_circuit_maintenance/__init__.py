@@ -44,14 +44,16 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
-        instance, _ = NotificationSource.objects.get_or_create(
+        instance, _ = NotificationSource.objects.update_or_create(
             name=notification_source["name"],
             slug=slugify(
                 notification_source["name"],
             ),
+            defaults={
+                "attach_all_providers": notification_source.get("attach_all_providers", False),
+            },
         )
-        instance.attach_all_providers = notification_source.get("attach_all_providers", False)
-        instance.save()
+
         desired_notification_sources_names.append(notification_source["name"])
 
         if instance.attach_all_providers:
