@@ -167,23 +167,8 @@ def process_parsed_notification(
     logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {maintenance_id}.")
 
 
-def process_raw_notification(  # pylint: disable=too-many-branches
-    logger: Job, notification: MaintenanceNotification
-) -> Union[int, None]:
-    """Processes a raw notification (maybe containing multiple parsed notifications).
-
-    It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
-    """
-    provider = Provider.objects.filter(slug=notification.provider_type).last()
-
-    if not provider:
-        logger.log_warning(
-            message=(
-                f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
-            )
-        )
-        return None
-
+def get_maintenances_from_notification(logger: Job, notification: MaintenanceNotification, provider: Provider):
+    """Use the `circuit_maintenance_parser` library to get Maintenances from the notification."""
     provider_type = provider.cf.get("provider_parser_circuit_maintenances", "").lower() or provider.slug
 
     parser_provider = init_provider(provider_type=provider_type)
@@ -195,7 +180,7 @@ def process_raw_notification(  # pylint: disable=too-many-branches
     data_to_process = init_data_email(notification.raw_payload)
 
     try:
-        parsed_notifications = parser_provider.get_maintenances(data_to_process)
+        return parser_provider.get_maintenances(data_to_process)
     except ProviderError:
         tb_str = traceback.format_exc()
         logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
@@ -207,6 +192,12 @@ def process_raw_notification(  # pylint: disable=too-many-branches
         )
         return None
 
+
+def create_raw_nofitication(logger: Job, notification: MaintenanceNotification, provider: Provider):
+    """Create a RawNotification.
+
+    If it already exists, we return `None` to signal we are skipping it.
+    """
     # Insert raw notification in DB even failed parsing
     try:
         raw_entry, created = RawNotification.objects.get_or_create(
@@ -227,6 +218,31 @@ def process_raw_notification(  # pylint: disable=too-many-branches
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
+
+    return raw_entry
+
+
+def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Union[int, None]:
+    """Processes a raw notification (maybe containing multiple parsed notifications).
+
+    It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
+    """
+    provider = Provider.objects.filter(slug=notification.provider_type).last()
+    if not provider:
+        logger.log_warning(
+            message=(
+                f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
+            )
+        )
+        return None
+
+    raw_entry = create_raw_nofitication(logger, notification, provider)
+    if not raw_entry:
+        return None
+
+    parsed_notifications = get_maintenances_from_notification(logger, notification, provider)
+    if not parsed_notifications:
+        return raw_entry.id
 
     for parsed_notification in parsed_notifications:
         try:

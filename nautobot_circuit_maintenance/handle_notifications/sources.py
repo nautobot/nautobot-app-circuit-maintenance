@@ -257,6 +257,26 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 return provider.slug
         return ""
 
+    def process_email(
+        self, job_logger: Job, email_message: email.message.EmailMessage
+    ) -> Optional[MaintenanceNotification]:
+        """Process an EmailMessage to create the MaintenaceNotification."""
+        email_source = self.extract_email_source(email_message[self.source_header])
+        if not email_source:
+            job_logger.log_warning(
+                message="Not possible to determine the email sender from "
+                f'"{self.source_header}: {email_message[self.source_header]}"'
+            )
+            return None
+
+        return MaintenanceNotification(
+            source=self.name,
+            sender=email_source,
+            subject=email_message["Subject"],
+            provider_type=self.get_provider_type_from_email(email_source),
+            raw_payload=email_message.as_bytes(),
+        )
+
 
 class IMAP(EmailSource):
     """IMAP class, extending Source class."""
@@ -304,21 +324,7 @@ class IMAP(EmailSource):
         raw_email_string = data[0][1].decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
 
-        email_source = self.extract_email_source(email_message[self.source_header])
-        if not email_source:
-            job_logger.log_warning(
-                message="Not possible to determine the email sender from "
-                f'"{self.source_header}: {email_message[self.source_header]}"'
-            )
-            return None
-
-        return MaintenanceNotification(
-            source=self.name,
-            sender=email_source,
-            subject=email_message["Subject"],
-            provider_type=self.get_provider_type_from_email(email_source),
-            raw_payload=raw_email_string,
-        )
+        return self.process_email(job_logger, email_message)
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
@@ -442,22 +448,7 @@ class GmailAPI(EmailSource):
 
         raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
         email_message = email.message_from_bytes(raw_email_string)
-        email_source = self.extract_email_source(email_message[self.source_header])
-
-        if not email_source:
-            job_logger.log_warning(
-                message="Not possible to determine the email sender from "
-                f'"{self.source_header}: {email_message[self.source_header]}"'
-            )
-            return None
-
-        return MaintenanceNotification(
-            source=self.name,
-            sender=email_source,
-            subject=email_message["Subject"],
-            provider_type=self.get_provider_type_from_email(email_source),
-            raw_payload=raw_email_string,
-        )
+        return self.process_email(job_logger, email_message)
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
