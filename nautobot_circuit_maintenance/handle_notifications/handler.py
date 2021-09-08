@@ -3,7 +3,7 @@ import datetime
 import traceback
 from typing import Union
 from django.conf import settings
-from circuit_maintenance_parser import ParsingError, init_provider
+from circuit_maintenance_parser import ProviderError, init_provider, init_data_email
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
@@ -186,40 +186,33 @@ def process_raw_notification(  # pylint: disable=too-many-branches
 
     provider_type = provider.cf.get("provider_parser_circuit_maintenances", "").lower() or provider.slug
 
-    raw_payload = b""
-    for raw_payload in notification.raw_payloads:
-        parser = init_provider(raw=raw_payload, provider_type=provider_type)
-        if not parser:
-            logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
-            return None
+    parser_provider = init_provider(provider_type=provider_type)
+    if not parser_provider:
+        logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
+        return None
 
-        try:
-            parsed_notifications = parser.process()
-            break
-        except ParsingError:
-            tb_str = traceback.format_exc()
-            logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
-        except Exception:
-            tb_str = traceback.format_exc()
-            logger.log_info(
-                message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
-            )
-    else:
-        parsed_notifications = []
-        logger.log_warning(message=f"Parsed failed for all the raw payloads for `{notification.subject}`.")
-        # Carry on with the last raw_payload in the list, if any
-        if not raw_payload:
-            return None
+    # TODO: we should handle NotificationData initialization
+    data_to_process = init_data_email(notification.raw_payload)
 
-    if isinstance(raw_payload, str):
-        raw_payload = raw_payload.encode("utf-8")
+    try:
+        parsed_notifications = parser_provider.get_maintenances(data_to_process)
+    except ProviderError:
+        tb_str = traceback.format_exc()
+        logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
+        return None
+    except Exception:
+        tb_str = traceback.format_exc()
+        logger.log_info(
+            message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
+        )
+        return None
 
     # Insert raw notification in DB even failed parsing
     try:
         raw_entry, created = RawNotification.objects.get_or_create(
             subject=notification.subject,
             provider=provider,
-            raw=raw_payload,
+            raw=notification.raw_payload,
             sender=notification.sender,
             source=NotificationSource.objects.filter(name=notification.source).last(),
         )
