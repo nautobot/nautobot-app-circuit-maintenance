@@ -1,7 +1,7 @@
 """Notifications jobs."""
 import datetime
 import traceback
-from typing import Union
+from typing import Optional
 from django.conf import settings
 from circuit_maintenance_parser import ProviderError, init_provider, init_data_email
 from nautobot.circuits.models import Circuit, Provider
@@ -176,24 +176,26 @@ def get_maintenances_from_notification(logger: Job, notification: MaintenanceNot
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
         return None
 
-    # TODO: we should handle NotificationData initialization
     data_to_process = init_data_email(notification.raw_payload)
+    if not data_to_process:
+        logger.log_failure(message=f"Notification data was not accepted by the parser: {notification.raw_payload}")
+        return None
 
     try:
         return parser_provider.get_maintenances(data_to_process)
     except ProviderError:
         tb_str = traceback.format_exc()
-        logger.log_info(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
+        logger.log_failure(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
         return None
     except Exception:
         tb_str = traceback.format_exc()
-        logger.log_info(
+        logger.log_failure(
             message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
         )
         return None
 
 
-def create_raw_nofitication(logger: Job, notification: MaintenanceNotification, provider: Provider):
+def create_raw_notification(logger: Job, notification: MaintenanceNotification, provider: Provider):
     """Create a RawNotification.
 
     If it already exists, we return `None` to signal we are skipping it.
@@ -222,7 +224,7 @@ def create_raw_nofitication(logger: Job, notification: MaintenanceNotification, 
     return raw_entry
 
 
-def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Union[int, None]:
+def process_raw_notification(logger: Job, notification: MaintenanceNotification) -> Optional[int]:
     """Processes a raw notification (maybe containing multiple parsed notifications).
 
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification.
@@ -236,7 +238,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
         )
         return None
 
-    raw_entry = create_raw_nofitication(logger, notification, provider)
+    raw_entry = create_raw_notification(logger, notification, provider)
     if not raw_entry:
         return None
 
