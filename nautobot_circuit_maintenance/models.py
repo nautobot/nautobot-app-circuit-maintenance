@@ -1,6 +1,7 @@
 """Models for Circuit Maintenance."""
 import hashlib
 import pickle  # nosec
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -13,6 +14,9 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
+
+PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+MAX_RAW_NOTIFICATION_SIZE = 1000
 
 
 @extras_features(
@@ -246,6 +250,10 @@ class RawNotification(OrganizationalModel):
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
         self._raw_md5 = hashlib.md5(self.raw).hexdigest()  # nosec
+        # Limiting the size of the notification stored.
+        self.raw = self.raw[
+            : PLUGIN_SETTINGS.get("raw_notifications", {}).get("raw_notification_size", MAX_RAW_NOTIFICATION_SIZE)
+        ]
         super().save(*args, **kwargs)
 
     def __str__(self):
