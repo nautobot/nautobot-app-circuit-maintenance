@@ -250,8 +250,9 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             circuit_maintenance_entry = create_or_update_circuit_maintenance(
                 logger, parser_maintenance, raw_entry, provider
             )
-            # Update raw notification as properly parsed
+            # Update raw notification as properly parsed and with the stamp time
             raw_entry.parsed = True
+            raw_entry.date = datetime.datetime.fromtimestamp(parser_maintenance.stamp)
             raw_entry.save()
 
             # Insert parsed notification in DB
@@ -260,7 +261,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
                 raw_notification=raw_entry,
                 json=parser_maintenance.to_json(),
             )
-            logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {circuit_maintenance_entry.id}.")
+            logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {circuit_maintenance_entry.name}.")
 
         except Exception as exc:
             tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
