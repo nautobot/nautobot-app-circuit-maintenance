@@ -191,7 +191,7 @@ class TestEmailSource(TestCase):
         provider_type = source.get_provider_type_from_email("user@example.com")
         self.assertEqual(provider_type, "abc-d")
         provider_type = source.get_provider_type_from_email("unknown")
-        self.assertEqual(provider_type, None)
+        self.assertIsNone(provider_type)
 
 
 class TestIMAPSource(TestCase):

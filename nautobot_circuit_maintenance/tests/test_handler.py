@@ -262,7 +262,7 @@ class TestHandleNotificationsJob(TestCase):
         test_notification = generate_email_notification(notification_data, self.source.name)
         provider = Provider.objects.get(slug=test_notification.provider_type)
         parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
-        self.assertEqual(parser_maintenances, None)
+        self.assertIsNone(parser_maintenances)
         self.job.log_failure.assert_called()
 
     def test_get_maintenances_from_notification_non_existent_provider_in_parser(self):
@@ -272,7 +272,7 @@ class TestHandleNotificationsJob(TestCase):
         provider = Provider.objects.get(slug=test_notification.provider_type)
         provider.cf["provider_parser_circuit_maintenances"] = "unkown_provider_in_parser"
         parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
-        self.assertEqual(parser_maintenances, None)
+        self.assertIsNone(parser_maintenances)
         self.job.log_warning.assert_any_call(message=f"Notification Parser not found for {provider.slug}")
 
     def test_create_circuit_maintenance(self):
