@@ -114,6 +114,85 @@ class TestEmailSource(TestCase):
         """Test for extract_email_source."""
         self.assertEqual(EmailSource.extract_email_source(email_source), email_source_output)
 
+    def test_process_email_success(self):
+        """Test successful processing of a single email into a MaintenanceNotification."""
+        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+
+        source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+
+        job = Job()
+        job.debug = True
+        job.job_result = JobResult.objects.create(
+            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
+        )
+
+        email_message = EmailMessage()
+        email_message["From"] = "User <user@example.com>"
+        email_message["Subject"] = "Circuit Maintenance Notification"
+        email_message["Content-Type"] = "text/html"
+        email_message.set_payload(b"Some text goes here")
+
+        notification = source.process_email(job, email_message)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "user@example.com")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, "zayo")
+        self.assertEqual(notification.raw_payload, email_message.as_bytes())
+
+    def test_process_email_success_alternate_source_header(self):
+        """Test successful processing of a single email with a non-standard source header."""
+        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+
+        source = IMAP(
+            name="whatever",
+            url="imap://localhost",
+            account="account",
+            password="pass",
+            imap_server="localhost",
+            source_header="X-Original-Sender",
+        )
+
+        job = Job()
+        job.debug = True
+        job.job_result = JobResult.objects.create(
+            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
+        )
+
+        email_message = EmailMessage()
+        email_message["From"] = "Mailing List <mailing-list@example.com>"
+        email_message["X-Original-Sender"] = "User <user@example.com>"
+        email_message["Subject"] = "Circuit Maintenance Notification"
+        email_message["Content-Type"] = "text/html"
+        email_message.set_payload(b"Some text goes here")
+
+        notification = source.process_email(job, email_message)
+        self.assertIsNotNone(notification)
+        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.sender, "user@example.com")
+        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
+        self.assertEqual(notification.provider_type, "zayo")
+        self.assertEqual(notification.raw_payload, email_message.as_bytes())
+
+    def test_get_provider_type_from_email(self):
+        provider = Provider.objects.create(name="abc d", slug="abc-d")
+        provider.cf["emails_circuit_maintenances"] = "user@example.com"
+        provider.save()
+        source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+
+        provider_type = source.get_provider_type_from_email("user@example.com")
+        self.assertEqual(provider_type, "abc-d")
+        provider_type = source.get_provider_type_from_email("unknown")
+        self.assertEqual(provider_type, None)
+
 
 class TestIMAPSource(TestCase):
     """Test case for IMAP Source."""
@@ -272,72 +351,6 @@ class TestIMAPSource(TestCase):
                 IMAP(**kwargs)
         else:
             IMAP(**kwargs)
-
-    def test_process_email_success(self):
-        """Test successful processing of a single email into a MaintenanceNotification."""
-        provider = Provider.objects.create(name="zayo", slug="zayo")
-        provider.cf["emails_circuit_maintenances"] = "user@example.com"
-        provider.save()
-
-        source = IMAP(
-            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
-        )
-
-        job = Job()
-        job.debug = True
-        job.job_result = JobResult.objects.create(
-            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
-        )
-
-        email_message = EmailMessage()
-        email_message["From"] = "User <user@example.com>"
-        email_message["Subject"] = "Circuit Maintenance Notification"
-        email_message["Content-Type"] = "text/html"
-        email_message.set_payload(b"Some text goes here")
-
-        notification = source.process_email(job, email_message)
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.source, source.name)
-        self.assertEqual(notification.sender, "user@example.com")
-        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-        self.assertEqual(notification.provider_type, "zayo")
-        self.assertEqual(notification.raw_payload, email_message.as_bytes())
-
-    def test_process_email_success_alternate_source_header(self):
-        """Test successful processing of a single email with a non-standard source header."""
-        provider = Provider.objects.create(name="zayo", slug="zayo")
-        provider.cf["emails_circuit_maintenances"] = "user@example.com"
-        provider.save()
-
-        source = IMAP(
-            name="whatever",
-            url="imap://localhost",
-            account="account",
-            password="pass",
-            imap_server="localhost",
-            source_header="X-Original-Sender",
-        )
-
-        job = Job()
-        job.debug = True
-        job.job_result = JobResult.objects.create(
-            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
-        )
-
-        email_message = EmailMessage()
-        email_message["From"] = "Mailing List <mailing-list@example.com>"
-        email_message["X-Original-Sender"] = "User <user@example.com>"
-        email_message["Subject"] = "Circuit Maintenance Notification"
-        email_message["Content-Type"] = "text/html"
-        email_message.set_payload(b"Some text goes here")
-
-        notification = source.process_email(job, email_message)
-        self.assertIsNotNone(notification)
-        self.assertEqual(notification.source, source.name)
-        self.assertEqual(notification.sender, "user@example.com")
-        self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-        self.assertEqual(notification.provider_type, "zayo")
-        self.assertEqual(notification.raw_payload, email_message.as_bytes())
 
     def test_open_session(self):
         """Test IMAP open_session logic."""
@@ -595,63 +608,3 @@ class TestGmailAPISource(TestCase):
         )
 
         return (provider, job, source)
-
-    # TODO: convert these tests to new structure
-    # def test_process_email_success(self):
-    #     """Test successful processing of a single email into a MaintenanceNotification."""
-    #     provider, job, source = self.email_setup()
-
-    #     received_email = {
-    #         "payload": {
-    #             "headers": [
-    #                 {"name": "Subject", "value": "Circuit Maintenance Notification"},
-    #                 {"name": "From", "value": "user@example.com"},
-    #             ],
-    #             "parts": [
-    #                 {
-    #                     "headers": [{"name": "Content-Type", "value": "text/html"}],
-    #                     "body": {"data": base64.b64encode(b"Some text goes here")},
-    #                 }
-    #             ],
-    #         },
-    #         "internalDate": 1000,
-    #     }
-
-    #     notification = source.process_email(job, received_email, msg_id=b"abc")
-    #     self.assertIsNotNone(notification)
-    #     self.assertEqual(notification.source, source.name)
-    #     self.assertEqual(notification.sender, "user@example.com")
-    #     self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-    #     self.assertEqual(notification.provider_type, provider.slug)
-    #     self.assertEqual(list(notification.raw_payload), b"Some text goes here")
-
-    # def test_process_email_success_alternate_source_header(self):
-    #     """Test successful processing of a single email with a non-standard source header."""
-    #     provider, job, source = self.email_setup()
-
-    #     source.source_header = "X-Original-Sender"
-
-    #     received_email = {
-    #         "payload": {
-    #             "headers": [
-    #                 {"name": "Subject", "value": "Circuit Maintenance Notification"},
-    #                 {"name": "From", "value": "mailing-list@example.com"},
-    #                 {"name": "X-Original-Sender", "value": "user@example.com"},
-    #             ],
-    #             "parts": [
-    #                 {
-    #                     "headers": [{"name": "Content-Type", "value": "text/html"}],
-    #                     "body": {"data": base64.b64encode(b"Some text goes here")},
-    #                 }
-    #             ],
-    #         },
-    #         "internalDate": 1000,
-    #     }
-
-    #     notification = source.process_email(job, received_email, msg_id=b"abc")
-    #     self.assertIsNotNone(notification)
-    #     self.assertEqual(notification.source, source.name)
-    #     self.assertEqual(notification.sender, "user@example.com")
-    #     self.assertEqual(notification.subject, "Circuit Maintenance Notification")
-    #     self.assertEqual(notification.provider_type, provider.slug)
-    #     self.assertEqual(list(notification.raw_payload), b"Some text goes here")

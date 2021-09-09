@@ -13,6 +13,7 @@ from nautobot_circuit_maintenance.handle_notifications.handler import (
     process_raw_notification,
     create_circuit_maintenance,
     update_circuit_maintenance,
+    get_maintenances_from_notification,
 )
 
 from nautobot_circuit_maintenance.models import (
@@ -245,6 +246,34 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(0, len(ParsedNotification.objects.all()))
         self.job.log_success.assert_any_call(raw_notification, message="Raw notification created.")
         self.job.log_warning.assert_called()
+
+    def test_get_maintenances_from_notification(self):
+        """Test get_maintenances_from_notification."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
+        self.assertEqual(1, len(parser_maintenances))
+
+    def test_get_maintenances_from_notification_wrong_data(self):
+        """Test get_maintenances_from_notification."""
+        notification_data = get_base_notification_data()
+        notification_data["status"] = "Non valid status"
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
+        self.assertEqual(parser_maintenances, None)
+        self.job.log_failure.assert_called()
+
+    def test_get_maintenances_from_notification_non_existent_provider_in_parser(self):
+        """Test get_maintenances_from_notification."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider.cf["provider_parser_circuit_maintenances"] = "unkown_provider_in_parser"
+        parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
+        self.assertEqual(parser_maintenances, None)
+        self.job.log_warning.assert_any_call(message=f"Notification Parser not found for {provider.slug}")
 
     def test_create_circuit_maintenance(self):
         """Test create_circuit_maintenance."""

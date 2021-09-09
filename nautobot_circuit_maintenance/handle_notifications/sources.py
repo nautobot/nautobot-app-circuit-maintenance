@@ -246,7 +246,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return email_source.lower()
 
     @staticmethod
-    def get_provider_type_from_email(email_source: str) -> str:
+    def get_provider_type_from_email(email_source: str) -> Optional[str]:
         """Return the `Provider` type related to the source."""
         for provider in Provider.objects.all():
             emails_for_provider = provider.cf.get("emails_circuit_maintenances")
@@ -255,7 +255,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             sources = [src.strip().lower() for src in emails_for_provider.split(",")]
             if email_source in sources:
                 return provider.slug
-        return ""
+        return None
 
     def process_email(
         self, job_logger: Job, email_message: email.message.EmailMessage
@@ -269,11 +269,16 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             )
             return None
 
+        provider_type = self.get_provider_type_from_email(email_source)
+        if not provider_type:
+            job_logger.log_warning(message=f"Not possible to determine the provider_type for {email_source}")
+            return None
+
         return MaintenanceNotification(
             source=self.name,
             sender=email_source,
             subject=email_message["Subject"],
-            provider_type=self.get_provider_type_from_email(email_source),
+            provider_type=provider_type,
             raw_payload=email_message.as_bytes(),
         )
 
@@ -375,6 +380,7 @@ class IMAP(EmailSource):
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
         if job_logger.debug:
             job_logger.log_debug(
                 message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),

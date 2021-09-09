@@ -88,12 +88,12 @@ def update_circuit_maintenance(
 
     circuit_entries = CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry)
 
-    parsed_cids = {parsed_circuit.circuit_id for parsed_circuit in parser_maintenance.circuits}
+    new_cids = {parsed_circuit.circuit_id for parsed_circuit in parser_maintenance.circuits}
     existing_cids = {circuit_entry.circuit.cid for circuit_entry in circuit_entries}
 
-    cids_to_update = parsed_cids & existing_cids
-    cids_to_create = parsed_cids - existing_cids
-    cids_to_remove = existing_cids - parsed_cids
+    cids_to_update = new_cids & existing_cids
+    cids_to_create = new_cids - existing_cids
+    cids_to_remove = existing_cids - new_cids
 
     for cid in cids_to_create:
         circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
