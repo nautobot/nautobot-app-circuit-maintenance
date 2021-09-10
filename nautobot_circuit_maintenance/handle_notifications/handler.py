@@ -27,13 +27,14 @@ def create_circuit_maintenance(
     logger: Job, maintenance_id: str, parser_maintenance, provider: Provider
 ) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
-    circuit_maintenance_entry = CircuitMaintenance.objects.create(
+    circuit_maintenance_entry = CircuitMaintenance(
         name=maintenance_id,
         start_time=datetime.datetime.fromtimestamp(parser_maintenance.start),
         end_time=datetime.datetime.fromtimestamp(parser_maintenance.end),
         description=parser_maintenance.summary,
         status=parser_maintenance.status,
     )
+    circuit_maintenance_entry.save()
     logger.log_success(obj=circuit_maintenance_entry, message="Created Circuit Maintenance.")
 
     for circuit in parser_maintenance.circuits:
