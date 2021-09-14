@@ -241,26 +241,28 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 # Each key in the dictionary is the name of an installed plugin and its value is a dictionary of settings.
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
-        "raw_notifications": {"initial_days_since": 100},
+        "raw_notifications": {"initial_days_since": 500},
         "notification_sources": [
             {
                 "name": "my imap source",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
                 "url": os.environ.get("CM_NS_1_URL", ""),
-                "attach_all_providers": True,
+                # "attach_all_providers": True,
             },
             {
                 "name": "my gmail service account api source",
                 "url": os.environ.get("CM_NS_2_URL", ""),
                 "account": os.environ.get("CM_NS_2_ACCOUNT", ""),
                 "credentials_file": os.environ.get("CM_NS_2_CREDENTIALS_FILE", ""),
+                "attach_all_providers": True,
             },
             {
                 "name": "my gmail oauth api source",
                 "url": os.environ.get("CM_NS_3_URL", ""),
                 "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
                 "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
+                # "attach_all_providers": True,
             },
         ],
         "metrics": {

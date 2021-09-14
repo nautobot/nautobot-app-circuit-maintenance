@@ -22,7 +22,6 @@ from django.utils.text import slugify
 
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
-from circuit_maintenance_parser import NonexistentParserError, get_provider_data_types
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 
@@ -43,7 +42,7 @@ class MaintenanceNotification(BaseModel):
     sender: str
     subject: str
     provider_type: str
-    raw_payloads: Iterable[bytes]
+    raw_payload: bytes
 
 
 class Source(BaseModel):
@@ -65,8 +64,8 @@ class Source(BaseModel):
         * source: self.name
         * sender: it could be the email 'from' or omitted if not relevant
         * subject: it could be the email 'subject' or some meaningful identifier from notification
+        * provider_type: mapping to the Provider that is related to this notification
         * raw: the raw_payload from notification
-        * provider_type: the provider slug identified by sender email or from membership
         """
         # TODO: `senders` is used to limit the scope of emails retrieved, this won't have sense depending on the
         # Notification Source.
@@ -247,44 +246,41 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return email_source.lower()
 
     @staticmethod
-    def extract_provider_data_types(email_source: str) -> Tuple[str, str, str]:
-        """Method to extract the provider data type based on the referenced email for the provider.
-
-        Returns:
-            Tuple(
-                Iterable[str]: provider_data_types, data types related to a specific Provider Parser
-                str: provider_type, corresponding to the Provider slug
-                str: error_message, if there was an issue
-            )
-        """
-        email_source = email_source.lower()
+    def get_provider_type_from_email(email_source: str) -> Optional[str]:
+        """Return the `Provider` type related to the source."""
         for provider in Provider.objects.all():
             emails_for_provider = provider.cf.get("emails_circuit_maintenances")
             if not emails_for_provider:
                 continue
             sources = [src.strip().lower() for src in emails_for_provider.split(",")]
             if email_source in sources:
-                provider_type = provider.slug
-                # If there is no custom provider mapping defined, we take the provider slug as default mapping
-                provider_parser_circuit_maintenances = provider.cf.get("provider_parser_circuit_maintenances")
-                if provider_parser_circuit_maintenances:
-                    provider_mapping = provider_parser_circuit_maintenances.lower()
-                else:
-                    provider_mapping = provider_type
-                break
-        else:
-            return "", "", f"Sender email {email_source} is not registered for any circuit provider."
+                return provider.slug
+        return None
 
-        try:
-            provider_data_types = get_provider_data_types(provider_mapping)
-        except NonexistentParserError:
-            return (
-                "",
-                "",
-                f"{email_source} is for provider type `{provider_type}`, which is not presently supported",
+    def process_email(
+        self, job_logger: Job, email_message: email.message.EmailMessage
+    ) -> Optional[MaintenanceNotification]:
+        """Process an EmailMessage to create the MaintenaceNotification."""
+        email_source = self.extract_email_source(email_message[self.source_header])
+        if not email_source:
+            job_logger.log_warning(
+                message="Not possible to determine the email sender from "
+                f'"{self.source_header}: {email_message[self.source_header]}"'
             )
+            return None
 
-        return provider_data_types, provider_type, ""
+        provider_type = self.get_provider_type_from_email(email_source)
+        if not provider_type:
+            job_logger.log_warning(message=f"Not possible to determine the provider_type for {email_source}")
+            return None
+
+        return MaintenanceNotification(
+            source=self.name,
+            sender=email_source,
+            subject=email_message["Subject"],
+            provider_type=provider_type,
+            raw_payload=email_message.as_bytes(),
+        )
 
 
 class IMAP(EmailSource):
@@ -335,49 +331,6 @@ class IMAP(EmailSource):
 
         return self.process_email(job_logger, email_message)
 
-    def process_email(
-        self, job_logger: Job, email_message: email.message.EmailMessage
-    ) -> Optional[MaintenanceNotification]:
-        """Helper method for the fetch_email() method."""
-        email_source = self.extract_email_source(email_message[self.source_header])
-        if not email_source:
-            job_logger.log_warning(
-                message="Not possible to determine the email sender from "
-                f'"{self.source_header}: {email_message[self.source_header]}"'
-            )
-            return None
-
-        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
-        if not provider_data_types:
-            job_logger.log_warning(message=error_message)
-            return None
-
-        raw_payloads = []
-        for provider_data_type in provider_data_types:
-            for part in email_message.walk():
-                if part.get_content_type() == provider_data_type:
-                    raw_payloads.append(part.get_payload())
-                    break
-            else:
-                if job_logger.debug is True:
-                    job_logger.log_debug(
-                        message=f"Payload type {provider_data_type} not found in email payload.",
-                    )
-
-        if not raw_payloads:
-            job_logger.log_warning(
-                message=f"Payload types {', '.join(provider_data_types)} not found in email payload.",
-            )
-            return None
-
-        return MaintenanceNotification(
-            source=self.name,
-            sender=email_message[self.source_header],
-            subject=email_message["Subject"],
-            raw_payloads=raw_payloads,
-            provider_type=provider_type,
-        )
-
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
     ) -> Iterable[MaintenanceNotification]:
@@ -427,6 +380,7 @@ class IMAP(EmailSource):
             raw_notification = self.fetch_email(job_logger, msg_id)
             if raw_notification:
                 received_notifications.append(raw_notification)
+
         if job_logger.debug:
             job_logger.log_debug(
                 message=(f"Raw notifications created {len(received_notifications)} from {self.name}."),
@@ -492,68 +446,15 @@ class GmailAPI(EmailSource):
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
         """
         received_email = (
-            self.service.users().messages().get(userId=self.account, id=msg_id).execute()  # pylint: disable=no-member
+            self.service.users()  # pylint: disable=no-member
+            .messages()
+            .get(userId=self.account, id=msg_id, format="raw")
+            .execute()
         )
 
-        return self.process_email(job_logger, received_email, msg_id)
-
-    def process_email(  # pylint: disable=too-many-locals
-        self, job_logger: Job, received_email: Dict, msg_id: bytes
-    ) -> Optional[MaintenanceNotification]:
-        """Helper method for the fetch_email() method."""
-        email_subject = ""
-        email_source = ""
-
-        for header in received_email["payload"]["headers"]:
-            if header.get("name") == "Subject":
-                email_subject = header["value"]
-            elif header.get("name") == self.source_header:
-                email_source = header["value"]
-
-        email_source_before = email_source
-        email_source = self.extract_email_source(email_source)
-        if not email_source:
-            job_logger.log_warning(message=f'Not possible to determine the email sender from "{email_source_before}"')
-            return None
-
-        provider_data_types, provider_type, error_message = self.extract_provider_data_types(email_source)
-        if not provider_data_types:
-            job_logger.log_warning(message=error_message)
-            return None
-
-        def get_raw_payload_from_parts(parts, provider_data_type):
-            """Helper function to extract the raw_payload from a multiple parts via a recursive call."""
-            for part_inner in parts:
-                for header_inner in part_inner["headers"]:
-                    if header_inner.get("name") == "Content-Type" and provider_data_type in header_inner.get("value"):
-                        return self.extract_raw_payload(part_inner["body"], msg_id)
-                    if header_inner.get("name") == "Content-Type" and "multipart" in header_inner.get("value"):
-                        return get_raw_payload_from_parts(part_inner["parts"], provider_data_type)
-            return None
-
-        raw_payloads = []
-        for provider_data_type in provider_data_types:
-            if "parts" not in received_email["payload"]:
-                raw_payload = self.extract_raw_payload(received_email["payload"]["body"], msg_id)
-            else:
-                raw_payload = get_raw_payload_from_parts(received_email["payload"]["parts"], provider_data_type)
-            if raw_payload:
-                raw_payloads.append(raw_payload)
-
-        if not raw_payloads:
-            job_logger.log_warning(
-                message=f"Payload types {provider_data_types} not found in email payload.",
-            )
-            return None
-        if job_logger.debug is True:
-            job_logger.log_debug(message=f"Got notification from {email_source} with subject {email_subject}")
-        return MaintenanceNotification(
-            source=self.name,
-            sender=email_source,
-            subject=email_subject,
-            raw_payloads=raw_payloads,
-            provider_type=provider_type,
-        )
+        raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
+        email_message = email.message_from_bytes(raw_email_string)
+        return self.process_email(job_logger, email_message)
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
