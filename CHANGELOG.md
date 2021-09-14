@@ -2,6 +2,10 @@
 
 ## v0.1.11
 
+### Added
+
+- #86: Adopt new `circuit-maintenance-parser` to simplify email related code. Use `stamp` from notification to define the date of the `RawNotification`. Limit the size of the store `RawNotification` via configuration file.
+
 ### Fixed
 
 - #76: Fix IMAP authentication logic that was not cleaning session after authentication failure.
