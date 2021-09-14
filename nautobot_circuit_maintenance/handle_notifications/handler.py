@@ -318,7 +318,7 @@ class HandleCircuitMaintenanceNotifications(Job):
             )
         except Exception as error:
             self.log_failure(
-                message=f"Unexpected exception when retrieveing notifications from sources ({notification_sources}): {error}"
+                message=f"Unexpected exception when retrieving notifications from sources ({notification_sources}): {error}"
             )
             return []
 
