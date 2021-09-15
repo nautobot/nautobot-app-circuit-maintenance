@@ -4,7 +4,7 @@ import traceback
 from typing import Optional, List
 import uuid
 from django.conf import settings
-from circuit_maintenance_parser import ProviderError, init_provider, init_data_email
+from circuit_maintenance_parser import ProviderError, init_provider, NotificationData, Maintenance
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
@@ -24,7 +24,7 @@ MAX_INITIAL_DAYS_SINCE = 365
 
 
 def create_circuit_maintenance(
-    logger: Job, maintenance_id: str, parser_maintenance, provider: Provider
+    logger: Job, maintenance_id: str, parser_maintenance: Maintenance, provider: Provider
 ) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
     circuit_maintenance_entry = CircuitMaintenance(
@@ -76,7 +76,7 @@ def update_circuit_maintenance(
     logger: Job,
     circuit_maintenance_entry: CircuitMaintenance,
     maintenance_id: str,
-    parser_maintenance,
+    parser_maintenance: Maintenance,
     provider: Provider,
 ):  # pylint: disable=too-many-locals
     """Handles the update of an existent circuit maintenance."""
@@ -148,9 +148,8 @@ def update_circuit_maintenance(
     logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")
 
 
-# TODO: Maintenance typing is not exposed in the parser library
 def create_or_update_circuit_maintenance(
-    logger: Job, parser_maintenance, raw_entry: RawNotification, provider: Provider
+    logger: Job, parser_maintenance: Maintenance, raw_entry: RawNotification, provider: Provider
 ) -> CircuitMaintenance:
     """Processes a Maintenance, creating or updating the related Circuit Maintenance.
 
@@ -176,7 +175,7 @@ def get_maintenances_from_notification(logger: Job, notification: MaintenanceNot
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
         return None
 
-    data_to_process = init_data_email(notification.raw_payload)
+    data_to_process = NotificationData.init_from_email_bytes(notification.raw_payload)
     if not data_to_process:
         logger.log_failure(message=f"Notification data was not accepted by the parser: {notification.raw_payload}")
         return None
