@@ -4,7 +4,7 @@ import traceback
 from typing import Optional, List
 import uuid
 from django.conf import settings
-from circuit_maintenance_parser import ProviderError, init_provider, init_data_email, Maintenance
+from circuit_maintenance_parser import ProviderError, init_provider, NotificationData, Maintenance
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
@@ -175,7 +175,7 @@ def get_maintenances_from_notification(logger: Job, notification: MaintenanceNot
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
         return None
 
-    data_to_process = init_data_email(notification.raw_payload)
+    data_to_process = NotificationData.init_from_email_bytes(notification.raw_payload)
     if not data_to_process:
         logger.log_failure(message=f"Notification data was not accepted by the parser: {notification.raw_payload}")
         return None
