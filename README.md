@@ -30,7 +30,10 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 ```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
-        "raw_notifications": {"initial_days_since": 100},
+        "raw_notifications": {
+            "initial_days_since": 100,
+            "raw_notification_size": 500,
+        },
         "notification_sources": [
             {
               ...
@@ -44,8 +47,8 @@ In the `raw_notifications` section, you can define:
 
 - `initial_days_since`: define how many days back the plugin will check for `RawNotification`s for each
   `NotificationSource`, in order to limit the number of notifications to be processed on the first run of the plugin.
-  In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to
-  **365 days**.
+  In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to **365 days**.
+- `raw_notification_size`: define how many bytes from a notification will be stored in the database to not store too big objects. If not defined, it defaults to **1000** bytes.
 
 The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [Usage](#Usage) section.
 

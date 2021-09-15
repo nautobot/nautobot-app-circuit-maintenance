@@ -1,5 +1,5 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.1.10"
+__version__ = "0.2.0"
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
@@ -44,13 +44,16 @@ def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-arg
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
         "notification_sources", []
     ):
-        instance, _ = NotificationSource.objects.get_or_create(
+        instance, _ = NotificationSource.objects.update_or_create(
             name=notification_source["name"],
             slug=slugify(
                 notification_source["name"],
             ),
-            attach_all_providers=notification_source.get("attach_all_providers", False),
+            defaults={
+                "attach_all_providers": notification_source.get("attach_all_providers", False),
+            },
         )
+
         desired_notification_sources_names.append(notification_source["name"])
 
         if instance.attach_all_providers:
