@@ -1,7 +1,5 @@
 ---
 extends: "default"
-ignore: |
-  /nautobot_circuit_maintenance/fixtures/
 
 rules:
   comments: "enable"
