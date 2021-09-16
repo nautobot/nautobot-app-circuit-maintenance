@@ -236,7 +236,6 @@ class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
     raw = models.BinaryField()
-    _raw_md5 = models.TextField(unique=True)
     subject = models.CharField(max_length=200)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=200, default="", null=True, blank=True)
@@ -246,10 +245,10 @@ class RawNotification(OrganizationalModel):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["date"]
+        unique_together = ("date", "provider", "subject")
 
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
-        self._raw_md5 = hashlib.md5(self.raw).hexdigest()  # nosec
         # Limiting the size of the notification stored.
         self.raw = self.raw[
             : PLUGIN_SETTINGS.get("raw_notifications", {}).get("raw_notification_size", DEFAULT_RAW_NOTIFICATION_SIZE)
