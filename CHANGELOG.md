@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.1 -
+
+### Added
+
+- #95: Add `emailmessage` info when getting error due not able to get email sender address.
+
 ## v0.2.0 - 2021-09-15
 
 ### Added
