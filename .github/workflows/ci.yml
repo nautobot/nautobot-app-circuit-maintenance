@@ -27,8 +27,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install Poetry"
+        run: "pip install poetry"
       - name: "Linting: bandit"
         run: "poetry run invoke bandit"
     needs:
@@ -40,8 +42,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install Poetry"
+        run: "pip install poetry"
       - name: "Linting: pydocstyle"
         run: "poetry run invoke pydocstyle"
     needs:
@@ -53,8 +57,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install Poetry"
+        run: "pip install poetry"
       - name: "Linting: flake8"
         run: "poetry run invoke flake8"
     needs:
@@ -78,8 +84,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install Poetry"
+        run: "pip install poetry"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
@@ -94,8 +102,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install Poetry"
+        run: "pip install poetry"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
