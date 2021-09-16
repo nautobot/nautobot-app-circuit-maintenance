@@ -261,11 +261,15 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         self, job_logger: Job, email_message: email.message.EmailMessage
     ) -> Optional[MaintenanceNotification]:
         """Process an EmailMessage to create the MaintenaceNotification."""
-        email_source = self.extract_email_source(email_message[self.source_header])
+        email_source = None
+        if email_message[self.source_header]:
+            email_source = self.extract_email_source(email_message[self.source_header])
+
         if not email_source:
-            job_logger.log_warning(
+            job_logger.log_failure(
+                email_message,
                 message="Not possible to determine the email sender from "
-                f'"{self.source_header}: {email_message[self.source_header]}"'
+                f'"{self.source_header}: {email_message[self.source_header]}"',
             )
             return None
 
