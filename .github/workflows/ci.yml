@@ -12,8 +12,10 @@ jobs:
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
-      - name: "Setup environment"
-        uses: "./.github/actions/setup-environment"
+      # - name: "Setup environment"
+      #   uses: "./.github/actions/setup-environment"
+      - name: "Install env"
+        run: "poetry install"
       - name: "Linting: black"
         run: "poetry run invoke black"
   bandit:
