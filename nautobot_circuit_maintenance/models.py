@@ -1,5 +1,4 @@
 """Models for Circuit Maintenance."""
-import hashlib
 import pickle  # nosec
 from django.conf import settings
 from django.core.exceptions import ValidationError
