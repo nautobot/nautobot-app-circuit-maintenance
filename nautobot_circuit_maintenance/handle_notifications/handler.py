@@ -263,11 +263,13 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             )
             logger.log_success(parsed_entry, message=f"Saved Parsed Notification for {circuit_maintenance_entry.name}.")
 
-        except Exception as exc:
-            tb_str = traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+        except Exception:
+            tb_str = traceback.format_exc()
             logger.log_failure(
-                parser_maintenance,
-                message=f"Unexpected exception while handling parsed notification {notification.subject}.\n{tb_str}",
+                message=(
+                    f"Unexpected exception while handling parsed notification `{notification.subject}`.\n"
+                    f"```\n{tb_str}\n```",
+                )
             )
 
     return raw_entry.id
