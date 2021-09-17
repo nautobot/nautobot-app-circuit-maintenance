@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.3 -
+## v0.2.3 - 2021-09-17
 
 ### Fix
 
@@ -11,6 +11,7 @@
 ### Fix
 
 - #99: Change uniqueness for `RawNotification`.
+- #100: Improve traceback formatting in case of exception during `process_raw_notification()`.
 
 ## v0.2.1 - 2021-09-16
 
