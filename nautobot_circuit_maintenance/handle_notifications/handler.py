@@ -159,11 +159,10 @@ def create_or_update_circuit_maintenance(
     It returns the CircuitMaintenance entry created or updated.
     """
     maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
-    circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
-
-    if circuit_maintenance_entry:
+    try:
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parser_maintenance, provider)
-    else:
+    except ObjectDoesNotExist:
         circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parser_maintenance, provider)
 
     return circuit_maintenance_entry
