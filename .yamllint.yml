@@ -1,5 +1,6 @@
 ---
 extends: "default"
+
 rules:
   comments: "enable"
   empty-values: "enable"
