@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.3 -
+
+### Fix
+
+- #104: When creating `RawNotification` we validate the `Integrity` exception from the DB to avoid postponing the error and handling it gracefully. Also, the `RawNotification.date` is now taken directly from the email notification `Date` instead of waiting for the parsing output, that will contain the same value in the `stamp` attribute.
+
 ## v0.2.2 - 2021-09-17
 
 ### Fix
