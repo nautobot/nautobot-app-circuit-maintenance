@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.2
+
+### Fix
+
+- #99: Change uniqueness for `RawNotification`.
+
 ## v0.2.1 - 2021-09-16
 
 ### Added
