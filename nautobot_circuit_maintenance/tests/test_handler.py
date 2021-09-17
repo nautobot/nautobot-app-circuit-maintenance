@@ -6,7 +6,7 @@ from django.test import TestCase
 from jinja2 import Template
 
 from nautobot.circuits.models import Circuit, Provider
-from circuit_maintenance_parser import init_provider, init_data_email
+from circuit_maintenance_parser import init_provider, NotificationData
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     HandleCircuitMaintenanceNotifications,
@@ -288,7 +288,7 @@ class TestHandleNotificationsJob(TestCase):
             source=self.source,
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
-        data_to_process = init_data_email(test_notification.raw_payload)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
         create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
@@ -309,7 +309,7 @@ class TestHandleNotificationsJob(TestCase):
             source=self.source,
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
-        data_to_process = init_data_email(test_notification.raw_payload)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
         create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
@@ -336,7 +336,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data["circuitimpacts"].append(circuit_to_update)
         test_notification = generate_email_notification(notification_data, self.source.name)
         parser_provider = init_provider(provider_type=test_notification.provider_type)
-        data_to_process = init_data_email(test_notification.raw_payload)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
         maintenance_id = f"{provider.slug}-{parsed_maintenance.maintenance_id}"
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)

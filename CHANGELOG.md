@@ -1,14 +1,28 @@
 # Changelog
 
-## v0.1.11
+## v0.2.2 - 2021-09-17
+
+### Fix
+
+- #99: Change uniqueness for `RawNotification`.
+
+## v0.2.1 - 2021-09-16
 
 ### Added
 
-- #86: Adopt new `circuit-maintenance-parser` to simplify email related code. Use `stamp` from notification to define the date of the `RawNotification`. Limit the size of the store `RawNotification` via configuration file.
+- #95: Add `emailmessage` info when getting error due not able to get email sender address.
+
+## v0.2.0 - 2021-09-15
+
+### Added
+
+- #81: Extend Circuit Maintenance ID to include the Provider and the Maintenace ID to make it unique among multiple Providers.
+- #86, #88: Adopt new `circuit-maintenance-parser` to simplify email related code. Use `stamp` from notification to define the date of the `RawNotification`. Limit the size of the store `RawNotification` via configuration file.
 
 ### Fixed
 
 - #76: Fix IMAP authentication logic that was not cleaning session after authentication failure.
+- #85: Fix how the attach_all_providers feature was updated between restarts.
 
 ## v0.1.10 - 2021-09-01
 
