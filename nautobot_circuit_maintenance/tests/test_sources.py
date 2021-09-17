@@ -133,6 +133,7 @@ class TestEmailSource(TestCase):
         email_message = EmailMessage()
         email_message["From"] = "User <user@example.com>"
         email_message["Subject"] = "Circuit Maintenance Notification"
+        email_message["Date"] = "Mon, 1 Feb 2021 09:33:34 +0000"
         email_message["Content-Type"] = "text/html"
         email_message.set_payload(b"Some text goes here")
 
@@ -167,6 +168,7 @@ class TestEmailSource(TestCase):
 
         email_message = EmailMessage()
         email_message["From"] = "Mailing List <mailing-list@example.com>"
+        email_message["Date"] = "Mon, 1 Feb 2021 09:33:34 +0000"
         email_message["X-Original-Sender"] = "User <user@example.com>"
         email_message["Subject"] = "Circuit Maintenance Notification"
         email_message["Content-Type"] = "text/html"

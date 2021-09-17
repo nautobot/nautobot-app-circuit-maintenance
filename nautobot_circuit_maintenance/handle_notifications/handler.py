@@ -3,7 +3,10 @@ import datetime
 import traceback
 from typing import Optional, List
 import uuid
+from dateutil import parser
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from circuit_maintenance_parser import ProviderError, init_provider, NotificationData, Maintenance
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
@@ -156,11 +159,10 @@ def create_or_update_circuit_maintenance(
     It returns the CircuitMaintenance entry created or updated.
     """
     maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
-    circuit_maintenance_entry = CircuitMaintenance.objects.filter(name=maintenance_id).last()
-
-    if circuit_maintenance_entry:
+    try:
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parser_maintenance, provider)
-    else:
+    except ObjectDoesNotExist:
         circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parser_maintenance, provider)
 
     return circuit_maintenance_entry
@@ -200,21 +202,22 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
     """
     # Insert raw notification in DB even failed parsing
     try:
-        raw_entry, created = RawNotification.objects.get_or_create(
+        raw_entry = RawNotification(
             subject=notification.subject,
             provider=provider,
             raw=notification.raw_payload,
             sender=notification.sender,
             source=NotificationSource.objects.filter(name=notification.source).last(),
+            date=parser.parse(notification.date),
         )
-    except Exception as exc:
-        logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
-        return None
-
-    if not created:
+        raw_entry.save()
+    except IntegrityError as exc:
         # If the RawNotification was already created, we ignore it.
         if logger.debug:
-            logger.log_debug(message=f"Raw notification '{raw_entry.subject}' already existed with id {raw_entry.pk}")
+            logger.log_debug(message=f"Raw notification already existed: {str(exc)}")
+        return None
+    except Exception as exc:
+        logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
         return None
 
     logger.log_success(raw_entry, message="Raw notification created.")
@@ -228,8 +231,9 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
     It creates a RawNotification and if it could be parsed, create the corresponding ParsedNotification and the
     related objects. Finally returns the the UUID of the RawNotification modified.
     """
-    provider = Provider.objects.filter(slug=notification.provider_type).last()
-    if not provider:
+    try:
+        provider = Provider.objects.get(slug=notification.provider_type)
+    except ObjectDoesNotExist:
         logger.log_warning(
             message=(
                 f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
@@ -252,7 +256,6 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             )
             # Update raw notification as properly parsed and with the stamp time
             raw_entry.parsed = True
-            raw_entry.date = datetime.datetime.fromtimestamp(parser_maintenance.stamp)
             raw_entry.save()
 
             # Insert parsed notification in DB

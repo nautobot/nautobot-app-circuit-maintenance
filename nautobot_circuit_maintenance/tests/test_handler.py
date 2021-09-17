@@ -4,7 +4,6 @@ from email.message import EmailMessage
 from email.utils import formatdate
 from django.test import TestCase
 from jinja2 import Template
-
 from nautobot.circuits.models import Circuit, Provider
 from circuit_maintenance_parser import init_provider, NotificationData
 
@@ -67,6 +66,7 @@ END:VCALENDAR
         source=source,
         raw_payload=email_message.as_bytes(),
         provider_type=notification_data["provider"],
+        date="Mon, 1 Feb 2021 09:33:34 +0000",
     )
 
 
@@ -232,6 +232,15 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(raw_notification.parsed, True)
         self.assertEqual(1, len(ParsedNotification.objects.all()))
         self.job.log_success.assert_any_call(raw_notification, message="Raw notification created.")
+
+    def test_process_raw_notification_duplicated_issue(self):
+        """Test process_raw_notification duplicated."""
+        self.test_process_raw_notification()
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        res = process_raw_notification(self.job, test_notification)
+        self.assertEqual(res, None)
+        self.assertIn("Raw notification already existed", str(self.job.log_debug.call_args))
 
     def test_process_raw_notification_parser_issue(self):
         """Test process_raw_notification with parsing issues"""
