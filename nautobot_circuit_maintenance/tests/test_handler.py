@@ -67,6 +67,7 @@ END:VCALENDAR
         source=source,
         raw_payload=email_message.as_bytes(),
         provider_type=notification_data["provider"],
+        date="Mon, 1 Feb 2021 09:33:34 +0000",
     )
 
 

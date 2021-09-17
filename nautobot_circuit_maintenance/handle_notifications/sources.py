@@ -43,6 +43,7 @@ class MaintenanceNotification(BaseModel):
     subject: str
     provider_type: str
     raw_payload: bytes
+    date: str
 
 
 class Source(BaseModel):
@@ -284,6 +285,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
             subject=email_message["Subject"],
             provider_type=provider_type,
             raw_payload=email_message.as_bytes(),
+            date=email_message["Date"],
         )
 
 
