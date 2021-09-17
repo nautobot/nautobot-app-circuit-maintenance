@@ -1,90 +1,90 @@
 ---
-- model: circuits.provider
-  pk: 0ec89992-0de0-483f-8f53-bdcd179eaecd
+- model: "circuits.provider"
+  pk: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
   fields:
     created: 2021-04-30
     last_updated: 2021-04-30 07:43:14.510402+00:00
     _custom_field_data:
-      emails_circuit_maintenances: sender@example.com
-    name: ntt
-    slug: ntt
+      emails_circuit_maintenances: "sender@example.com"
+    name: "ntt"
+    slug: "ntt"
     asn: null
     account: ""
     portal_url: ""
     noc_contact: ""
     admin_contact: ""
     comments: ""
-- model: circuits.provider
-  pk: 6de61a64-f873-482a-9e33-97000b7f7515
+- model: "circuits.provider"
+  pk: "6de61a64-f873-482a-9e33-97000b7f7515"
   fields:
     created: 2021-04-30
     last_updated: 2021-04-30 07:43:14.510402+00:00
     _custom_field_data:
-      emails_circuit_maintenances: sender2@example.com
-    name: packetfabric
-    slug: packetfabric
+      emails_circuit_maintenances: "sender2@example.com"
+    name: "packetfabric"
+    slug: "packetfabric"
     asn: null
     account: ""
     portal_url: ""
     noc_contact: ""
     admin_contact: ""
     comments: ""
-- model: circuits.provider
-  pk: b6c067ac-2215-4412-b99f-f269c25b9e56
+- model: "circuits.provider"
+  pk: "b6c067ac-2215-4412-b99f-f269c25b9e56"
   fields:
     created: 2021-04-30
     last_updated: 2021-04-30 07:43:14.510402+00:00
     _custom_field_data:
-      emails_circuit_maintenances: sender3@example.com
-    name: abc
-    slug: abc
+      emails_circuit_maintenances: "sender3@example.com"
+    name: "abc"
+    slug: "abc"
     asn: null
     account: ""
     portal_url: ""
     noc_contact: ""
     admin_contact: ""
     comments: ""
-- model: circuits.circuittype
-  pk: d1c2ed9d-9376-485b-b058-d26c29b5f22f
+- model: "circuits.circuittype"
+  pk: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
   fields:
     created: 2021-05-06
     last_updated: 2021-05-06 05:16:27.538979+00:00
     _custom_field_data: {}
-    name: Transit
-    slug: transit
+    name: "Transit"
+    slug: "transit"
     description: ""
-- model: circuits.circuit
-  pk: 3ef990ab-6ae0-4e26-bd76-8017f643ab74
+- model: "circuits.circuit"
+  pk: "3ef990ab-6ae0-4e26-bd76-8017f643ab74"
   fields:
     created: 2021-04-30
     last_updated: 2021-04-30 07:43:34.845865+00:00
     _custom_field_data: {}
     status: null
     cid: "000001"
-    provider: 0ec89992-0de0-483f-8f53-bdcd179eaecd
-    type: d1c2ed9d-9376-485b-b058-d26c29b5f22f
+    provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
+    type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
     install_date: null
     commit_rate: null
     description: ""
     comments: ""
-- model: circuits.circuit
-  pk: fe87375e-a292-4a44-9bc9-830e0fb7a0ec
+- model: "circuits.circuit"
+  pk: "fe87375e-a292-4a44-9bc9-830e0fb7a0ec"
   fields:
     created: 2021-05-06
     last_updated: 2021-05-06 05:18:36.057186+00:00
     _custom_field_data: {}
     status: null
     cid: "000002"
-    provider: 0ec89992-0de0-483f-8f53-bdcd179eaecd
-    type: d1c2ed9d-9376-485b-b058-d26c29b5f22f
+    provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
+    type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
     install_date: null
     commit_rate: null
     description: ""
     comments: ""
-- model: nautobot_circuit_maintenance.notificationsource
-  pk: eb82df7e-6df6-405a-a798-d12e16cc1a50
+- model: "nautobot_circuit_maintenance.notificationsource"
+  pk: "eb82df7e-6df6-405a-a798-d12e16cc1a50"
   fields:
     created: 2021-05-06
     last_updated: 2021-05-06 05:19:11.314056+00:00
@@ -92,9 +92,9 @@
     name: "source imap"
     slug: "source-imap"
     providers:
-      - 0ec89992-0de0-483f-8f53-bdcd179eaecd
-- model: nautobot_circuit_maintenance.notificationsource
-  pk: 5fb2d3e4-4693-472c-8116-b4d7904eba66
+      - "0ec89992-0de0-483f-8f53-bdcd179eaecd"
+- model: "nautobot_circuit_maintenance.notificationsource"
+  pk: "5fb2d3e4-4693-472c-8116-b4d7904eba66"
   fields:
     created: 2021-06-16
     last_updated: 2021-06-16 09:13:59.564410+00:00
@@ -102,4 +102,4 @@
     name: "source gmail api"
     slug: "source-gmail-api"
     providers:
-      - 6de61a64-f873-482a-9e33-97000b7f7515
+      - "6de61a64-f873-482a-9e33-97000b7f7515"
