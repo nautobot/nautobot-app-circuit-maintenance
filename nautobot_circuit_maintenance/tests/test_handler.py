@@ -238,9 +238,17 @@ class TestHandleNotificationsJob(TestCase):
         self.test_process_raw_notification()
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source.name)
+
+        # A duplicated RawNotification skip creation
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
         self.assertIn("Raw notification already existed with ID", str(self.job.log_debug.call_args))
+
+        # After a duplicated RawNotification, a new RawNotification should be inserted
+        test_notification.subject = "another_subject"
+        res = process_raw_notification(self.job, test_notification)
+        raw_notification = RawNotification.objects.get(pk=res)
+        self.assertEqual(raw_notification.pk, res)
 
     def test_process_raw_notification_parser_issue(self):
         """Test process_raw_notification with parsing issues"""
