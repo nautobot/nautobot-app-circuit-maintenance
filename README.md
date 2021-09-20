@@ -121,6 +121,7 @@ There are 2 extra required attributes:
 There are also two optional attributes:
 
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
+- `source_header_limit_emails`: Restrict the emails used as "From", maybe a email from a mailing list or alias, in order to limit the emails that are processed.
 - `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to GMail API access.
 
 ```py
@@ -133,6 +134,7 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.getenv("CM_NS_1_CREDENTIALS_FILE", ""),
                 "url": os.getenv("CM_NS_1_URL", ""),
                 "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),          # optional
+                "source_header_limit_emails": ["email@example.com"],                  # optional
                 "extra_scopes": ["https://www.googleapis.com/auth/calendar.events"],  # optional
             }
         ]
