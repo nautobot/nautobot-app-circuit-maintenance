@@ -350,6 +350,8 @@ class IMAP(EmailSource):
         # TODO: find the right way to search messages from several senders
         # Maybe extend filtering options, for instance, to discard some type of notifications
         msg_ids = []
+
+        # TODO: define a similar function to _get_search_criteria
         since_date = ""
         if since_timestamp:
             since_txt = since_timestamp.strftime("%d-%b-%Y")
@@ -464,13 +466,8 @@ class GmailAPI(EmailSource):
         email_message = email.message_from_bytes(raw_email_string)
         return self.process_email(job_logger, email_message)
 
-    def receive_notifications(
-        self, job_logger: Job, since_timestamp: datetime.datetime = None
-    ) -> Iterable[MaintenanceNotification]:
-        """Retrieve emails since an specific time, if provided."""
-        self.load_credentials()
-        self.build_service()
-
+    def _get_search_criteria(self, since_timestamp: datetime.datetime = None) -> str:
+        """Build "search" criteria to filter emails, from date of from sender."""
         search_criteria = ""
         if since_timestamp:
             since_txt = since_timestamp.strftime("%Y/%m/%d")
@@ -485,6 +482,17 @@ class GmailAPI(EmailSource):
         elif self.emails_to_fetch and self.limit_emails_without_header_from:
             emails_with_from = [f"from:{email}" for email in self.limit_emails_without_header_from]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
+
+        return search_criteria
+
+    def receive_notifications(
+        self, job_logger: Job, since_timestamp: datetime.datetime = None
+    ) -> Iterable[MaintenanceNotification]:
+        """Retrieve emails since an specific time, if provided."""
+        self.load_credentials()
+        self.build_service()
+
+        search_criteria = self._get_search_criteria(since_timestamp)
 
         # TODO: For now not covering pagination as a way to limit the number of messages
         res = (
