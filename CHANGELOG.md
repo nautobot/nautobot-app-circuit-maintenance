@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.4 - 2021-09-20
+
+### Fix
+
+- #108: Do not use the `IntegrityError` exception to avoid duplicating entries by verifying that the object exists before creating it.
+
 ## v0.2.3 - 2021-09-17
 
 ### Fix

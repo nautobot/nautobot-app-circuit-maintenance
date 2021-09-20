@@ -6,7 +6,6 @@ import uuid
 from dateutil import parser
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
 from circuit_maintenance_parser import ProviderError, init_provider, NotificationData, Maintenance
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
@@ -200,27 +199,31 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
 
     If it already exists, we return `None` to signal we are skipping it.
     """
-    # Insert raw notification in DB even failed parsing
     try:
-        raw_entry = RawNotification(
+        raw_entry = RawNotification.objects.get(
             subject=notification.subject,
             provider=provider,
-            raw=notification.raw_payload,
-            sender=notification.sender,
-            source=NotificationSource.objects.filter(name=notification.source).last(),
             date=parser.parse(notification.date),
         )
-        raw_entry.save()
-    except IntegrityError as exc:
         # If the RawNotification was already created, we ignore it.
         if logger.debug:
-            logger.log_debug(message=f"Raw notification already existed: {str(exc)}")
+            logger.log_debug(message=f"Raw notification already existed with ID: {raw_entry.id}")
         return None
-    except Exception as exc:
-        logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
-        return None
-
-    logger.log_success(raw_entry, message="Raw notification created.")
+    except ObjectDoesNotExist:
+        try:
+            raw_entry = RawNotification(
+                subject=notification.subject,
+                provider=provider,
+                raw=notification.raw_payload,
+                sender=notification.sender,
+                source=NotificationSource.objects.filter(name=notification.source).last(),
+                date=parser.parse(notification.date),
+            )
+            raw_entry.save()
+            logger.log_success(raw_entry, message="Raw notification created.")
+        except Exception as exc:
+            logger.log_failure(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
+            return None
 
     return raw_entry
 
