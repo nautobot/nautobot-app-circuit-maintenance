@@ -271,7 +271,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             logger.log_failure(
                 message=(
                     f"Unexpected exception while handling parsed notification `{notification.subject}`.\n"
-                    f"```\n{tb_str}\n```",
+                    f"```\n{tb_str}\n```"
                 )
             )
 
