@@ -162,7 +162,7 @@ class Source(BaseModel):
                     account=config.get("account"),
                     credentials_file=creds_filename,
                     source_header=config.get("source_header", "From"),
-                    source_header_limit_emails=config.get("source_header_limit_emails", []),
+                    limit_emails_without_header_from=config.get("limit_emails_without_header_from", []),
                     extra_scopes=config.get("extra_scopes", []),
                 )
 
@@ -408,7 +408,7 @@ class GmailAPI(EmailSource):
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
     extra_scopes: List[str] = []
-    source_header_limit_emails: List[str] = []
+    limit_emails_without_header_from: List[str] = []
 
     class Config:
         """Pydantic BaseModel config."""
@@ -478,12 +478,12 @@ class GmailAPI(EmailSource):
 
         # If source_header is not "From" but some other custom header such as X-Original-Sender,
         # the GMail API doesn't let us filter by that, but if we provided via config a list of
-        # source via `source_header_limit_emails`, we filter by that.
+        # source via `limit_emails_without_header_from`, we filter by that.
         if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
-        elif self.emails_to_fetch and self.source_header_limit_emails:
-            emails_with_from = [f"from:{email}" for email in self.source_header_limit_emails]
+        elif self.emails_to_fetch and self.limit_emails_without_header_from:
+            emails_with_from = [f"from:{email}" for email in self.limit_emails_without_header_from]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         # TODO: For now not covering pagination as a way to limit the number of messages

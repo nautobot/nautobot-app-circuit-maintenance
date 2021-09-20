@@ -4,7 +4,7 @@
 
 ### Added
 
-- #109: For Gmail API sources, add a new configuration item `source_header_limit_emails` to be used when the `source_header` is not `From` to limit the number of notifications received from a mailing list or alias.
+- #109: For Gmail API sources, add a new configuration item `limit_emails_without_header_from` to be used when the `source_header` is not `From` to limit the number of notifications received from a mailing list or alias.
 
 ## v0.2.3 - 2021-09-17
 
