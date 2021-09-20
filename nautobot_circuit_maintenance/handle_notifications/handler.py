@@ -222,7 +222,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
             raw_entry.save()
             logger.log_success(raw_entry, message="Raw notification created.")
         except Exception as exc:
-            logger.log_warning(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
+            logger.log_failure(message=f"Raw notification '{notification.subject}' not created because {str(exc)}")
             return None
 
     return raw_entry
