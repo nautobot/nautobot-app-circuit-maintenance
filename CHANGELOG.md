@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.5
+
+### Fix
+
+- #113: In `CircuitMaintenace` detail view, when the parsed notifications are listed, instead of using the date of the parsing action, we show the date when the original notification was sent.
+
 ## v0.2.4 - 2021-09-20
 
 ### Fix
