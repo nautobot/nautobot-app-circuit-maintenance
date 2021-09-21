@@ -610,3 +610,53 @@ class TestGmailAPISource(TestCase):
         )
 
         return (provider, job, source)
+
+    @parameterized.expand(
+        [
+            [
+                None,
+                "From",
+                ["email1@example.com", "email2@example.com"],
+                [],
+                " {from:email1@example.com from:email2@example.com}",
+            ],
+            [
+                datetime.datetime(2021, 9, 20, 17, 49, 50, 0),
+                "From",
+                ["email1@example.com", "email2@example.com"],
+                [],
+                "after:2021/09/20 {from:email1@example.com from:email2@example.com}",
+            ],
+            [None, "X-Original-Sender", ["email1@example.com", "email2@example.com"], [], ""],
+            [
+                None,
+                "X-Original-Sender",
+                ["email1@example.com", "email2@example.com"],
+                ["mailinglist1@example.com", "mailinglist2@example.com"],
+                " {from:mailinglist1@example.com from:mailinglist2@example.com}",
+            ],
+            [
+                datetime.datetime(2021, 9, 20, 17, 49, 50, 0),
+                "X-Original-Sender",
+                ["email1@example.com", "email2@example.com"],
+                ["mailinglist1@example.com", "mailinglist2@example.com"],
+                "after:2021/09/20 {from:mailinglist1@example.com from:mailinglist2@example.com}",
+            ],
+        ]  # pylint: disable=too-many-arguments
+    )
+    def test_get_search_criteria(
+        self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result
+    ):
+        """Test the get_search_criteria method."""
+        source = GmailAPI(
+            name="whatever",
+            url="https://accounts.google.com/o/oauth2/auth",
+            account="account",
+            credentials_file="path_to_file",
+            source_header=source_header,
+            limit_emails_with_not_header_from=limit_emails_with_not_header_from,
+        )
+
+        source.emails_to_fetch = emails_to_fetch
+
+        self.assertEqual(result, source._get_search_criteria(since_timestamp))  # pylint: disable=protected-access

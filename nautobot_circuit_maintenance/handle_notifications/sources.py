@@ -162,6 +162,7 @@ class Source(BaseModel):
                     account=config.get("account"),
                     credentials_file=creds_filename,
                     source_header=config.get("source_header", "From"),
+                    limit_emails_with_not_header_from=config.get("limit_emails_with_not_header_from", []),
                     extra_scopes=config.get("extra_scopes", []),
                 )
 
@@ -349,6 +350,8 @@ class IMAP(EmailSource):
         # TODO: find the right way to search messages from several senders
         # Maybe extend filtering options, for instance, to discard some type of notifications
         msg_ids = []
+
+        # TODO: define a similar function to _get_search_criteria
         since_date = ""
         if since_timestamp:
             since_txt = since_timestamp.strftime("%d-%b-%Y")
@@ -407,6 +410,7 @@ class GmailAPI(EmailSource):
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
     extra_scopes: List[str] = []
+    limit_emails_with_not_header_from: List[str] = []
 
     class Config:
         """Pydantic BaseModel config."""
@@ -462,6 +466,25 @@ class GmailAPI(EmailSource):
         email_message = email.message_from_bytes(raw_email_string)
         return self.process_email(job_logger, email_message)
 
+    def _get_search_criteria(self, since_timestamp: datetime.datetime = None) -> str:
+        """Build "search" criteria to filter emails, from date of from sender."""
+        search_criteria = ""
+        if since_timestamp:
+            since_txt = since_timestamp.strftime("%Y/%m/%d")
+            search_criteria = f"after:{since_txt}"
+
+        # If source_header is not "From" but some other custom header such as X-Original-Sender,
+        # the GMail API doesn't let us filter by that, but if we provided via config a list of
+        # source via `limit_emails_with_not_header_from`, we filter by that.
+        if self.emails_to_fetch and self.source_header == "From":
+            emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
+            search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
+        elif self.emails_to_fetch and self.limit_emails_with_not_header_from:
+            emails_with_from = [f"from:{email}" for email in self.limit_emails_with_not_header_from]
+            search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
+
+        return search_criteria
+
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
     ) -> Iterable[MaintenanceNotification]:
@@ -469,16 +492,7 @@ class GmailAPI(EmailSource):
         self.load_credentials()
         self.build_service()
 
-        search_criteria = ""
-        if since_timestamp:
-            since_txt = since_timestamp.strftime("%Y/%m/%d")
-            search_criteria = f"after:{since_txt}"
-
-        # If source_header is not "from" but some other custom header such as X-Original-Sender,
-        # the GMail API doesn't let us filter by that.
-        if self.emails_to_fetch and self.source_header == "From":
-            emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
-            search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
+        search_criteria = self._get_search_criteria(since_timestamp)
 
         # TODO: For now not covering pagination as a way to limit the number of messages
         res = (
