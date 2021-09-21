@@ -645,7 +645,7 @@ class TestGmailAPISource(TestCase):
         ]  # pylint: disable=too-many-arguments
     )
     def test_get_search_criteria(
-        self, since_timestamp, source_header, emails_to_fetch, limit_emails_without_header_from, result
+        self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result
     ):
         """Test the get_search_criteria method."""
         source = GmailAPI(
@@ -654,7 +654,7 @@ class TestGmailAPISource(TestCase):
             account="account",
             credentials_file="path_to_file",
             source_header=source_header,
-            limit_emails_without_header_from=limit_emails_without_header_from,
+            limit_emails_with_not_header_from=limit_emails_with_not_header_from,
         )
 
         source.emails_to_fetch = emails_to_fetch
