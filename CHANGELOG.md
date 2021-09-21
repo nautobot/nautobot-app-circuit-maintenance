@@ -1,10 +1,20 @@
 # Changelog
 
-## v0.2.4
+## v0.2.5
 
 ### Added
 
 - #109: For Gmail API sources, add a new configuration item `limit_emails_without_header_from` to be used when the `source_header` is not `From` to limit the number of notifications received from a mailing list or alias.
+
+### Fix
+
+- #113: In `CircuitMaintenace` detail view, when the parsed notifications are listed, instead of using the date of the parsing action, we show the date when the original notification was sent.
+
+## v0.2.4 - 2021-09-20
+
+### Fix
+
+- #108: Do not use the `IntegrityError` exception to avoid duplicating entries by verifying that the object exists before creating it.
 
 ## v0.2.3 - 2021-09-17
 
