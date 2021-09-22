@@ -32,8 +32,8 @@ def create_circuit_maintenance(
     """Handles the creation of a new circuit maintenance."""
     circuit_maintenance_entry = CircuitMaintenance(
         name=maintenance_id,
-        start_time=datetime.datetime.fromtimestamp(parser_maintenance.start),
-        end_time=datetime.datetime.fromtimestamp(parser_maintenance.end),
+        start_time=datetime.datetime.fromtimestamp(parser_maintenance.start, tz=datetime.timezone.utc),
+        end_time=datetime.datetime.fromtimestamp(parser_maintenance.end, tz=datetime.timezone.utc),
         description=parser_maintenance.summary,
         status=parser_maintenance.status,
     )
@@ -85,8 +85,12 @@ def update_circuit_maintenance(
     """Handles the update of an existent circuit maintenance."""
     circuit_maintenance_entry.description = parser_maintenance.summary
     circuit_maintenance_entry.status = parser_maintenance.status
-    circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(parser_maintenance.start)
-    circuit_maintenance_entry.end_time = datetime.datetime.fromtimestamp(parser_maintenance.end)
+    circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(
+        parser_maintenance.start, tz=datetime.timezone.utc
+    )
+    circuit_maintenance_entry.end_time = datetime.datetime.fromtimestamp(
+        parser_maintenance.end, tz=datetime.timezone.utc
+    )
     circuit_maintenance_entry.ack = False
     circuit_maintenance_entry.save()
 
