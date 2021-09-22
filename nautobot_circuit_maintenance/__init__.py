@@ -1,5 +1,12 @@
 """Init for Circuit Maintenance plugin."""
-__version__ = "0.2.4"
+try:
+    from importlib import metadata
+except ImportError:
+    # Python version < 3.8
+    import importlib_metadata as metadata
+
+__version__ = metadata.version(__name__)
+
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
