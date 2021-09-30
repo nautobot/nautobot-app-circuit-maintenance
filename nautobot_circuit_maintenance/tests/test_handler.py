@@ -367,7 +367,7 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(circuit_to_update["impact"], circuit_impact_entry.impact)
 
     def test_update_circuit_maintenance_unordered_notifications(self):
-        """Test update_circuit_maintenance."""
+        """Test update_circuit_maintenance with unordered notifications."""
         notification_data = get_base_notification_data()
         test_notification_older = generate_email_notification(notification_data, self.source.name)
 
