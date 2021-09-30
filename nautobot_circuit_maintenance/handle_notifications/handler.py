@@ -164,6 +164,18 @@ def create_or_update_circuit_maintenance(
     maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
     try:
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+        last_parsed_notification = (
+            circuit_maintenance_entry.parsednotification_set.order_by("raw_notification__date").reverse().last()
+        )
+
+        # If the notification is older than the latest one used to update the CircuitMaintenance, we skip updating it
+        if last_parsed_notification and last_parsed_notification.date > datetime.datetime.fromtimestamp(
+            parser_maintenance.stamp, tz=datetime.timezone.utc
+        ):
+            if logger.debug:
+                logger.log_debug(f"Not updating CircuitMaintenance {maintenance_id} because the notification is older.")
+            return circuit_maintenance_entry
+
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parser_maintenance, provider)
     except ObjectDoesNotExist:
         circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parser_maintenance, provider)
@@ -261,7 +273,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
             circuit_maintenance_entry = create_or_update_circuit_maintenance(
                 logger, parser_maintenance, raw_entry, provider
             )
-            # Update raw notification as properly parsed and with the stamp time
+            # Update raw notification as properly parsed
             raw_entry.parsed = True
             raw_entry.save()
 
