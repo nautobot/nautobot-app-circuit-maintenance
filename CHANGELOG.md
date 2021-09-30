@@ -9,7 +9,7 @@
 ### Fix
 
 - #113: In `CircuitMaintenace` detail view, when the parsed notifications are listed, instead of using the date of the parsing action, we show the date when the original notification was sent.
-- #123: Unordered notifications made the final `CircuitMaintenance` state to not being the latest but the one from the last notification parsed. Now, only parsed notifications, newer than the latest one used to update the `CircuitMaintenace` are taken into account, but all of them are linked to it, to have a complete report of them, and be able to render all of them in descendant order in the detail view.
+- #123: Out-of-sequence notifications could make the final `CircuitMaintenance` state not reflect the latest notification state. Now, while out-of-sequence notifications will still be processed and linked to the `CircuitMaintenance` for context, they will not result in a change of its overall state.
 
 ## v0.2.4 - 2021-09-20
 
