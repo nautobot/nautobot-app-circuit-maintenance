@@ -169,11 +169,15 @@ def create_or_update_circuit_maintenance(
         )
 
         # If the notification is older than the latest one used to update the CircuitMaintenance, we skip updating it
-        if last_parsed_notification and last_parsed_notification.date > datetime.datetime.fromtimestamp(
+        parser_maintenance_datetime = datetime.datetime.fromtimestamp(
             parser_maintenance.stamp, tz=datetime.timezone.utc
-        ):
+        )
+        if last_parsed_notification and last_parsed_notification.date > parser_maintenance_datetime:
             if logger.debug:
-                logger.log_debug(f"Not updating CircuitMaintenance {maintenance_id} because the notification is older.")
+                logger.log_debug(
+                    f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
+                    f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.date}."
+                )
             return circuit_maintenance_entry
 
         update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parser_maintenance, provider)
