@@ -164,6 +164,9 @@ def create_or_update_circuit_maintenance(
     maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
     try:
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+        # Using the RawNotification.date as the reference to sort because it's the one that takes into account the
+        # source receving time. The ParsedNotification.date stores the date when the RawNotification was parsed and the
+        # ParsedNotification was created.
         last_parsed_notification = (
             circuit_maintenance_entry.parsednotification_set.order_by("raw_notification__date").reverse().last()
         )
