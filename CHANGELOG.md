@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.5
+## v0.2.5 - 2021-10-01
 
 ### Added
 
@@ -9,6 +9,7 @@
 ### Fix
 
 - #113: In `CircuitMaintenace` detail view, when the parsed notifications are listed, instead of using the date of the parsing action, we show the date when the original notification was sent.
+- #118: Always create timezone-aware `parser_maintenance` timestamps.
 - #123: Out-of-sequence notifications could make the final `CircuitMaintenance` state not reflect the latest notification state. Now, while out-of-sequence notifications will still be processed and linked to the `CircuitMaintenance` for context, they will not result in a change of its overall state.
 
 ## v0.2.4 - 2021-09-20
