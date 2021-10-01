@@ -118,9 +118,10 @@ There are 2 extra required attributes:
 - `account`: Identifier (i.e. email address) to access via OAuth or to impersonate as service account.
 - `credentials_file`: JSON file containing all the necessary data to identify the API integration (see below).
 
-There are also two optional attributes:
+There are also three optional attributes:
 
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
+- `limit_emails_with_not_header_from`: List of emails used to restrict the emails retrieved when NOT using the `source_header` "From" and we can't use the `Provider` original emails to filter.
 - `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to GMail API access.
 
 ```py
@@ -133,6 +134,7 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.getenv("CM_NS_1_CREDENTIALS_FILE", ""),
                 "url": os.getenv("CM_NS_1_URL", ""),
                 "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),          # optional
+                "limit_emails_with_not_header_from": ["email@example.com"],                  # optional
                 "extra_scopes": ["https://www.googleapis.com/auth/calendar.events"],  # optional
             }
         ]

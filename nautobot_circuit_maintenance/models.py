@@ -240,6 +240,7 @@ class RawNotification(OrganizationalModel):
     sender = models.CharField(max_length=200, default="", null=True, blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False, null=True, blank=True)
+    # RawNotification.date is the date when the RawNotification was received by the Source
     date = models.DateTimeField(default=now)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
@@ -281,6 +282,7 @@ class ParsedNotification(OrganizationalModel):
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
     raw_notification = models.ForeignKey(RawNotification, on_delete=models.CASCADE, default=None)
     json = models.JSONField()
+    # ParsedNotification.date is the date when after parsing a RawNotification, the ParsedNotification was created
     date = models.DateTimeField(default=now)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
