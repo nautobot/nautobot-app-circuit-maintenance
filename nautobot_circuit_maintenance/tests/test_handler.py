@@ -365,3 +365,30 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(notification_data["status"], circuit_maintenance_entry.status)
         circuit_impact_entry = CircuitImpact.objects.get(circuit__cid=circuit_to_update["cid"])
         self.assertEqual(circuit_to_update["impact"], circuit_impact_entry.impact)
+
+    def test_update_circuit_maintenance_unordered_notifications(self):
+        """Test update_circuit_maintenance with unordered notifications."""
+        notification_data = get_base_notification_data()
+        test_notification_older = generate_email_notification(notification_data, self.source.name)
+
+        notification_data["status"] = "COMPLETED"
+        test_notification_newer = generate_email_notification(notification_data, self.source.name)
+        test_notification_newer.date = "Mon, 2 Feb 2021 09:33:34 +0000"
+
+        provider = Provider.objects.get(slug=test_notification_older.provider_type)
+        with patch(
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            # We simulate that the newer notifications are retrieved first, so processed first
+            mock_get_notifications.return_value = [test_notification_newer, test_notification_older]
+            self.job.run(commit=True)
+
+        # Verify that both notifications where related to same CircuitMaintenance
+        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+
+        maintenance_id = f"{provider.slug}-{notification_data['name']}"
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+        # Verify that the final status of the CircuitMaintenance depends on the newest notification
+        self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
+        # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
+        self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
