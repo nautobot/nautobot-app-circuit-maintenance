@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name="parsednotification",
-            options={"ordering": ["created"]},
+            options={"ordering": ["last_updated"]},
         ),
         migrations.RemoveField(
             model_name="rawnotification",

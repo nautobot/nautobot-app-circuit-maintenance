@@ -1,7 +1,11 @@
 """Unit tests for nautobot_circuit_maintenance models."""
+import datetime
+
+from django.core.exceptions import ValidationError
 from django.test import TestCase
+
 from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot_circuit_maintenance.models import CircuitMaintenance, CircuitImpact
+from nautobot_circuit_maintenance.models import CircuitMaintenance, CircuitImpact, RawNotification, NotificationSource
 from nautobot_circuit_maintenance.choices import CircuitImpactChoices
 
 
@@ -52,3 +56,24 @@ class CircuitMaintenanceModelTestCase(TestCase):
         circuit_impacts = CircuitImpact.objects.all()
         for circuit_impact in circuit_impacts:
             self.assertEqual(circuit_impact.impact, CircuitImpactChoices.OUTAGE)
+
+
+class RawNotificationModelTestCase(TestCase):
+    """Test the RawNotification model."""
+
+    def setUp(self):
+        """Setup objects for Circuit Maintenance Model tests."""
+        self.provider = Provider.objects.create(name="Provider 1", slug="provider-1")
+        self.source = NotificationSource.objects.create(name="Source 1")
+
+    def test_future_stamp_validation(self):
+        """Validate that a stamp reference in the future raises a ValidationError."""
+        raw_notification = RawNotification(
+            raw=b"",
+            subject="something",
+            provider=self.provider,
+            source=self.source,
+            stamp=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        )
+        with self.assertRaises(ValidationError):
+            raw_notification.full_clean()

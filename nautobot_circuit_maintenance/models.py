@@ -1,6 +1,6 @@
 """Models for Circuit Maintenance."""
 import pickle  # nosec
-from datetime import datetime, timezone
+from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -264,13 +264,13 @@ class RawNotification(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.subject, self.provider, self.sender, self.source, self.raw, self.created, self.parsed)
+        return (self.subject, self.provider, self.sender, self.source, self.raw, self.stamp, self.parsed)
 
     def clean(self):
         """Add validation when creating a RawNotification."""
         super().clean()
 
-        if self.stamp > datetime.now(timezone.utc):
+        if self.stamp > datetime.utcnow():
             raise ValidationError(f"Stamp time {self.stamp} is not consistent, it's in the future.")
 
 
@@ -290,7 +290,7 @@ class ParsedNotification(OrganizationalModel):
     json = models.JSONField()
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["created"]
+        ordering = ["last_updated"]
 
     def __str__(self):
         """String value for HTML rendering."""
@@ -302,4 +302,4 @@ class ParsedNotification(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.maintenance, self.raw_notification, self.json, self.created)
+        return (self.maintenance, self.raw_notification, self.json, self.last_updated)
