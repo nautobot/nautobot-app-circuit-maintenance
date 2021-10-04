@@ -241,7 +241,6 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 # Each key in the dictionary is the name of an installed plugin and its value is a dictionary of settings.
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
-        "raw_notifications": {"initial_days_since": 365},
         "notification_sources": [
             {
                 "name": "my imap source",
