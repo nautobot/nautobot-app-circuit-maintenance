@@ -15,7 +15,6 @@ from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
-DEFAULT_RAW_NOTIFICATION_SIZE = 1000
 
 
 @extras_features(
@@ -249,9 +248,7 @@ class RawNotification(OrganizationalModel):
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
         # Limiting the size of the notification stored.
-        self.raw = self.raw[
-            : PLUGIN_SETTINGS.get("raw_notifications", {}).get("raw_notification_size", DEFAULT_RAW_NOTIFICATION_SIZE)
-        ]
+        self.raw = self.raw[: PLUGIN_SETTINGS.get("raw_notification_size")]
         super().save(*args, **kwargs)
 
     def __str__(self):
