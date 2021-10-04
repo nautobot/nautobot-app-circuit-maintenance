@@ -249,7 +249,7 @@ class RawNotification(OrganizationalModel):
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
         # Limiting the size of the notification stored.
-        self.raw = self.raw[: PLUGIN_SETTINGS.get("raw_notifications", {}).get("raw_notification_size")]
+        self.raw = self.raw[: PLUGIN_SETTINGS.get("raw_notification_size")]
         super().save(*args, **kwargs)
 
     def __str__(self):
