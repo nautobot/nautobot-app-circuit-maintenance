@@ -233,7 +233,7 @@
                         <a href="{% url 'plugins:nautobot_circuit_maintenance:rawnotification' pk=parsed_notification.raw_notification.id %}">{{ parsed_notification.raw_notification.subject }}</a>
                     </td>
                     <td>
-                        {{ parsed_notification.raw_notification.date }}
+                        {{ parsed_notification.raw_notification.stamp }}
                     </td>
                     <td>
                         {{ parsed_notification.json }}

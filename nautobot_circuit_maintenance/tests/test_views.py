@@ -1,6 +1,7 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
 from unittest.mock import patch
+from datetime import datetime
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from nautobot.users.models import ObjectPermission
@@ -287,10 +288,17 @@ class RawNotificationTest(
         source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
 
         RawNotification.objects.create(
-            subject="whatever", provider=providers[0], sender="whatever", source=source, raw=b"whatever 1"
+            subject="whatever",
+            provider=providers[0],
+            sender="whatever",
+            source=source,
+            raw=b"whatever 1",
+            stamp=datetime.utcnow(),
         )
 
-        RawNotification.objects.create(subject="whatever", provider=providers[1], source=source, raw=b"whatever 2")
+        RawNotification.objects.create(
+            subject="whatever", provider=providers[1], source=source, raw=b"whatever 2", stamp=datetime.now()
+        )
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
@@ -333,6 +341,7 @@ class ParsedNotificationTest(
             sender="whatever sender 1",
             source=source,
             raw=b"whatever raw 1",
+            stamp=datetime.utcnow(),
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
@@ -345,6 +354,7 @@ class ParsedNotificationTest(
             sender="whatever sender 2",
             source=source,
             raw=b"whatever raw 2",
+            stamp=datetime.utcnow(),
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"

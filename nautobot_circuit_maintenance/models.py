@@ -240,12 +240,14 @@ class RawNotification(OrganizationalModel):
     sender = models.CharField(max_length=200, default="", null=True, blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False, null=True, blank=True)
-    # RawNotification.date is the date when the RawNotification was received by the Source
+    # RawNotification.date is the date when the RawNotification was created
     date = models.DateTimeField(default=now)
+    # RawNotification.stamp is the date when the RawNotification was received by the Source
+    stamp = models.DateTimeField()
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["date"]
-        unique_together = ("date", "provider", "subject")
+        ordering = ["stamp"]
+        unique_together = ("stamp", "provider", "subject")
 
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
@@ -266,6 +268,13 @@ class RawNotification(OrganizationalModel):
     def to_csv(self):
         """Return fields for bulk view."""
         return (self.subject, self.provider, self.sender, self.source, self.raw, self.date, self.parsed)
+
+    def clean(self):
+        """Add validation when creating a RawNotification."""
+        super().clean()
+
+        if self.date < self.stamp:
+            raise ValidationError(f"Stamp time {self.stamp} is not consistent, it's in the future.")
 
 
 @extras_features(

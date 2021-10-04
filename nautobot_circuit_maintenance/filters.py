@@ -77,7 +77,7 @@ class RawNotificationFilterSet(BaseFilterSet):
         label="Search",
     )
 
-    since = django_filters.DateTimeFilter(field_name="date", lookup_expr="gte")
+    since = django_filters.DateTimeFilter(field_name="stamp", lookup_expr="gte")
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
