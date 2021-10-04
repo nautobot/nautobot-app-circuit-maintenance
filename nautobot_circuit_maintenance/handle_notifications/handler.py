@@ -22,7 +22,6 @@ from .sources import get_notifications, MaintenanceNotification
 
 # pylint: disable=broad-except
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
-MAX_INITIAL_DAYS_SINCE = 365
 
 
 def create_circuit_maintenance(
@@ -311,7 +310,7 @@ def get_since_reference(logger: Job) -> int:
         since_reference = last_raw_notification.date.timestamp()
     else:
         since_reference = datetime.datetime.utcnow() - datetime.timedelta(
-            days=PLUGIN_SETTINGS.get("raw_notifications", {}).get("initial_days_since", MAX_INITIAL_DAYS_SINCE)
+            days=PLUGIN_SETTINGS.get("raw_notifications", {}).get("initial_days_since")
         )
         since_reference = int(since_reference.timestamp())
     logger.log_info(message=f"Processing notifications since {since_reference}")

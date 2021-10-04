@@ -84,7 +84,12 @@ class CircuitMaintenanceConfig(PluginConfig):
     min_version = "1.0.0-beta.4"
     max_version = "1.999"
     required_settings = []
-    default_settings = {}
+    default_settings = {
+        "raw_notifications": {
+            "initial_days_since": 365,
+            "raw_notification_size": 8192,
+        },
+    }
     caching_config = {}
 
     def ready(self):
