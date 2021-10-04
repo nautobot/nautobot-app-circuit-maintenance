@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.2.6 -
+
+## Changed
+
+- #127: Increase default `raw_notification_size` from 1000 to 8192, and also update this and `raw_notification_initial_days_since` definition in `PLUGINS_CONFIG`.
+- #128: Remove `date` from `RawNotification`, `ParsedNotification` and `Note`, and adding `stamp` to `RawNotification` as the reference to when the notification was sent.
+
 ## v0.2.5 - 2021-10-01
 
 ### Added
