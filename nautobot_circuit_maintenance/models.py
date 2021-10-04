@@ -1,4 +1,5 @@
 """Models for Circuit Maintenance."""
+import logging
 import pickle  # nosec
 from datetime import datetime
 from django.conf import settings
@@ -13,6 +14,8 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
+
+logger = logging.getLogger(__name__)
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 
@@ -268,7 +271,7 @@ class RawNotification(OrganizationalModel):
         super().clean()
 
         if self.stamp > datetime.utcnow():
-            raise ValidationError(f"Stamp time {self.stamp} is not consistent, it's in the future.")
+            logger.warning("Stamp time %s is not consistent, it's in the future.", self.stamp)
 
 
 @extras_features(

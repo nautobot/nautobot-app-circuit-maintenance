@@ -1,7 +1,5 @@
 """Unit tests for nautobot_circuit_maintenance models."""
 import datetime
-
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from nautobot.circuits.models import Circuit, CircuitType, Provider
@@ -68,12 +66,17 @@ class RawNotificationModelTestCase(TestCase):
 
     def test_future_stamp_validation(self):
         """Validate that a stamp reference in the future raises a ValidationError."""
+        stamp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         raw_notification = RawNotification(
             raw=b"",
             subject="something",
             provider=self.provider,
             source=self.source,
-            stamp=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            stamp=stamp,
         )
-        with self.assertRaises(ValidationError):
+        with self.assertLogs(logger="nautobot_circuit_maintenance.models", level="WARNING") as log_res:
             raw_notification.full_clean()
+            self.assertIn(
+                f"WARNING:nautobot_circuit_maintenance.models:Stamp time {stamp} is not consistent, it's in the future.",
+                log_res.output,
+            )
