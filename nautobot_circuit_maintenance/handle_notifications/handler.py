@@ -165,8 +165,7 @@ def create_or_update_circuit_maintenance(
     try:
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         # Using the RawNotification.date as the reference to sort because it's the one that takes into account the
-        # source receving time. The ParsedNotification.date stores the date when the RawNotification was parsed and the
-        # ParsedNotification was created.
+        # source receving time.
         last_parsed_notification = (
             circuit_maintenance_entry.parsednotification_set.order_by("raw_notification__stamp").reverse().last()
         )
@@ -175,10 +174,10 @@ def create_or_update_circuit_maintenance(
         parser_maintenance_datetime = datetime.datetime.fromtimestamp(
             parser_maintenance.stamp, tz=datetime.timezone.utc
         )
-        if last_parsed_notification and last_parsed_notification.date > parser_maintenance_datetime:
+        if last_parsed_notification and last_parsed_notification.last_updated > parser_maintenance_datetime:
             logger.log_debug(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
-                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.date}."
+                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.created}."
             )
             return circuit_maintenance_entry
 
@@ -308,7 +307,7 @@ def get_since_reference(logger: Job) -> int:
     # Latest processed RawNotification will limit the scope of notifications to retrieve
     last_raw_notification = RawNotification.objects.last()
     if last_raw_notification:
-        since_reference = last_raw_notification.date.timestamp()
+        since_reference = last_raw_notification.created.timestamp()
     else:
         since_reference = datetime.datetime.utcnow() - datetime.timedelta(
             days=PLUGIN_SETTINGS.get("raw_notifications", {}).get("initial_days_since", MAX_INITIAL_DAYS_SINCE)

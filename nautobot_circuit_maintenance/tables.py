@@ -59,7 +59,7 @@ class NoteTable(BaseTable):
         """Meta for class NoteTable."""
 
         model = Note
-        fields = ("pk", "maintenance", "title", "level", "comment", "date")
+        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")
 
 
 class NotificationSourceTable(BaseTable):

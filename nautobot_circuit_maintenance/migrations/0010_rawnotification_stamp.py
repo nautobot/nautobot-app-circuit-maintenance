@@ -39,4 +39,24 @@ class Migration(migrations.Migration):
             name="rawnotification",
             unique_together={("stamp", "provider", "subject")},
         ),
+        migrations.AlterModelOptions(
+            name="note",
+            options={"ordering": ["last_updated"]},
+        ),
+        migrations.AlterModelOptions(
+            name="parsednotification",
+            options={"ordering": ["created"]},
+        ),
+        migrations.RemoveField(
+            model_name="rawnotification",
+            name="date",
+        ),
+        migrations.RemoveField(
+            model_name="parsednotification",
+            name="date",
+        ),
+        migrations.RemoveField(
+            model_name="note",
+            name="date",
+        ),
     ]
