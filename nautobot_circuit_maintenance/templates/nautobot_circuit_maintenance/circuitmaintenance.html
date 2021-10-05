@@ -182,7 +182,7 @@
                         {{ note.level }}
                     </td>
                     <td>
-                        {{ note.title }}
+                        <a href="{% url 'plugins:nautobot_circuit_maintenance:note' pk=note.id %}">{{ note.title }}</a>
                     </td>
                     <td>
                         {{ note.last_updated }}
