@@ -176,7 +176,7 @@ def create_or_update_circuit_maintenance(
         if last_parsed_notification and last_parsed_notification.last_updated > parser_maintenance_datetime:
             logger.log_debug(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
-                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.created}."
+                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.last_updated}."
             )
             return circuit_maintenance_entry
 
