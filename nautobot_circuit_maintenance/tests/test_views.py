@@ -297,7 +297,7 @@ class RawNotificationTest(
         )
 
         RawNotification.objects.create(
-            subject="whatever", provider=providers[1], source=source, raw=b"whatever 2", stamp=datetime.now()
+            subject="whatever", provider=providers[1], source=source, raw=b"whatever 2", stamp=datetime.utcnow()
         )
 
     def test_list_objects_with_constrained_permission(self):

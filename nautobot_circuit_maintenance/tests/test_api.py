@@ -32,8 +32,8 @@ class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
         cls.create_data = [
             {
                 "name": "UT-TEST1",
-                "start_time": now() + datetime.timedelta(days=5),
-                "end_time": now() + datetime.timedelta(days=6),
+                "start_time": utcnow() + datetime.timedelta(days=5),
+                "end_time": utcnow() + datetime.timedelta(days=6),
                 "description": "TEST1",
             }
         ]
