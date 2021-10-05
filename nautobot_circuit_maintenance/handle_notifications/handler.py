@@ -163,21 +163,20 @@ def create_or_update_circuit_maintenance(
     maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
     try:
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
-        # Using the RawNotification.date as the reference to sort because it's the one that takes into account the
-        # source receving time. The ParsedNotification.date stores the date when the RawNotification was parsed and the
-        # ParsedNotification was created.
+        # Using the RawNotification.stamp as the reference to sort because it's the one that takes into account the
+        # source receving time.
         last_parsed_notification = (
-            circuit_maintenance_entry.parsednotification_set.order_by("raw_notification__date").reverse().last()
+            circuit_maintenance_entry.parsednotification_set.order_by("raw_notification__stamp").reverse().last()
         )
 
         # If the notification is older than the latest one used to update the CircuitMaintenance, we skip updating it
         parser_maintenance_datetime = datetime.datetime.fromtimestamp(
             parser_maintenance.stamp, tz=datetime.timezone.utc
         )
-        if last_parsed_notification and last_parsed_notification.date > parser_maintenance_datetime:
+        if last_parsed_notification and last_parsed_notification.last_updated > parser_maintenance_datetime:
             logger.log_debug(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
-                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.date}."
+                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.last_updated}."
             )
             return circuit_maintenance_entry
 
@@ -224,7 +223,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
         raw_entry = RawNotification.objects.get(
             subject=notification.subject,
             provider=provider,
-            date=parser.parse(notification.date),
+            stamp=parser.parse(notification.date),
         )
         # If the RawNotification was already created, we ignore it.
         if logger.debug:
@@ -238,7 +237,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
                 raw=notification.raw_payload,
                 sender=notification.sender,
                 source=NotificationSource.objects.filter(name=notification.source).last(),
-                date=parser.parse(notification.date),
+                stamp=parser.parse(notification.date),
             )
             raw_entry.save()
             logger.log_success(raw_entry, message="Raw notification created.")
@@ -307,9 +306,9 @@ def get_since_reference(logger: Job) -> int:
     # Latest retrieved notification will limit the scope of notifications to retrieve
     last_raw_notification = RawNotification.objects.last()
     if last_raw_notification:
-        since_reference = last_raw_notification.date.timestamp()
+        since_reference = last_raw_notification.created.timestamp()
     else:
-        since_reference = datetime.datetime.utcnow() - datetime.timedelta(
+        since_reference = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=PLUGIN_SETTINGS.get("raw_notification_initial_days_since")
         )
         since_reference = int(since_reference.timestamp())

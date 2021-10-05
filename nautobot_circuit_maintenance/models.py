@@ -1,10 +1,11 @@
 """Models for Circuit Maintenance."""
+import logging
 import pickle  # nosec
+from datetime import datetime, timezone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from django.utils.timezone import now
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -13,6 +14,8 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
 
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
+
+logger = logging.getLogger(__name__)
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 
@@ -135,12 +138,11 @@ class Note(OrganizationalModel):
         blank=True,
     )
     comment = models.TextField()
-    date = models.DateTimeField(default=now)
 
     csv_headers = ["maintenance", "title", "level", "comment"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["date"]
+        ordering = ["last_updated"]
         unique_together = ["maintenance", "title"]
 
     def __str__(self):
@@ -153,7 +155,7 @@ class Note(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.maintenance, self.title, self.level, self.comment, self.date)
+        return (self.maintenance, self.title, self.level, self.comment, self.last_updated)
 
 
 @extras_features(
@@ -239,12 +241,12 @@ class RawNotification(OrganizationalModel):
     sender = models.CharField(max_length=200, default="", null=True, blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False, null=True, blank=True)
-    # RawNotification.date is the date when the RawNotification was received by the Source
-    date = models.DateTimeField(default=now)
+    # RawNotification.stamp is the date when the RawNotification was received by the Source
+    stamp = models.DateTimeField()
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["date"]
-        unique_together = ("date", "provider", "subject")
+        ordering = ["stamp"]
+        unique_together = ("stamp", "provider", "subject")
 
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
@@ -262,7 +264,14 @@ class RawNotification(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.subject, self.provider, self.sender, self.source, self.raw, self.date, self.parsed)
+        return (self.subject, self.provider, self.sender, self.source, self.raw, self.stamp, self.parsed)
+
+    def clean(self):
+        """Add validation when creating a RawNotification."""
+        super().clean()
+
+        if self.stamp > datetime.now(timezone.utc):
+            logger.warning("Stamp time %s is not consistent, it's in the future.", self.stamp)
 
 
 @extras_features(
@@ -279,11 +288,9 @@ class ParsedNotification(OrganizationalModel):
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
     raw_notification = models.ForeignKey(RawNotification, on_delete=models.CASCADE, default=None)
     json = models.JSONField()
-    # ParsedNotification.date is the date when after parsing a RawNotification, the ParsedNotification was created
-    date = models.DateTimeField(default=now)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["date"]
+        ordering = ["last_updated"]
 
     def __str__(self):
         """String value for HTML rendering."""
@@ -295,4 +302,4 @@ class ParsedNotification(OrganizationalModel):
 
     def to_csv(self):
         """Return fields for bulk view."""
-        return (self.maintenance, self.raw_notification, self.json, self.date)
+        return (self.maintenance, self.raw_notification, self.json, self.last_updated)
