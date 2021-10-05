@@ -22,6 +22,9 @@ def rgetattr(obj, attr, *args):
 
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+# REMINDER
+# If we update the list of default labels, we should also update
+# the list of select_related fields for the query in metric_circuit_operational
 DEFAULT_LABELS = {
     "circuit": "circuit.cid",
     "provider": "circuit.provider.name",
@@ -60,7 +63,9 @@ def metric_circuit_operational():
         .prefetch_related("circuit")
     )
 
-    for termination in CircuitTermination.objects.all().prefetch_related("circuit"):
+    for termination in CircuitTermination.objects.all().select_related(
+        "circuit", "circuit__provider", "circuit__type", "site"
+    ):
         status = 1
         if any(circuit_impact.circuit == termination.circuit for circuit_impact in active_circuit_impacts):
             status = 2
