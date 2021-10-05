@@ -22,6 +22,9 @@ def rgetattr(obj, attr, *args):
 
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+# REMINDER
+# If we update the list of default labels, we should also update
+# the list of select_related fields for the query in metric_circuit_operational
 DEFAULT_LABELS = {
     "circuit": "circuit.cid",
     "provider": "circuit.provider.name",
