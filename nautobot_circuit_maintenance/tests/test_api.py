@@ -1,7 +1,6 @@
 """Test for Circuit Maintenace API."""
-import datetime
+from datetime import datetime, timezone, timedelta
 from django.urls import reverse
-from django.utils.timezone import now
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.utilities.testing import APIViewTestCases
 from nautobot_circuit_maintenance.models import CircuitMaintenance, CircuitImpact
@@ -32,8 +31,8 @@ class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
         cls.create_data = [
             {
                 "name": "UT-TEST1",
-                "start_time": utcnow() + datetime.timedelta(days=5),
-                "end_time": utcnow() + datetime.timedelta(days=6),
+                "start_time": datetime.now(timezone.utc) + timedelta(days=5),
+                "end_time": datetime.now(timezone.utc) + timedelta(days=6),
                 "description": "TEST1",
             }
         ]
@@ -75,14 +74,14 @@ class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
         maintenances = (
             CircuitMaintenance(
                 name="UT-TEST1",
-                start_time=now() + datetime.timedelta(days=5),
-                end_time=now() + datetime.timedelta(days=6),
+                start_time=datetime.now(timezone.utc) + timedelta(days=5),
+                end_time=datetime.now(timezone.utc) + timedelta(days=6),
                 description="TEST1",
             ),
             CircuitMaintenance(
                 name="UT-TEST2",
-                start_time=now() + datetime.timedelta(days=5),
-                end_time=now() + datetime.timedelta(days=6),
+                start_time=datetime.now(timezone.utc) + timedelta(days=5),
+                end_time=datetime.now(timezone.utc) + timedelta(days=6),
                 description="TEST2",
             ),
         )

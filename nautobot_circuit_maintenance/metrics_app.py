@@ -1,7 +1,7 @@
 """Nautobot Circuit Maintenance plugin application level metrics exposed through nautobot_capacity_metrics."""
 from collections import OrderedDict
 import functools
-from datetime import datetime
+from datetime import datetime, timezone
 from prometheus_client.core import GaugeMetricFamily
 from nautobot.circuits.models import CircuitTermination
 from django.conf import settings
@@ -51,7 +51,7 @@ def metric_circuit_operational():
     # Not all the providers use all the standard statuses.
     active_statuses = ["CONFIRMED", "IN-PROCESS", "RE-SCHEDULED"]
     active_circuit_maintenances = CircuitMaintenance.objects.filter(
-        status__in=active_statuses, start_time__lte=datetime.utcnow(), end_time__gte=datetime.utcnow()
+        status__in=active_statuses, start_time__lte=datetime.now(timezone.utc), end_time__gte=datetime.now(timezone.utc)
     )
 
     active_circuit_impacts = (

@@ -1,7 +1,7 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
 from unittest.mock import patch
-from datetime import datetime
+from datetime import datetime, timezone
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from nautobot.users.models import ObjectPermission
@@ -293,11 +293,15 @@ class RawNotificationTest(
             sender="whatever",
             source=source,
             raw=b"whatever 1",
-            stamp=datetime.utcnow(),
+            stamp=datetime.now(timezone.utc),
         )
 
         RawNotification.objects.create(
-            subject="whatever", provider=providers[1], source=source, raw=b"whatever 2", stamp=datetime.utcnow()
+            subject="whatever",
+            provider=providers[1],
+            source=source,
+            raw=b"whatever 2",
+            stamp=datetime.now(timezone.utc),
         )
 
     def test_list_objects_with_constrained_permission(self):
@@ -341,7 +345,7 @@ class ParsedNotificationTest(
             sender="whatever sender 1",
             source=source,
             raw=b"whatever raw 1",
-            stamp=datetime.utcnow(),
+            stamp=datetime.now(timezone.utc),
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
@@ -354,7 +358,7 @@ class ParsedNotificationTest(
             sender="whatever sender 2",
             source=source,
             raw=b"whatever raw 2",
-            stamp=datetime.utcnow(),
+            stamp=datetime.now(timezone.utc),
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"

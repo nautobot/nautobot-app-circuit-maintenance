@@ -1,6 +1,6 @@
 """Tests for Handle Notifications methods."""
 from unittest.mock import Mock, patch
-from datetime import datetime
+from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import formatdate
 from django.test import TestCase
@@ -304,7 +304,7 @@ class TestHandleNotificationsJob(TestCase):
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
             source=self.source,
-            stamp=datetime.utcnow(),
+            stamp=datetime.now(timezone.utc),
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
@@ -326,7 +326,7 @@ class TestHandleNotificationsJob(TestCase):
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
             source=self.source,
-            stamp=datetime.utcnow(),
+            stamp=datetime.now(timezone.utc),
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)

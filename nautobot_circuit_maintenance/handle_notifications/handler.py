@@ -308,7 +308,7 @@ def get_since_reference(logger: Job) -> int:
     if last_raw_notification:
         since_reference = last_raw_notification.created.timestamp()
     else:
-        since_reference = datetime.datetime.utcnow() - datetime.timedelta(
+        since_reference = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=PLUGIN_SETTINGS.get("raw_notification_initial_days_since")
         )
         since_reference = int(since_reference.timestamp())

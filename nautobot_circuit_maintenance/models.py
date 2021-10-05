@@ -1,7 +1,7 @@
 """Models for Circuit Maintenance."""
 import logging
 import pickle  # nosec
-from datetime import datetime
+from datetime import datetime, timezone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -270,7 +270,7 @@ class RawNotification(OrganizationalModel):
         """Add validation when creating a RawNotification."""
         super().clean()
 
-        if self.stamp > datetime.utcnow():
+        if self.stamp > datetime.now(timezone.utc):
             logger.warning("Stamp time %s is not consistent, it's in the future.", self.stamp)
 
 

@@ -66,7 +66,7 @@ class RawNotificationModelTestCase(TestCase):
 
     def test_future_stamp_validation(self):
         """Validate that a stamp reference in the future raises a ValidationError."""
-        stamp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+        stamp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
         raw_notification = RawNotification(
             raw=b"",
             subject="something",
