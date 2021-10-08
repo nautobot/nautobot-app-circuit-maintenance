@@ -306,7 +306,7 @@ def get_since_reference(logger: Job) -> int:
     # Latest retrieved notification will limit the scope of notifications to retrieve
     last_raw_notification = RawNotification.objects.last()
     if last_raw_notification:
-        since_reference = last_raw_notification.created.timestamp()
+        since_reference = last_raw_notification.last_updated.timestamp()
     else:
         since_reference = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=PLUGIN_SETTINGS.get("raw_notification_initial_days_since")

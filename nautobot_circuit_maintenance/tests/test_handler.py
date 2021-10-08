@@ -14,6 +14,7 @@ from nautobot_circuit_maintenance.handle_notifications.handler import (
     create_circuit_maintenance,
     update_circuit_maintenance,
     get_maintenances_from_notification,
+    get_since_reference,
 )
 
 from nautobot_circuit_maintenance.models import (
@@ -395,3 +396,11 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
         # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
         self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
+
+    def test_get_since_with_previous_raw_notification(self):
+        """Test get_since_reference with a previous raw_notification."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        raw_id = process_raw_notification(self.job, test_notification)
+        since_reference = get_since_reference(self.job)
+        self.assertEqual(since_reference, RawNotification.objects.get(id=raw_id).last_updated.timestamp())
