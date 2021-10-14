@@ -9,6 +9,10 @@
 - #129: Improve efficiency to retrieve default app-metrics preselecting all related tables.
 - #131: Add ChangeLog tab to `Note` detail view and href from `CircuitMaintenance`.
 
+### Fix
+
+- #134: Fix `CircuitImpact` detail view, adding href to `CircuitMaintenance` and `Circuit`.
+
 ## v0.2.5 - 2021-10-01
 
 ### Added
