@@ -25,7 +25,7 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
     "custom_links",
     "custom_validators",
     "export_templates",
-    # "graphql",  # TODO: https://github.com/nautobot/nautobot/issues/399
+    "graphql",
     "relationships",
     "statuses",
     "webhooks",
@@ -81,7 +81,7 @@ class CircuitMaintenance(PrimaryModel):
     "custom_links",
     "custom_validators",
     "export_templates",
-    # "graphql",  # TODO: https://github.com/nautobot/nautobot/issues/399
+    "graphql",
     "relationships",
     "webhooks",
 )
