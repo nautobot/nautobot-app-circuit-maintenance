@@ -20,6 +20,9 @@ from nautobot_circuit_maintenance.models import (
 from .sources import get_notifications, MaintenanceNotification
 
 
+name = "Circuit Maintenance"  # pylint: disable=invalid-name
+
+
 # pylint: disable=broad-except
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 
