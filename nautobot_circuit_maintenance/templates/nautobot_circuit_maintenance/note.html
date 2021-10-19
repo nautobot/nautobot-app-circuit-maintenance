@@ -14,6 +14,17 @@
 
 <div class="pull-right noprint">{% custom_links object %}</div>
 
+<ul class="nav nav-tabs">
+  <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
+      <a href="{{ object.get_absolute_url }}">Note</a>
+  </li>
+  {% if perms.extras.view_objectchange %}
+      <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
+          <a href="{% url 'plugins:nautobot_circuit_maintenance:note_changelog' pk=object.pk %}">Change Log</a>
+      </li>
+  {% endif %}
+</ul>
+
 {% endblock %} {% block content %}
 
 <div class="row">
@@ -46,8 +57,8 @@
             <td>{{ object.comment }}</td>
         </tr>
         <tr>
-            <td>Date</td>
-            <td>{{ object.date }}</td>
+            <td>Last Updated</td>
+            <td>{{ object.last_updated }}</td>
         </tr>
       </table>
     </div>

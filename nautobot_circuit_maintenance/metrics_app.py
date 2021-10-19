@@ -1,7 +1,7 @@
 """Nautobot Circuit Maintenance plugin application level metrics exposed through nautobot_capacity_metrics."""
 from collections import OrderedDict
 import functools
-from datetime import datetime
+from datetime import datetime, timezone
 from prometheus_client.core import GaugeMetricFamily
 from nautobot.circuits.models import CircuitTermination
 from django.conf import settings
@@ -22,6 +22,9 @@ def rgetattr(obj, attr, *args):
 
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
+# REMINDER
+# If we update the list of default labels, we should also update
+# the list of select_related fields for the query in metric_circuit_operational
 DEFAULT_LABELS = {
     "circuit": "circuit.cid",
     "provider": "circuit.provider.name",
@@ -51,7 +54,7 @@ def metric_circuit_operational():
     # Not all the providers use all the standard statuses.
     active_statuses = ["CONFIRMED", "IN-PROCESS", "RE-SCHEDULED"]
     active_circuit_maintenances = CircuitMaintenance.objects.filter(
-        status__in=active_statuses, start_time__lte=datetime.utcnow(), end_time__gte=datetime.utcnow()
+        status__in=active_statuses, start_time__lte=datetime.now(timezone.utc), end_time__gte=datetime.now(timezone.utc)
     )
 
     active_circuit_impacts = (
@@ -60,7 +63,9 @@ def metric_circuit_operational():
         .prefetch_related("circuit")
     )
 
-    for termination in CircuitTermination.objects.all().prefetch_related("circuit"):
+    for termination in CircuitTermination.objects.all().select_related(
+        "circuit", "circuit__provider", "circuit__type", "site"
+    ):
         status = 1
         if any(circuit_impact.circuit == termination.circuit for circuit_impact in active_circuit_impacts):
             status = 2

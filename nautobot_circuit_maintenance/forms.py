@@ -125,7 +125,7 @@ class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     comment = forms.CharField(max_length=200)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        nullable_fields = ["level", "date"]
+        nullable_fields = ["level"]
 
 
 class NoteCSVForm(CustomFieldModelCSVForm):

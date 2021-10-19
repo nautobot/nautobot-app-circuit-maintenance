@@ -1,5 +1,6 @@
 """Tests for Handle Notifications methods."""
 from unittest.mock import Mock, patch
+from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import formatdate
 from django.test import TestCase
@@ -13,6 +14,7 @@ from nautobot_circuit_maintenance.handle_notifications.handler import (
     create_circuit_maintenance,
     update_circuit_maintenance,
     get_maintenances_from_notification,
+    get_since_reference,
 )
 
 from nautobot_circuit_maintenance.models import (
@@ -303,6 +305,7 @@ class TestHandleNotificationsJob(TestCase):
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
             source=self.source,
+            stamp=datetime.now(timezone.utc),
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
@@ -324,6 +327,7 @@ class TestHandleNotificationsJob(TestCase):
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
             source=self.source,
+            stamp=datetime.now(timezone.utc),
         )
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
@@ -392,3 +396,11 @@ class TestHandleNotificationsJob(TestCase):
         self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
         # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
         self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
+
+    def test_get_since_with_previous_raw_notification(self):
+        """Test get_since_reference with a previous raw_notification."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        raw_id = process_raw_notification(self.job, test_notification)
+        since_reference = get_since_reference(self.job)
+        self.assertEqual(since_reference, RawNotification.objects.get(id=raw_id).last_updated.timestamp())

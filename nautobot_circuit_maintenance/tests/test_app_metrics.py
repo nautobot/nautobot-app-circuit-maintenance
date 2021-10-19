@@ -1,5 +1,5 @@
 """Test cases for application metrics endpoint views."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from django.test import TestCase
 from nautobot.circuits.models import Circuit, CircuitType, Provider, CircuitTermination
 from nautobot.dcim.models import Site
@@ -55,14 +55,14 @@ class AppMetricTests(TestCase):
         self.circuit_maintenance_1 = CircuitMaintenance.objects.create(
             name="Circuit Maintenance 1",
             status="CONFIRMED",
-            start_time=datetime.utcnow() - timedelta(minutes=1),
-            end_time=datetime.utcnow() + timedelta(minutes=1),
+            start_time=datetime.now(timezone.utc) - timedelta(minutes=1),
+            end_time=datetime.now(timezone.utc) + timedelta(minutes=1),
         )
         self.circuit_maintenance_3 = CircuitMaintenance.objects.create(
             name="Circuit Maintenance 3",
             status="CONFIRMED",
-            start_time=datetime.utcnow() + timedelta(minutes=20),
-            end_time=datetime.utcnow() + timedelta(minutes=21),
+            start_time=datetime.now(timezone.utc) + timedelta(minutes=20),
+            end_time=datetime.now(timezone.utc) + timedelta(minutes=21),
         )
 
         CircuitImpact.objects.create(circuit=getattr(self, "circuit_1"), maintenance=self.circuit_maintenance_1)

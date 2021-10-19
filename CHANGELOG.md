@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.3.0 - 2021-10-19
+
+## Changed
+
+- #127: Increase default `raw_notification_size` from 1000 to 8192, and also update this and `raw_notification_initial_days_since` definition in `PLUGINS_CONFIG`. Notice the updates in the plugin configuration section:
+```py
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "raw_notification_initial_days_since": 100,
+        "raw_notification_size": 16384,
+        "notification_sources": [
+            {
+              ...
+            }
+        ]
+    }
+}
+```
+- #128: Remove `date` from `RawNotification`, `ParsedNotification` and `Note`, and adding `stamp` to `RawNotification` as the reference to when the notification was sent.
+- #129: Improve efficiency to retrieve default app-metrics preselecting all related tables.
+- #131: Add ChangeLog tab to `Note` detail view and href from `CircuitMaintenance`.
+- #135: Simplified GraphQL configuration and add testing.
+- #137: Update Jobs section name to `Circuit Maintenance`
+
+### Fix
+
+- #134: Fix `CircuitImpact` detail view, adding href to `CircuitMaintenance` and `Circuit`.
+
 ## v0.2.5 - 2021-10-01
 
 ### Added

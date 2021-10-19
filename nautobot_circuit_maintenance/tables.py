@@ -35,7 +35,7 @@ class RawNotificationTable(BaseTable):
         """Meta for class CircuitMaintenanceNofiticationRawTable."""
 
         model = RawNotification
-        fields = ("pk", "subject", "provider", "sender", "source", "parsed", "date")
+        fields = ("pk", "subject", "provider", "sender", "source", "parsed", "stamp")
 
 
 class CircuitImpactTable(BaseTable):
@@ -59,7 +59,7 @@ class NoteTable(BaseTable):
         """Meta for class NoteTable."""
 
         model = Note
-        fields = ("pk", "maintenance", "title", "level", "comment", "date")
+        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")
 
 
 class NotificationSourceTable(BaseTable):
