@@ -85,7 +85,7 @@ class CircuitMaintenanceConfig(PluginConfig):
     max_version = "1.999"
     required_settings = []
     default_settings = {
-        "raw_notification_initial_days_since": 365,
+        "raw_notification_initial_days_since": 7,
         "raw_notification_size": 8192,
     }
     caching_config = {}
