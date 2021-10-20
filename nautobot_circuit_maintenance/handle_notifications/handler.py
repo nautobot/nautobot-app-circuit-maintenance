@@ -224,7 +224,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
     """
     try:
         raw_entry = RawNotification.objects.get(
-            subject=notification.subject,
+            subject=notification.subject[:200],
             provider=provider,
             stamp=parser.parse(notification.date),
         )
@@ -235,7 +235,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
     except ObjectDoesNotExist:
         try:
             raw_entry = RawNotification(
-                subject=notification.subject,
+                subject=notification.subject[:200],
                 provider=provider,
                 raw=notification.raw_payload,
                 sender=notification.sender,
