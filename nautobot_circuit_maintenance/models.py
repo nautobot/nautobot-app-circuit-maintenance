@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 
+MAX_MAINTENANCE_NAME_LENGTH = 100
+MAX_NOTIFICATION_SENDER_LENGTH = 200
+MAX_NOTIFICATION_SUBJECT_LENGTH = 200
+
 
 @extras_features(
     "custom_fields",
@@ -33,7 +37,7 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
 class CircuitMaintenance(PrimaryModel):
     """Model for circuit maintenances."""
 
-    name = models.CharField(max_length=100, default="", unique=True, blank=False)
+    name = models.CharField(max_length=MAX_MAINTENANCE_NAME_LENGTH, default="", unique=True, blank=False)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     description = models.TextField(null=True, blank=True)
@@ -236,9 +240,9 @@ class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
     raw = models.BinaryField()
-    subject = models.CharField(max_length=200)
+    subject = models.CharField(max_length=MAX_NOTIFICATION_SUBJECT_LENGTH)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
-    sender = models.CharField(max_length=200, default="", null=True, blank=True)
+    sender = models.CharField(max_length=MAX_NOTIFICATION_SENDER_LENGTH, default="", null=True, blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False, null=True, blank=True)
     # RawNotification.stamp is the date when the RawNotification was received by the Source
