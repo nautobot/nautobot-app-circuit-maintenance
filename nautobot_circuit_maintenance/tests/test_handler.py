@@ -95,7 +95,7 @@ def get_base_notification_data(provider_slug="ntt"):
     return notification_data
 
 
-class TestHandleNotificationsJob(TestCase):
+class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-methods
     """Test case for all the related methods in Handle Notifications."""
 
     fixtures = ["handle_notifications_job.yaml"]
