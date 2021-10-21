@@ -54,7 +54,7 @@ def create_circuit_maintenance(
                 message=f"Circuit ID {circuit.circuit_id} linked to Maintenance {maintenance_id}",
             )
         else:
-            note_entry = Note.objects.create(
+            note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
                 title=f"Nonexistent circuit ID {circuit.circuit_id}",
                 comment=(
@@ -63,13 +63,14 @@ def create_circuit_maintenance(
                 ),
                 level="WARNING",
             )
-            logger.log_warning(
-                note_entry,
-                message=(
-                    f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a "
-                    "note"
-                ),
-            )
+            if created:
+                logger.log_warning(
+                    note_entry,
+                    message=(
+                        f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a "
+                        "note"
+                    ),
+                )
     if not CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry):
         logger.log_warning(message=f"Circuit Maintenance {maintenance_id} has none Circuit IDs in the DB.")
 
