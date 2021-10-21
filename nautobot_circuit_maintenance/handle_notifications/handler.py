@@ -179,10 +179,10 @@ def create_or_update_circuit_maintenance(
         parser_maintenance_datetime = datetime.datetime.fromtimestamp(
             parser_maintenance.stamp, tz=datetime.timezone.utc
         )
-        if last_parsed_notification and last_parsed_notification.last_updated > parser_maintenance_datetime:
+        if last_parsed_notification and last_parsed_notification.raw_notification.stamp > parser_maintenance_datetime:
             logger.log_debug(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
-                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.last_updated}."
+                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.raw_notification.stamp}."
             )
             return circuit_maintenance_entry
 
