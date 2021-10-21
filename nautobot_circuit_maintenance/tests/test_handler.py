@@ -404,3 +404,26 @@ class TestHandleNotificationsJob(TestCase):
         raw_id = process_raw_notification(self.job, test_notification)
         since_reference = get_since_reference(self.job)
         self.assertEqual(since_reference, RawNotification.objects.get(id=raw_id).last_updated.timestamp())
+
+    def test_update_circuit_maintenance_with_duplicated_notes(self):
+        """Test update_circuit_maintenance with duplicated notes."""
+        notification_data = get_base_notification_data()
+        # Updating the circuit impact to reference to an unexistent cid
+        for circuitimpact in notification_data["circuitimpacts"]:
+            circuitimpact["cid"] = ""
+
+        with patch(
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            test_notification = generate_email_notification(notification_data, self.source.name)
+            mock_get_notifications.return_value = [test_notification]
+            self.job.run(commit=True)
+            # Running it again with another notification but for same maintenance wit the same unexistent circuit
+            test_notification = generate_email_notification(notification_data, self.source.name)
+            test_notification.subject = "another subject"
+            mock_get_notifications.return_value = [test_notification]
+            self.job.run(commit=True)
+
+        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+        self.assertEqual(0, len(CircuitImpact.objects.all()))
+        self.assertEqual(1, len(Note.objects.all()))
