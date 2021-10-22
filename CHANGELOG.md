@@ -4,6 +4,7 @@
 
 ## Fixed
 
+- #142: Handle Gmail API pagination, enforce subject truncation to 200 characters, and fix notification retrieval comparison.
 - #143: Fix duplicated `Notes` raising db uniqueness exception.
 
 ## v0.3.0 - 2021-10-19
