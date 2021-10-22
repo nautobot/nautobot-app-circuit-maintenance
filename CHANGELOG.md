@@ -1,10 +1,18 @@
 # Changelog
 
+## v0.3.1
+
+## Fixed
+
+- #142: Handle Gmail API pagination, enforce subject truncation to 200 characters, and fix notification retrieval comparison.
+- #143: Fix duplicated `Notes` raising db uniqueness exception.
+
 ## v0.3.0 - 2021-10-19
 
 ## Changed
 
 - #127: Increase default `raw_notification_size` from 1000 to 8192, and also update this and `raw_notification_initial_days_since` definition in `PLUGINS_CONFIG`. Notice the updates in the plugin configuration section:
+
 ```py
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
@@ -18,6 +26,7 @@ PLUGINS_CONFIG = {
     }
 }
 ```
+
 - #128: Remove `date` from `RawNotification`, `ParsedNotification` and `Note`, and adding `stamp` to `RawNotification` as the reference to when the notification was sent.
 - #129: Improve efficiency to retrieve default app-metrics preselecting all related tables.
 - #131: Add ChangeLog tab to `Note` detail view and href from `CircuitMaintenance`.
