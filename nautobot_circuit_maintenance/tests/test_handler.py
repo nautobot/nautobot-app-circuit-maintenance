@@ -2,24 +2,27 @@
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 from email.message import EmailMessage
-from email.utils import formatdate
+from email.utils import format_datetime
 from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
 from circuit_maintenance_parser import init_provider, NotificationData
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
-    HandleCircuitMaintenanceNotifications,
-    process_raw_notification,
     create_circuit_maintenance,
-    update_circuit_maintenance,
     get_maintenances_from_notification,
     get_since_reference,
+    HandleCircuitMaintenanceNotifications,
+    process_raw_notification,
+    update_circuit_maintenance,
 )
 
 from nautobot_circuit_maintenance.models import (
     CircuitMaintenance,
     CircuitImpact,
+    MAX_MAINTENANCE_NAME_LENGTH,
+    MAX_NOTIFICATION_SENDER_LENGTH,
+    MAX_NOTIFICATION_SUBJECT_LENGTH,
     NotificationSource,
     Note,
     RawNotification,
@@ -37,7 +40,7 @@ VERSION:2.0
 BEGIN:VEVENT
 DESCRIPTION:{{ obj.provider }} URGENT Maintenance Notification: {{ obj.status }} [{{ obj.name }}] Please refer to the email notification for more details regarding maintenance or outage reason and impact.
 DTEND:20210808T071300Z
-DTSTAMP:20210806T224928Z
+DTSTAMP:{{ obj.stamp.strftime("%Y%m%dT%H%M%SZ") }}
 DTSTART:20210808T050000Z
 SEQUENCE:1
 SUMMARY:{{ obj.provider }} URGENT Maintenance Notification: {{ obj.status }} [{{ obj.name }}]
@@ -57,7 +60,7 @@ END:VCALENDAR
     template = Template(raw_notification_template)
     email_message = EmailMessage()
     email_message["From"] = "Sender <sender@example.com>"
-    email_message["Date"] = formatdate()
+    email_message["Date"] = format_datetime(notification_data["stamp"])
     email_message["Subject"] = "Test subject"
     email_message["Content-Type"] = "text/calendar"
     email_message.set_payload(template.render(obj=notification_data).encode("utf-8"))
@@ -68,7 +71,7 @@ END:VCALENDAR
         source=source,
         raw_payload=email_message.as_bytes(),
         provider_type=notification_data["provider"],
-        date="Mon, 1 Feb 2021 09:33:34 +0000",
+        date=format_datetime(notification_data["stamp"]),
     )
 
 
@@ -82,6 +85,7 @@ def get_base_notification_data(provider_slug="ntt"):
         "name": f"MNT-{provider.slug.upper()}",
         "status": "CONFIRMED",
         "circuitimpacts": [],
+        "stamp": datetime(2021, 2, 1, 9, 33, 34, tzinfo=timezone.utc),
     }
 
     sample_circuits = Circuit.objects.filter(provider=provider)
@@ -91,7 +95,7 @@ def get_base_notification_data(provider_slug="ntt"):
     return notification_data
 
 
-class TestHandleNotificationsJob(TestCase):
+class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-methods
     """Test case for all the related methods in Handle Notifications."""
 
     fixtures = ["handle_notifications_job.yaml"]
@@ -150,7 +154,7 @@ class TestHandleNotificationsJob(TestCase):
             self.assertIn(fake_cid, Note.objects.all().first().title)
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
-    def test_run_nonotifications(self):
+    def test_run_no_notifications(self):
         """Test when a there are no notifications."""
 
         with patch(
@@ -168,7 +172,7 @@ class TestHandleNotificationsJob(TestCase):
             self.assertEqual(0, len(Note.objects.all()))
             self.job.log_info.assert_called_with(message="No notifications received.")
 
-    def test_run_nonnotificationsource(self):
+    def test_run_no_notification_source(self):
         """Test when a there are no Notification Sources."""
 
         NotificationSource.objects.all().delete()
@@ -299,7 +303,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source.name)
         provider = Provider.objects.get(slug=test_notification.provider_type)
-        raw_entry, _ = RawNotification.objects.get_or_create(
+        RawNotification.objects.get_or_create(
             subject=test_notification.subject,
             provider=provider,
             raw=test_notification.raw_payload,
@@ -310,7 +314,9 @@ class TestHandleNotificationsJob(TestCase):
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
-        create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
+        create_circuit_maintenance(
+            self.job, f"{provider.slug}-{parsed_maintenance.maintenance_id}", parsed_maintenance, provider
+        )
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(2, len(CircuitImpact.objects.all()))
         self.assertEqual(0, len(Note.objects.all()))
@@ -321,7 +327,7 @@ class TestHandleNotificationsJob(TestCase):
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
         test_notification = generate_email_notification(notification_data, self.source.name)
         provider = Provider.objects.get(slug=test_notification.provider_type)
-        raw_entry, _ = RawNotification.objects.get_or_create(
+        RawNotification.objects.get_or_create(
             subject=test_notification.subject,
             provider=provider,
             raw=test_notification.raw_payload,
@@ -332,7 +338,9 @@ class TestHandleNotificationsJob(TestCase):
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
-        create_circuit_maintenance(self.job, raw_entry.id, parsed_maintenance, provider)
+        create_circuit_maintenance(
+            self.job, f"{provider.slug}-{parsed_maintenance.maintenance_id}", parsed_maintenance, provider
+        )
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(0, len(CircuitImpact.objects.all()))
         self.assertEqual(1, len(Note.objects.all()))
@@ -376,8 +384,8 @@ class TestHandleNotificationsJob(TestCase):
         test_notification_older = generate_email_notification(notification_data, self.source.name)
 
         notification_data["status"] = "COMPLETED"
+        notification_data["stamp"] = datetime(2021, 2, 2, 9, 33, 34, tzinfo=timezone.utc)
         test_notification_newer = generate_email_notification(notification_data, self.source.name)
-        test_notification_newer.date = "Mon, 2 Feb 2021 09:33:34 +0000"
 
         provider = Provider.objects.get(slug=test_notification_older.provider_type)
         with patch(
@@ -394,6 +402,41 @@ class TestHandleNotificationsJob(TestCase):
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         # Verify that the final status of the CircuitMaintenance depends on the newest notification
         self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
+        # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
+        self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
+
+    def test_create_or_update_circuit_maintenance_truncated_fields(self):
+        """Test create_or_update_circuit_maintenance with long fields that must be truncated to fit the DB."""
+        notification_data = get_base_notification_data()
+        notification_data["name"] = f"MNT-{'1234567890' * 20}"
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        test_notification.subject = "abcdefghijiklmnopqrstuvwxyz " * 10
+        test_notification.sender = f"{'abcdefghij' * 20}@example.com"
+
+        notification_data["status"] = "COMPLETED"
+        notification_data["stamp"] = datetime(2021, 2, 2, 9, 33, 34, tzinfo=timezone.utc)
+        test_notification_newer = generate_email_notification(notification_data, self.source.name)
+        test_notification_newer.subject = "abcdefghijiklmnopqrstuvwxyz " * 10
+        test_notification_newer.sender = f"{'abcdefghij' * 20}@example.com"
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        with patch("nautobot_circuit_maintenance.handle_notifications.handler.get_notifications") as mock_get_notif:
+            mock_get_notif.return_value = [test_notification, test_notification_newer]
+            self.job.run(commit=True)
+
+        # Make sure raw notification sender and subject were correctly truncated
+        self.assertEqual(2, len(RawNotification.objects.all()))
+        for raw_notification in RawNotification.objects.filter(provider=provider):
+            self.assertEqual(MAX_NOTIFICATION_SENDER_LENGTH, len(raw_notification.sender))
+            self.assertEqual(test_notification.sender[:MAX_NOTIFICATION_SENDER_LENGTH], raw_notification.sender)
+            self.assertEqual(MAX_NOTIFICATION_SUBJECT_LENGTH, len(raw_notification.subject))
+            self.assertEqual(test_notification.subject[:MAX_NOTIFICATION_SENDER_LENGTH], raw_notification.subject)
+
+        # Make sure maintenance name was correctly truncated on both create and update
+        maintenance_id = f"{provider.slug}-{notification_data['name']}"[:MAX_MAINTENANCE_NAME_LENGTH]
+        self.assertEqual(MAX_MAINTENANCE_NAME_LENGTH, len(maintenance_id))
+        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+        self.assertEqual("COMPLETED", circuit_maintenance_entry.status)
         # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
         self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
 

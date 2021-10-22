@@ -494,14 +494,16 @@ class GmailAPI(EmailSource):
 
         search_criteria = self._get_search_criteria(since_timestamp)
 
-        # TODO: For now not covering pagination as a way to limit the number of messages
-        res = (
-            self.service.users()  # pylint: disable=no-member
-            .messages()
-            .list(userId=self.account, q=search_criteria)
-            .execute()
+        # messages.list() returns 100 emails at a time;
+        # we need to loop with list_next() until we have all relevant messages
+        request = (
+            self.service.users().messages().list(userId=self.account, q=search_criteria)  # pylint: disable=no-member
         )
-        msg_ids = [msg["id"] for msg in res.get("messages", [])]
+        msg_ids = []
+        while request is not None:
+            response = request.execute()
+            msg_ids.extend(msg["id"] for msg in response.get("messages", []))
+            request = self.service.users().messages().list_next(request, response)  # pylint: disable=no-member
 
         if job_logger.debug is True:
             job_logger.log_debug(

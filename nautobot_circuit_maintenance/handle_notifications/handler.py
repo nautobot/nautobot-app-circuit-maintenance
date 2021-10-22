@@ -12,6 +12,9 @@ from nautobot.extras.jobs import Job, BooleanVar
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
+    MAX_MAINTENANCE_NAME_LENGTH,
+    MAX_NOTIFICATION_SENDER_LENGTH,
+    MAX_NOTIFICATION_SUBJECT_LENGTH,
     Note,
     ParsedNotification,
     RawNotification,
@@ -32,7 +35,7 @@ def create_circuit_maintenance(
 ) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
     circuit_maintenance_entry = CircuitMaintenance(
-        name=maintenance_id,
+        name=maintenance_id[:MAX_MAINTENANCE_NAME_LENGTH],
         start_time=datetime.datetime.fromtimestamp(parser_maintenance.start, tz=datetime.timezone.utc),
         end_time=datetime.datetime.fromtimestamp(parser_maintenance.end, tz=datetime.timezone.utc),
         description=parser_maintenance.summary,
@@ -164,7 +167,7 @@ def create_or_update_circuit_maintenance(
 
     It returns the CircuitMaintenance entry created or updated.
     """
-    maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"
+    maintenance_id = f"{raw_entry.provider.slug}-{parser_maintenance.maintenance_id}"[:MAX_MAINTENANCE_NAME_LENGTH]
     try:
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         # Using the RawNotification.stamp as the reference to sort because it's the one that takes into account the
@@ -177,10 +180,10 @@ def create_or_update_circuit_maintenance(
         parser_maintenance_datetime = datetime.datetime.fromtimestamp(
             parser_maintenance.stamp, tz=datetime.timezone.utc
         )
-        if last_parsed_notification and last_parsed_notification.last_updated > parser_maintenance_datetime:
+        if last_parsed_notification and last_parsed_notification.raw_notification.stamp > parser_maintenance_datetime:
             logger.log_debug(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
-                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.last_updated}."
+                f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.raw_notification.stamp}."
             )
             return circuit_maintenance_entry
 
@@ -225,7 +228,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
     """
     try:
         raw_entry = RawNotification.objects.get(
-            subject=notification.subject,
+            subject=notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
             stamp=parser.parse(notification.date),
         )
@@ -236,10 +239,10 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
     except ObjectDoesNotExist:
         try:
             raw_entry = RawNotification(
-                subject=notification.subject,
+                subject=notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
                 provider=provider,
                 raw=notification.raw_payload,
-                sender=notification.sender,
+                sender=notification.sender[:MAX_NOTIFICATION_SENDER_LENGTH],
                 source=NotificationSource.objects.filter(name=notification.source).last(),
                 stamp=parser.parse(notification.date),
             )
