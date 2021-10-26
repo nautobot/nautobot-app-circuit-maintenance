@@ -1,15 +1,21 @@
 # Changelog
 
+## v0.3.2
+
+### Fixed
+
+- #147: Fix duplicated `CircuitImpact` when circuit ID was present for a Maintenance ID.
+
 ## v0.3.1
 
-## Fixed
+### Fixed
 
 - #142: Handle Gmail API pagination, enforce subject truncation to 200 characters, and fix notification retrieval comparison.
 - #143: Fix duplicated `Notes` raising db uniqueness exception.
 
 ## v0.3.0 - 2021-10-19
 
-## Changed
+### Changed
 
 - #127: Increase default `raw_notification_size` from 1000 to 8192, and also update this and `raw_notification_initial_days_since` definition in `PLUGINS_CONFIG`. Notice the updates in the plugin configuration section:
 
