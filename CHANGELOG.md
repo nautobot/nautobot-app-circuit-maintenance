@@ -1,12 +1,12 @@
 # Changelog
 
-## v0.3.2
+## v0.3.2 - 2021-10-26
 
 ### Fixed
 
 - #147: Fix duplicated `CircuitImpact` when circuit ID was present for a Maintenance ID.
 
-## v0.3.1
+## v0.3.1 - 2021-10-22
 
 ### Fixed
 
