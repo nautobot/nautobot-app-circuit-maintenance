@@ -470,3 +470,28 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(0, len(CircuitImpact.objects.all()))
         self.assertEqual(1, len(Note.objects.all()))
+
+    def test_create_circuit_maintenance_duplicated_circuit_id(self):
+        """Test create_circuit_maintenance."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source.name)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        RawNotification.objects.get_or_create(
+            subject=test_notification.subject,
+            provider=provider,
+            raw=test_notification.raw_payload,
+            sender=test_notification.sender,
+            source=self.source,
+            stamp=datetime.now(timezone.utc),
+        )
+        parser_provider = init_provider(provider_type=test_notification.provider_type)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
+        parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
+        # Duplicating the circuit ID
+        parsed_maintenance.circuits[1].circuit_id = parsed_maintenance.circuits[0].circuit_id
+        create_circuit_maintenance(
+            self.job, f"{provider.slug}-{parsed_maintenance.maintenance_id}", parsed_maintenance, provider
+        )
+        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+        self.assertEqual(1, len(CircuitImpact.objects.all()))
+        self.assertEqual(0, len(Note.objects.all()))

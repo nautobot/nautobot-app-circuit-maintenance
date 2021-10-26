@@ -47,15 +47,14 @@ def create_circuit_maintenance(
     for circuit in parser_maintenance.circuits:
         circuit_entry = Circuit.objects.filter(cid=circuit.circuit_id, provider=provider).last()
         if circuit_entry:
-            circuit_impact_entry = CircuitImpact.objects.create(
-                maintenance=circuit_maintenance_entry,
-                circuit=circuit_entry,
-                impact=circuit.impact,
+            circuit_impact_entry, created = CircuitImpact.objects.get_or_create(
+                maintenance=circuit_maintenance_entry, circuit=circuit_entry, defaults={"impact": circuit.impact}
             )
-            logger.log_success(
-                circuit_impact_entry,
-                message=f"Circuit ID {circuit.circuit_id} linked to Maintenance {maintenance_id}",
-            )
+            if created:
+                logger.log_success(
+                    circuit_impact_entry,
+                    message=f"Circuit ID {circuit.circuit_id} linked to Maintenance {maintenance_id}",
+                )
         else:
             note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
