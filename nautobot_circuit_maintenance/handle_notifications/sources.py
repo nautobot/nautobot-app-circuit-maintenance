@@ -25,6 +25,7 @@ from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-i
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 
+from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
 class MaintenanceNotification(BaseModel):
     """Representation of all the data related to a Maintenance Notification."""
 
-    source: str
+    msg_id: bytes
+    source: "Source"
     sender: str
     subject: str
     provider_type: str
@@ -164,11 +166,18 @@ class Source(BaseModel):
                     source_header=config.get("source_header", "From"),
                     limit_emails_with_not_header_from=config.get("limit_emails_with_not_header_from", []),
                     extra_scopes=config.get("extra_scopes", []),
+                    labels=config.get("labels", {}),
                 )
 
         raise ValueError(
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
         )
+
+    def tag_message(self, msg_id: bytes, tag: MessageProcessingStatus):
+        """If supported, apply the given tag to the given message for future reference and categorization.
+
+        The default implementation of this method is a no-op but specific Source subclasses may implement it.
+        """
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
@@ -260,9 +269,9 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return None
 
     def process_email(
-        self, job_logger: Job, email_message: email.message.EmailMessage
+        self, job_logger: Job, email_message: email.message.EmailMessage, msg_id: bytes
     ) -> Optional[MaintenanceNotification]:
-        """Process an EmailMessage to create the MaintenaceNotification."""
+        """Process an EmailMessage to create the MaintenanceNotification."""
         email_source = None
         if email_message[self.source_header]:
             email_source = self.extract_email_source(email_message[self.source_header])
@@ -273,20 +282,23 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 message="Not possible to determine the email sender from "
                 f'"{self.source_header}: {email_message[self.source_header]}"',
             )
+            self.tag_message(msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
             return None
 
         provider_type = self.get_provider_type_from_email(email_source)
         if not provider_type:
             job_logger.log_warning(message=f"Not possible to determine the provider_type for {email_source}")
+            self.tag_message(msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
             return None
 
         return MaintenanceNotification(
-            source=self.name,
+            source=self,
             sender=email_source,
             subject=email_message["Subject"],
             provider_type=provider_type,
             raw_payload=email_message.as_bytes(),
             date=email_message["Date"],
+            msg_id=msg_id,
         )
 
 
@@ -336,7 +348,7 @@ class IMAP(EmailSource):
         raw_email_string = data[0][1].decode("utf-8")
         email_message = email.message_from_string(raw_email_string)
 
-        return self.process_email(job_logger, email_message)
+        return self.process_email(job_logger, email_message, msg_id)
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
@@ -407,10 +419,11 @@ class GmailAPI(EmailSource):
     service: Optional[Resource] = None
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
-    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"]
 
     extra_scopes: List[str] = []
     limit_emails_with_not_header_from: List[str] = []
+    labels: Dict[str, str] = {}
 
     class Config:
         """Pydantic BaseModel config."""
@@ -464,7 +477,7 @@ class GmailAPI(EmailSource):
 
         raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
         email_message = email.message_from_bytes(raw_email_string)
-        return self.process_email(job_logger, email_message)
+        return self.process_email(job_logger, email_message, msg_id)
 
     def _get_search_criteria(self, since_timestamp: datetime.datetime = None) -> str:
         """Build "search" criteria to filter emails, from date of from sender."""
@@ -474,7 +487,7 @@ class GmailAPI(EmailSource):
             search_criteria = f"after:{since_txt}"
 
         # If source_header is not "From" but some other custom header such as X-Original-Sender,
-        # the GMail API doesn't let us filter by that, but if we provided via config a list of
+        # the Gmail API doesn't let us filter by that, but if we provided via config a list of
         # source via `limit_emails_with_not_header_from`, we filter by that.
         if self.emails_to_fetch and self.source_header == "From":
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
@@ -484,6 +497,15 @@ class GmailAPI(EmailSource):
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         return search_criteria
+
+    def tag_message(self, msg_id: bytes, tag: MessageProcessingStatus):
+        """Apply the given Gmail label to the given message."""
+        # Do we have a configured label ID corresponding to the given tag?
+        if tag.value not in self.labels:
+            return
+        self.service.users().messages().modify(  # pylint: disable=no-member
+            userId=self.account, id=msg_id, body={"addLabelIds": [self.labels[tag.value]]}
+        ).execute()
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
@@ -626,3 +648,6 @@ def get_notifications(
             )
 
     return received_notifications
+
+
+MaintenanceNotification.update_forward_refs()

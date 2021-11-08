@@ -116,11 +116,18 @@ There are 2 extra required attributes:
 - `account`: Identifier (i.e. email address) to access via OAuth or to impersonate as service account.
 - `credentials_file`: JSON file containing all the necessary data to identify the API integration (see below).
 
-There are also three optional attributes:
+There are also the following optional attributes:
 
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
 - `limit_emails_with_not_header_from`: List of emails used to restrict the emails retrieved when NOT using the `source_header` "From" and we can't use the `Provider` original emails to filter.
 - `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to GMail API access.
+- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to automatically label messages as they are processed by this plugin for later investigation and troubleshooting. Any labels that are not specified will be skipped. Currently supported labels are:
+  - `unknown-provider` - A message was inspected but the plugin could not identify which provider this message came from in order to parse it properly
+  - `parsing-failed` - An error occurred while trying to parse this message
+  - `parsed` - The message was parsed successfully
+  - `ignored` - Parsing of the message determined that there is no relevant circuit maintenance content in the message
+  - `out-of-sequence` - Parsing of the message determined that it predates the latest already-processed message relevant to the same circuit maintenance event, so it is out of sequence.
+  - `unknown-cids` - Parsing of the message determined that it references one or more circuit IDs (CIDs) that could not be found within Nautobot's database.
 
 ```py
 PLUGINS_CONFIG = {
@@ -132,8 +139,16 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.getenv("CM_NS_1_CREDENTIALS_FILE", ""),
                 "url": os.getenv("CM_NS_1_URL", ""),
                 "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),          # optional
-                "limit_emails_with_not_header_from": ["email@example.com"],                  # optional
+                "limit_emails_with_not_header_from": ["email@example.com"],           # optional
                 "extra_scopes": ["https://www.googleapis.com/auth/calendar.events"],  # optional
+                "labels": {                                                           # optional
+                    "unknown-provider": "Label_2156989743288038678",
+                    "parsing-failed": "Label_820864599623865470",
+                    "parsed": "Label_3930009158110411672",
+                    "ignored": "Label_6398181635995151975",
+                    "out-of-sequence": "Label_7702409558462584907",
+                    "unknown-cids": "Label_870427780871495349",
+                },
             }
         ]
     }
@@ -152,7 +167,7 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated to be used when configuring Nautobot Sources.
 4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
-6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
+6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly`, `https://www.googleapis.com/auth/gmail.modify`, and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
 
 ###### 2.1.2.2 OAuth
 
