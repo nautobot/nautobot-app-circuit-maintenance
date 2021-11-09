@@ -13,6 +13,7 @@ from typing import Iterable, List, Optional, TypeVar, Type, Tuple, Dict, Union
 import imaplib
 
 from googleapiclient.discovery import build, Resource
+from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -173,7 +174,7 @@ class Source(BaseModel):
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
         )
 
-    def tag_message(self, msg_id: bytes, tag: MessageProcessingStatus):
+    def tag_message(self, job_logger: Job, msg_id: bytes, tag: MessageProcessingStatus):
         """If supported, apply the given tag to the given message for future reference and categorization.
 
         The default implementation of this method is a no-op but specific Source subclasses may implement it.
@@ -282,13 +283,13 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 message="Not possible to determine the email sender from "
                 f'"{self.source_header}: {email_message[self.source_header]}"',
             )
-            self.tag_message(msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
+            self.tag_message(job_logger, msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
             return None
 
         provider_type = self.get_provider_type_from_email(email_source)
         if not provider_type:
             job_logger.log_warning(message=f"Not possible to determine the provider_type for {email_source}")
-            self.tag_message(msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
+            self.tag_message(job_logger, msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
             return None
 
         return MaintenanceNotification(
@@ -498,14 +499,19 @@ class GmailAPI(EmailSource):
 
         return search_criteria
 
-    def tag_message(self, msg_id: bytes, tag: MessageProcessingStatus):
+    def tag_message(self, job_logger: Job, msg_id: bytes, tag: MessageProcessingStatus):
         """Apply the given Gmail label to the given message."""
         # Do we have a configured label ID corresponding to the given tag?
         if tag.value not in self.labels:
             return
-        self.service.users().messages().modify(  # pylint: disable=no-member
-            userId=self.account, id=msg_id, body={"addLabelIds": [self.labels[tag.value]]}
-        ).execute()
+        try:
+            self.service.users().messages().modify(  # pylint: disable=no-member
+                userId=self.account, id=msg_id, body={"addLabelIds": [self.labels[tag.value]]}
+            ).execute()
+        except HttpError as exc:
+            job_logger.log_warning(
+                message=f"Error in applying tag '{tag.value}' to message: {exc.status_code} {exc.error_details}"
+            )
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None

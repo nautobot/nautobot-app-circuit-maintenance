@@ -133,7 +133,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(2, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
-            mock_tag_message.assert_called_with(test_notification.msg_id, "parsed")
+            mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsed")
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
     def test_run_nonexistent_circuit(self):
@@ -159,8 +159,8 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(2, len(CircuitImpact.objects.all()))
             self.assertEqual(1, len(Note.objects.all()))
             self.assertIn(fake_cid, Note.objects.all().first().title)
-            mock_tag_message.assert_any_call(test_notification.msg_id, "parsed")
-            mock_tag_message.assert_any_call(test_notification.msg_id, "unknown-cids")
+            mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "parsed")
+            mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "unknown-cids")
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
     def test_run_no_notifications(self):
@@ -213,7 +213,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
-            mock_tag_message.assert_called_with(test_notification.msg_id, "parsing-failed")
+            mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
             self.job.log_warning.assert_called()
             self.job.log_debug.assert_called_with("1 notifications processed.")
 
@@ -226,7 +226,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             res = process_raw_notification(self.job, test_notification)
 
         self.assertNotEqual(res, None)
-        mock_tag_message.assert_called_with(test_notification.msg_id, "parsing-failed")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
         self.job.log_warning.assert_called_with(
             message=f"Notification Parser not found for {test_notification.provider_type}"
         )
@@ -240,7 +240,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             res = process_raw_notification(self.job, test_notification)
 
         self.assertEqual(res, None)
-        mock_tag_message.assert_called_with(test_notification.msg_id, "unknown-provider")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "unknown-provider")
         self.job.log_warning.assert_called_with(
             message=f"Raw notification not created because is referencing to a provider not existent: {test_notification.provider_type}"
         )
@@ -286,7 +286,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(raw_notification.pk, res)
         self.assertEqual(raw_notification.parsed, False)
         self.assertEqual(0, len(ParsedNotification.objects.all()))
-        mock_tag_message.assert_called_with(test_notification.msg_id, "parsing-failed")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
         self.job.log_success.assert_any_call(raw_notification, message="Raw notification created.")
         self.job.log_warning.assert_called()
 
@@ -299,7 +299,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
 
         self.assertEqual(1, len(parser_maintenances))
-        mock_tag_message.assert_called_with(test_notification.msg_id, "parsed")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsed")
 
     def test_get_maintenances_from_notification_wrong_data(self):
         """Test get_maintenances_from_notification."""
@@ -311,7 +311,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
 
         self.assertIsNone(parser_maintenances)
-        mock_tag_message.assert_called_with(test_notification.msg_id, "parsing-failed")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
         self.job.log_failure.assert_called()
 
     def test_get_maintenances_from_notification_non_existent_provider_in_parser(self):
@@ -324,7 +324,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
 
         self.assertIsNone(parser_maintenances)
-        mock_tag_message.assert_called_with(test_notification.msg_id, "parsing-failed")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
         self.job.log_warning.assert_any_call(message=f"Notification Parser not found for {provider.slug}")
 
     def test_create_circuit_maintenance(self):
@@ -383,7 +383,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(0, len(CircuitImpact.objects.all()))
         self.assertEqual(1, len(Note.objects.all()))
-        mock_tag_message.assert_called_with(test_notification.msg_id, "unknown-cids")
+        mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "unknown-cids")
 
     def test_update_circuit_maintenance(self):
         """Test update_circuit_maintenance."""
@@ -440,7 +440,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         # Verify that both notifications where related to same CircuitMaintenance
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
 
-        mock_tag_message.assert_called_with(test_notification_older.msg_id, "out-of-sequence")
+        mock_tag_message.assert_called_with(self.job, test_notification_older.msg_id, "out-of-sequence")
 
         maintenance_id = f"{provider.slug}-{notification_data['name']}"
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)

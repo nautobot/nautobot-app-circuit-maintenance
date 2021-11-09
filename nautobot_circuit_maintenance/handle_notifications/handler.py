@@ -79,7 +79,7 @@ def create_circuit_maintenance(
                         "adding a note"
                     ),
                 )
-            notification.source.tag_message(notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
 
     if not CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry):
         logger.log_warning(message=f"Circuit Maintenance {maintenance_id} has none Circuit IDs in the DB.")
@@ -149,7 +149,7 @@ def update_circuit_maintenance(
                         "adding a note"
                     ),
                 )
-            notification.source.tag_message(notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
 
     for cid in cids_to_update:
         circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
@@ -198,7 +198,7 @@ def create_or_update_circuit_maintenance(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
                 f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.raw_notification.stamp}."
             )
-            notification.source.tag_message(notification.msg_id, MessageProcessingStatus.OUT_OF_SEQUENCE)
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.OUT_OF_SEQUENCE)
             return circuit_maintenance_entry
 
         update_circuit_maintenance(logger, notification, circuit_maintenance_entry, parser_maintenance, provider)
@@ -217,32 +217,32 @@ def get_maintenances_from_notification(logger: Job, notification: MaintenanceNot
     parser_provider = init_provider(provider_type=provider_type)
     if not parser_provider:
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
         return None
 
     data_to_process = NotificationData.init_from_email_bytes(notification.raw_payload)
     if not data_to_process:
         logger.log_failure(message=f"Notification data was not accepted by the parser: {notification.raw_payload}")
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
         return None
 
     try:
         result = parser_provider.get_maintenances(data_to_process)
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.PARSED)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSED)
         if not result:
             logger.log_info(message=f"No maintenance notifications detected in `{notification.subject}`")
-            notification.source.tag_message(notification.msg_id, MessageProcessingStatus.IGNORED)
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.IGNORED)
         return result
     except ProviderError:
         tb_str = traceback.format_exc()
         logger.log_failure(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
     except Exception:
         tb_str = traceback.format_exc()
         logger.log_failure(
             message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
         )
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
     return None
 
 
@@ -296,7 +296,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
                 f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
             )
         )
-        notification.source.tag_message(notification.msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
         return None
 
     raw_entry = create_raw_notification(logger, notification, provider)
