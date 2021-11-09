@@ -174,7 +174,7 @@ class Source(BaseModel):
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
         )
 
-    def tag_message(self, job_logger: Job, msg_id: bytes, tag: MessageProcessingStatus):
+    def tag_message(self, job_logger: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus):
         """If supported, apply the given tag to the given message for future reference and categorization.
 
         The default implementation of this method is a no-op but specific Source subclasses may implement it.
@@ -270,7 +270,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return None
 
     def process_email(
-        self, job_logger: Job, email_message: email.message.EmailMessage, msg_id: bytes
+        self, job_logger: Job, email_message: email.message.EmailMessage, msg_id: Union[str, bytes]
     ) -> Optional[MaintenanceNotification]:
         """Process an EmailMessage to create the MaintenanceNotification."""
         email_source = None
@@ -420,7 +420,10 @@ class GmailAPI(EmailSource):
     service: Optional[Resource] = None
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
-    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly", "https://www.googleapis.com/auth/gmail.modify"]
+    SCOPES = [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.modify",
+    ]
 
     extra_scopes: List[str] = []
     limit_emails_with_not_header_from: List[str] = []
@@ -448,7 +451,7 @@ class GmailAPI(EmailSource):
         """Inner method to run the custom class validation logic."""
         self.load_credentials()
 
-    def extract_raw_payload(self, body: Dict, msg_id: bytes) -> bytes:
+    def extract_raw_payload(self, body: Dict, msg_id: str) -> bytes:
         """Extracts the raw_payload from body or attachement."""
         if "attachmentId" in body:
             attachment = (
@@ -464,7 +467,7 @@ class GmailAPI(EmailSource):
 
         return b""
 
-    def fetch_email(self, job_logger: Job, msg_id: bytes) -> Optional[MaintenanceNotification]:
+    def fetch_email(self, job_logger: Job, msg_id: str) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
@@ -499,18 +502,26 @@ class GmailAPI(EmailSource):
 
         return search_criteria
 
-    def tag_message(self, job_logger: Job, msg_id: bytes, tag: MessageProcessingStatus):
+    def tag_message(self, job_logger: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus):
         """Apply the given Gmail label to the given message."""
         # Do we have a configured label ID corresponding to the given tag?
         if tag.value not in self.labels:
             return
+
+        # Gmail API expects a str msg_id, but MaintenanceNotification coerces it to bytes - change it back if needed
+        if isinstance(msg_id, bytes):
+            msg_id = str(msg_id.decode())
+
         try:
             self.service.users().messages().modify(  # pylint: disable=no-member
                 userId=self.account, id=msg_id, body={"addLabelIds": [self.labels[tag.value]]}
             ).execute()
         except HttpError as exc:
             job_logger.log_warning(
-                message=f"Error in applying tag '{tag.value}' to message: {exc.status_code} {exc.error_details}"
+                message=(
+                    f"Error in applying tag '{tag.value}' ({self.labels[tag.value]}) to message {msg_id}: "
+                    f"{exc.status_code} {exc.error_details}"
+                ),
             )
 
     def receive_notifications(
