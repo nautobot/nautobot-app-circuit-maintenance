@@ -121,7 +121,7 @@ There are also the following optional attributes:
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
 - `limit_emails_with_not_header_from`: List of emails used to restrict the emails retrieved when NOT using the `source_header` "From" and we can't use the `Provider` original emails to filter.
 - `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to GMail API access.
-- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to automatically label messages as they are processed by this plugin for later investigation and troubleshooting. Any labels that are not specified will be skipped. Currently supported labels are:
+- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to automatically label messages as they are processed by this plugin for later investigation and troubleshooting. See below for how to look up the IDs for the desired labels; any labels that are not specified will be skipped. Currently supported labels are:
   - `unknown-provider` - A message was inspected but the plugin could not identify which provider this message came from in order to parse it properly
   - `parsing-failed` - An error occurred while trying to parse this message
   - `parsed` - The message was parsed successfully
@@ -180,6 +180,14 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 > For OAuth integration, it's recommendable that, at least the first time, you run a manual **Validate** of the Notification Source to complete the OAuth authentication workflow, identifying your Google credentials.
 
 > Typically the `url` setting to configure in your `nautobot_config.py` for use with OAuth integration will be `"https://accounts.google.com/o/oauth2/auth"`.
+
+##### 2.1.2.3 Gmail Label IDs
+
+While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI doesn't appear to expose the underlying label IDs that need to be used with the Gmail API. The easiest way to look these up is to use the "Gmail for Developers API Explorer" (https://developers.google.com/gmail/api/reference/rest/v1/users.labels/list) to log in as the desired user and query for the existing labels and their IDs.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/gmail_api_explorer_label_ids.png" class="center">
+</p>
 
 #### 2.2 Add `Providers` to the Notification Sources
 
