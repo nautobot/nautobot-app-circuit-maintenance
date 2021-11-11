@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0 - 2021-11-11
+
+### Added
+
+- #120: Added option to apply appropriate labels to Gmail messages after processing them.
+
 ## v0.3.2 - 2021-10-26
 
 ### Fixed
