@@ -37,18 +37,6 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
 
 
-class MaintenanceNotification(BaseModel):
-    """Representation of all the data related to a Maintenance Notification."""
-
-    msg_id: bytes
-    source: "Source"
-    sender: str
-    subject: str
-    provider_type: str
-    raw_payload: bytes
-    date: str
-
-
 class Source(BaseModel):
     """Base class to retrieve notifications. To be extended for each scheme."""
 
@@ -61,7 +49,7 @@ class Source(BaseModel):
 
     def receive_notifications(
         self, job_logger: Job, since_timestamp: datetime.datetime = None
-    ) -> Iterable[MaintenanceNotification]:
+    ) -> Iterable["MaintenanceNotification"]:
         """Function to retrieve notifications since one moment in time.
 
         The `MaintenanceNotification` attributes will contains these attributes:
@@ -179,6 +167,18 @@ class Source(BaseModel):
 
         The default implementation of this method is a no-op but specific Source subclasses may implement it.
         """
+
+
+class MaintenanceNotification(BaseModel):
+    """Representation of all the data related to a Maintenance Notification."""
+
+    msg_id: bytes
+    source: Source
+    sender: str
+    subject: str
+    provider_type: str
+    raw_payload: bytes
+    date: str
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
@@ -420,10 +420,8 @@ class GmailAPI(EmailSource):
     service: Optional[Resource] = None
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
-    SCOPES = [
-        "https://www.googleapis.com/auth/gmail.readonly",
-        "https://www.googleapis.com/auth/gmail.modify",
-    ]
+    # The required scope for baseline functionality (add gmail.modify permission in extra_scopes to enable tagging)
+    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
     extra_scopes: List[str] = []
     limit_emails_with_not_header_from: List[str] = []
@@ -665,6 +663,3 @@ def get_notifications(
             )
 
     return received_notifications
-
-
-MaintenanceNotification.update_forward_refs()
