@@ -111,16 +111,27 @@ PLUGINS_CONFIG = {
 
 ##### 2.1.2 Gmail API integrations
 
+> Typically the `url` setting to configure in your `PLUGINS_CONFIG` for use with Gmail integration will be `"https://accounts.google.com/o/oauth2/auth"`.
+
 There are 2 extra required attributes:
 
 - `account`: Identifier (i.e. email address) to access via OAuth or to impersonate as service account.
 - `credentials_file`: JSON file containing all the necessary data to identify the API integration (see below).
 
-There are also three optional attributes:
+There are also the following optional attributes:
 
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
 - `limit_emails_with_not_header_from`: List of emails used to restrict the emails retrieved when NOT using the `source_header` "From" and we can't use the `Provider` original emails to filter.
-- `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to GMail API access.
+- `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to Gmail API read-only access.
+- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to enable the optional feature of automatically labeling messages as they are processed by this plugin for later investigation and troubleshooting. See below for how to look up the IDs for the desired labels; any labels that are not specified will be skipped. Currently supported labels are:
+  - `unknown-provider` - A message was inspected but the plugin could not identify which provider this message came from in order to parse it properly
+  - `parsing-failed` - An error occurred while trying to parse this message
+  - `parsed` - The message was parsed successfully
+  - `ignored` - Parsing of the message determined that there is no relevant circuit maintenance content in the message
+  - `out-of-sequence` - Parsing of the message determined that it predates the latest already-processed message relevant to the same circuit maintenance event, so it is out of sequence.
+  - `unknown-cids` - Parsing of the message determined that it references one or more circuit IDs (CIDs) that could not be found within Nautobot's database.
+
+> If you want to use the `labels` feature, you *must* include `"https://www.googleapis.com/auth/gmail.modify"` in the `extra_scopes` list so that the plugin will be allowed to make changes to the Gmail messages to apply the labels.
 
 ```py
 PLUGINS_CONFIG = {
@@ -131,9 +142,20 @@ PLUGINS_CONFIG = {
                 "account": os.getenv("CM_NS_1_ACCOUNT", ""),
                 "credentials_file": os.getenv("CM_NS_1_CREDENTIALS_FILE", ""),
                 "url": os.getenv("CM_NS_1_URL", ""),
-                "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),          # optional
-                "limit_emails_with_not_header_from": ["email@example.com"],                  # optional
-                "extra_scopes": ["https://www.googleapis.com/auth/calendar.events"],  # optional
+                "source_header": os.getenv("CM_NS_1_SOURCE_HEADER", "From"),   # optional
+                "limit_emails_with_not_header_from": ["email@example.com"],    # optional
+                "extra_scopes": [                                              # optional
+                    "https://www.googleapis.com/auth/gmail.modify",
+                    "https://www.googleapis.com/auth/calendar.events",
+                ],
+                "labels": {                                                    # optional
+                    "unknown-provider": "Label_2156989743288038678",
+                    "parsing-failed": "Label_820864599623865470",
+                    "parsed": "Label_3930009158110411672",
+                    "ignored": "Label_6398181635995151975",
+                    "out-of-sequence": "Label_7702409558462584907",
+                    "unknown-cids": "Label_870427780871495349",
+                },
             }
         ]
     }
@@ -152,7 +174,10 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 3. Still under **APIs and Services**, in **Credentials**, create a new **Service Account** and save the credentials file generated to be used when configuring Nautobot Sources.
 4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
-6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the scopes `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com/`. Save the new client configuration by clicking _Authorize_.
+6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the appropriate scopes:
+    - `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com` are mandatory
+    - `https://www.googleapis.com/auth/gmail.modify` is additionally required if you want to use the automatic message labeling feature.
+7. Save the new client configuration by clicking _Authorize_.
 
 ###### 2.1.2.2 OAuth
 
@@ -164,7 +189,13 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 
 > For OAuth integration, it's recommendable that, at least the first time, you run a manual **Validate** of the Notification Source to complete the OAuth authentication workflow, identifying your Google credentials.
 
-> Typically the `url` setting to configure in your `nautobot_config.py` for use with OAuth integration will be `"https://accounts.google.com/o/oauth2/auth"`.
+###### 2.1.2.3 Gmail Label IDs
+
+While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI doesn't appear to expose the underlying label IDs that need to be used with the Gmail API. The easiest way to look these up is to use the [Gmail for Developers API Explorer](https://developers.google.com/gmail/api/reference/rest/v1/users.labels/list) to log in as the desired user and query for the existing labels and their IDs.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/gmail_api_explorer_label_ids.png" class="center">
+</p>
 
 #### 2.2 Add `Providers` to the Notification Sources
 
