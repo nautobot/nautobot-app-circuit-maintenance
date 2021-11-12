@@ -8,7 +8,7 @@
 
 ### Changed
 
-- Circuit CID lookups are now case-insensitive
+- #156: Circuit CID lookups are now case-insensitive
 
 ## v0.3.2 - 2021-10-26
 
