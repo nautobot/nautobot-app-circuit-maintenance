@@ -51,7 +51,7 @@ def create_circuit_maintenance(
     logger.log_success(obj=circuit_maintenance_entry, message="Created Circuit Maintenance.")
 
     for circuit in parser_maintenance.circuits:
-        circuit_entry = Circuit.objects.filter(cid=circuit.circuit_id, provider=provider).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=circuit.circuit_id, provider=provider).last()
         if circuit_entry:
             circuit_impact_entry, created = CircuitImpact.objects.get_or_create(
                 maintenance=circuit_maintenance_entry, circuit=circuit_entry, defaults={"impact": circuit.impact}
@@ -109,17 +109,19 @@ def update_circuit_maintenance(
 
     circuit_entries = CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry)
 
-    new_cids = {parsed_circuit.circuit_id for parsed_circuit in parser_maintenance.circuits}
-    existing_cids = {circuit_entry.circuit.cid for circuit_entry in circuit_entries}
+    new_cids = {parsed_circuit.circuit_id.lower() for parsed_circuit in parser_maintenance.circuits}
+    existing_cids = {circuit_entry.circuit.cid.lower() for circuit_entry in circuit_entries}
 
     cids_to_update = new_cids & existing_cids
     cids_to_create = new_cids - existing_cids
     cids_to_remove = existing_cids - new_cids
 
     for cid in cids_to_create:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         circuit = [
-            parsed_circuit for parsed_circuit in parser_maintenance.circuits if parsed_circuit.circuit_id == cid
+            parsed_circuit
+            for parsed_circuit in parser_maintenance.circuits
+            if parsed_circuit.circuit_id.lower() == cid.lower()
         ][0]
         if circuit_entry:
             circuit_impact_entry = CircuitImpact.objects.create(
@@ -152,18 +154,20 @@ def update_circuit_maintenance(
             notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
 
     for cid in cids_to_update:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         circuitimpact_entry = CircuitImpact.objects.filter(
             circuit=circuit_entry, maintenance=circuit_maintenance_entry
         ).last()
         circuit = [
-            parsed_circuit for parsed_circuit in parser_maintenance.circuits if parsed_circuit.circuit_id == cid
+            parsed_circuit
+            for parsed_circuit in parser_maintenance.circuits
+            if parsed_circuit.circuit_id.lower() == cid.lower()
         ][0]
         circuitimpact_entry.impact = circuit.impact
         circuitimpact_entry.save()
 
     for cid in cids_to_remove:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         CircuitImpact.objects.filter(circuit=circuit_entry, maintenance=circuit_maintenance_entry).delete()
 
     logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")

@@ -60,7 +60,7 @@
     last_updated: 2021-04-30 07:43:34.845865+00:00
     _custom_field_data: {}
     status: null
-    cid: "000001"
+    cid: "CID-000001"
     provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
     type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
@@ -75,7 +75,7 @@
     last_updated: 2021-05-06 05:18:36.057186+00:00
     _custom_field_data: {}
     status: null
-    cid: "000002"
+    cid: "CID-000002"
     provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
     type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
