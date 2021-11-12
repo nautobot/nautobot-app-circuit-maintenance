@@ -91,7 +91,9 @@ def get_base_notification_data(provider_slug="ntt") -> dict:
 
     sample_circuits = Circuit.objects.filter(provider=provider)
     for circuit in sample_circuits:
-        notification_data["circuitimpacts"].append({"cid": circuit.cid, "impact": "NO-IMPACT"})
+        # Intentionally convert the CID reference to lower-case,
+        # because all of our circuit lookups *should* be case-insensitive
+        notification_data["circuitimpacts"].append({"cid": circuit.cid.lower(), "impact": "NO-IMPACT"})
 
     return notification_data
 
@@ -415,7 +417,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(1, len(Note.objects.all()))
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         self.assertEqual(notification_data["status"], circuit_maintenance_entry.status)
-        circuit_impact_entry = CircuitImpact.objects.get(circuit__cid=circuit_to_update["cid"])
+        circuit_impact_entry = CircuitImpact.objects.get(circuit__cid__iexact=circuit_to_update["cid"])
         self.assertEqual(circuit_to_update["impact"], circuit_impact_entry.impact)
 
     def test_update_circuit_maintenance_unordered_notifications(self):
