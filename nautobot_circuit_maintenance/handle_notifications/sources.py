@@ -333,8 +333,10 @@ class IMAP(EmailSource):
     def fetch_email(self, job_logger: Job, msg_id: bytes) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
-        raw_email_string = data[0][1].decode("utf-8")
-        email_message = email.message_from_string(raw_email_string)
+        # raw_email_string = data[0][1].decode("utf-8")
+        # email_message = email.message_from_string(raw_email_string)
+        # raw_email_string = data[0][1].decode("utf-8")
+        email_message = email.message_from_bytes(data[0][1])
 
         return self.process_email(job_logger, email_message)
 
