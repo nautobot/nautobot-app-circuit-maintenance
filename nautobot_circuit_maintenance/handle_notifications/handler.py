@@ -9,6 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from circuit_maintenance_parser import ProviderError, init_provider, NotificationData, Maintenance
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
+
+from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -31,7 +33,11 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
 
 
 def create_circuit_maintenance(
-    logger: Job, maintenance_id: str, parser_maintenance: Maintenance, provider: Provider
+    logger: Job,
+    notification: MaintenanceNotification,
+    maintenance_id: str,
+    parser_maintenance: Maintenance,
+    provider: Provider,
 ) -> CircuitMaintenance:
     """Handles the creation of a new circuit maintenance."""
     circuit_maintenance_entry = CircuitMaintenance(
@@ -45,7 +51,7 @@ def create_circuit_maintenance(
     logger.log_success(obj=circuit_maintenance_entry, message="Created Circuit Maintenance.")
 
     for circuit in parser_maintenance.circuits:
-        circuit_entry = Circuit.objects.filter(cid=circuit.circuit_id, provider=provider).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=circuit.circuit_id, provider=provider).last()
         if circuit_entry:
             circuit_impact_entry, created = CircuitImpact.objects.get_or_create(
                 maintenance=circuit_maintenance_entry, circuit=circuit_entry, defaults={"impact": circuit.impact}
@@ -69,10 +75,12 @@ def create_circuit_maintenance(
                 logger.log_warning(
                     note_entry,
                     message=(
-                        f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, adding a "
-                        "note"
+                        f"Circuit ID {circuit.circuit_id} referenced in {maintenance_id} is not in the Database, "
+                        "adding a note"
                     ),
                 )
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
+
     if not CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry):
         logger.log_warning(message=f"Circuit Maintenance {maintenance_id} has none Circuit IDs in the DB.")
 
@@ -81,12 +89,13 @@ def create_circuit_maintenance(
 
 def update_circuit_maintenance(
     logger: Job,
+    notification: MaintenanceNotification,
     circuit_maintenance_entry: CircuitMaintenance,
-    maintenance_id: str,
     parser_maintenance: Maintenance,
     provider: Provider,
 ):  # pylint: disable=too-many-locals
     """Handles the update of an existent circuit maintenance."""
+    maintenance_id = circuit_maintenance_entry.name
     circuit_maintenance_entry.description = parser_maintenance.summary
     circuit_maintenance_entry.status = parser_maintenance.status
     circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(
@@ -100,17 +109,19 @@ def update_circuit_maintenance(
 
     circuit_entries = CircuitImpact.objects.filter(maintenance=circuit_maintenance_entry)
 
-    new_cids = {parsed_circuit.circuit_id for parsed_circuit in parser_maintenance.circuits}
-    existing_cids = {circuit_entry.circuit.cid for circuit_entry in circuit_entries}
+    new_cids = {parsed_circuit.circuit_id.lower() for parsed_circuit in parser_maintenance.circuits}
+    existing_cids = {circuit_entry.circuit.cid.lower() for circuit_entry in circuit_entries}
 
     cids_to_update = new_cids & existing_cids
     cids_to_create = new_cids - existing_cids
     cids_to_remove = existing_cids - new_cids
 
     for cid in cids_to_create:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         circuit = [
-            parsed_circuit for parsed_circuit in parser_maintenance.circuits if parsed_circuit.circuit_id == cid
+            parsed_circuit
+            for parsed_circuit in parser_maintenance.circuits
+            if parsed_circuit.circuit_id.lower() == cid.lower()
         ][0]
         if circuit_entry:
             circuit_impact_entry = CircuitImpact.objects.create(
@@ -140,27 +151,34 @@ def update_circuit_maintenance(
                         "adding a note"
                     ),
                 )
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_CIDS)
 
     for cid in cids_to_update:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         circuitimpact_entry = CircuitImpact.objects.filter(
             circuit=circuit_entry, maintenance=circuit_maintenance_entry
         ).last()
         circuit = [
-            parsed_circuit for parsed_circuit in parser_maintenance.circuits if parsed_circuit.circuit_id == cid
+            parsed_circuit
+            for parsed_circuit in parser_maintenance.circuits
+            if parsed_circuit.circuit_id.lower() == cid.lower()
         ][0]
         circuitimpact_entry.impact = circuit.impact
         circuitimpact_entry.save()
 
     for cid in cids_to_remove:
-        circuit_entry = Circuit.objects.filter(cid=cid, provider=provider.pk).last()
+        circuit_entry = Circuit.objects.filter(cid__iexact=cid, provider=provider.pk).last()
         CircuitImpact.objects.filter(circuit=circuit_entry, maintenance=circuit_maintenance_entry).delete()
 
     logger.log_info(obj=circuit_maintenance_entry, message=f"Updated Circuit Maintenance {maintenance_id}")
 
 
 def create_or_update_circuit_maintenance(
-    logger: Job, parser_maintenance: Maintenance, raw_entry: RawNotification, provider: Provider
+    logger: Job,
+    notification: MaintenanceNotification,
+    raw_entry: RawNotification,
+    parser_maintenance: Maintenance,
+    provider: Provider,
 ) -> CircuitMaintenance:
     """Processes a Maintenance, creating or updating the related Circuit Maintenance.
 
@@ -184,11 +202,14 @@ def create_or_update_circuit_maintenance(
                 f"Not updating CircuitMaintenance {maintenance_id} because the notification is from "
                 f"{parser_maintenance_datetime}, older than the most recent notification from {last_parsed_notification.raw_notification.stamp}."
             )
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.OUT_OF_SEQUENCE)
             return circuit_maintenance_entry
 
-        update_circuit_maintenance(logger, circuit_maintenance_entry, maintenance_id, parser_maintenance, provider)
+        update_circuit_maintenance(logger, notification, circuit_maintenance_entry, parser_maintenance, provider)
     except ObjectDoesNotExist:
-        circuit_maintenance_entry = create_circuit_maintenance(logger, maintenance_id, parser_maintenance, provider)
+        circuit_maintenance_entry = create_circuit_maintenance(
+            logger, notification, maintenance_id, parser_maintenance, provider
+        )
 
     return circuit_maintenance_entry
 
@@ -200,27 +221,38 @@ def get_maintenances_from_notification(logger: Job, notification: MaintenanceNot
     parser_provider = init_provider(provider_type=provider_type)
     if not parser_provider:
         logger.log_warning(message=f"Notification Parser not found for {notification.provider_type}")
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
         return None
 
     data_to_process = NotificationData.init_from_email_bytes(notification.raw_payload)
     if not data_to_process:
         logger.log_failure(message=f"Notification data was not accepted by the parser: {notification.raw_payload}")
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
         return None
 
     try:
-        return parser_provider.get_maintenances(data_to_process)
+        result = parser_provider.get_maintenances(data_to_process)
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSED)
+        if not result:
+            logger.log_info(message=f"No maintenance notifications detected in `{notification.subject}`")
+            notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.IGNORED)
+        return result
     except ProviderError:
         tb_str = traceback.format_exc()
         logger.log_failure(message=f"Parsing failed for notification `{notification.subject}`:\n```\n{tb_str}\n```")
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
     except Exception:
         tb_str = traceback.format_exc()
         logger.log_failure(
             message=f"Unexpected exception while parsing notification `{notification.subject}`.\n```\n{tb_str}\n```"
         )
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.PARSING_FAILED)
     return None
 
 
-def create_raw_notification(logger: Job, notification: MaintenanceNotification, provider: Provider):
+def create_raw_notification(
+    logger: Job, notification: MaintenanceNotification, provider: Provider
+) -> Optional[RawNotification]:
     """Create a RawNotification.
 
     If it already exists, we return `None` to signal we are skipping it.
@@ -242,7 +274,7 @@ def create_raw_notification(logger: Job, notification: MaintenanceNotification, 
                 provider=provider,
                 raw=notification.raw_payload,
                 sender=notification.sender[:MAX_NOTIFICATION_SENDER_LENGTH],
-                source=NotificationSource.objects.filter(name=notification.source).last(),
+                source=NotificationSource.objects.filter(name=notification.source.name).last(),
                 stamp=parser.parse(notification.date),
             )
             raw_entry.save()
@@ -268,6 +300,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
                 f"Raw notification not created because is referencing to a provider not existent: {notification.provider_type}"
             )
         )
+        notification.source.tag_message(logger, notification.msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
         return None
 
     raw_entry = create_raw_notification(logger, notification, provider)
@@ -281,7 +314,7 @@ def process_raw_notification(logger: Job, notification: MaintenanceNotification)
     for parser_maintenance in parser_maintenances:
         try:
             circuit_maintenance_entry = create_or_update_circuit_maintenance(
-                logger, parser_maintenance, raw_entry, provider
+                logger, notification, raw_entry, parser_maintenance, provider
             )
             # Update raw notification as properly parsed
             raw_entry.parsed = True

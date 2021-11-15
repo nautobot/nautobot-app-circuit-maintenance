@@ -137,9 +137,10 @@ class TestEmailSource(TestCase):
         email_message["Content-Type"] = "text/html"
         email_message.set_payload(b"Some text goes here")
 
-        notification = source.process_email(job, email_message)
+        notification = source.process_email(job, email_message, b"12345")
         self.assertIsNotNone(notification)
-        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.msg_id, b"12345")
+        self.assertEqual(notification.source, source)
         self.assertEqual(notification.sender, "user@example.com")
         self.assertEqual(notification.subject, "Circuit Maintenance Notification")
         self.assertEqual(notification.provider_type, "zayo")
@@ -174,9 +175,10 @@ class TestEmailSource(TestCase):
         email_message["Content-Type"] = "text/html"
         email_message.set_payload(b"Some text goes here")
 
-        notification = source.process_email(job, email_message)
+        notification = source.process_email(job, email_message, b"12345")
         self.assertIsNotNone(notification)
-        self.assertEqual(notification.source, source.name)
+        self.assertEqual(notification.msg_id, b"12345")
+        self.assertEqual(notification.source, source)
         self.assertEqual(notification.sender, "user@example.com")
         self.assertEqual(notification.subject, "Circuit Maintenance Notification")
         self.assertEqual(notification.provider_type, "zayo")
@@ -210,7 +212,8 @@ class TestIMAPSource(TestCase):
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"] = [SOURCE_IMAP.copy()]
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(name__in=[SOURCE_IMAP["name"]]).delete()
-        self.source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
+        self.notification_source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
+        self.source = Source.init(name=SOURCE_IMAP["name"])
 
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
@@ -281,7 +284,7 @@ class TestIMAPSource(TestCase):
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications."""
         notification_data = get_base_notification_data()
-        notification = generate_email_notification(notification_data, self.source.name)
+        notification = generate_email_notification(notification_data, self.source)
 
         mock_receive_notifications.return_value = [notification]
 
@@ -294,7 +297,7 @@ class TestIMAPSource(TestCase):
     def test_get_notifications_multiple(self, mock_receive_notifications):
         """Test get_notifications multiple."""
         notification_data = get_base_notification_data()
-        notification = generate_email_notification(notification_data, self.source.name)
+        notification = generate_email_notification(notification_data, self.source)
 
         mock_receive_notifications.return_value = [notification, notification]
 
@@ -422,13 +425,15 @@ class TestGmailAPISource(TestCase):
         ]
         # Deleting other NotificationSource and Provider to define a reliable state.
         NotificationSource.objects.exclude(name__in=[SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]).delete()
-        self.source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+        self.notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
         with open(SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"], "w") as credentials_file:
             json.dump({"type": "service_account"}, credentials_file)
 
         with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w") as credentials_file:
             json.dump({"web": {}}, credentials_file)
+
+        self.source = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
     def tearDown(self):
         """Clean up data from tests."""
@@ -517,7 +522,7 @@ class TestGmailAPISource(TestCase):
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications."""
         notification_data = get_base_notification_data()
-        notification = generate_email_notification(notification_data, self.source.name)
+        notification = generate_email_notification(notification_data, self.source)
 
         mock_receive_notifications.return_value = [notification]
 
@@ -530,7 +535,7 @@ class TestGmailAPISource(TestCase):
     def test_get_notifications_multiple(self, mock_receive_notifications):
         """Test get_notifications multiple."""
         notification_data = get_base_notification_data()
-        notification = generate_email_notification(notification_data, self.source.name)
+        notification = generate_email_notification(notification_data, self.source)
 
         mock_receive_notifications.return_value = [notification, notification]
 
