@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.1 - 2021-11-29
+
+### Fixed
+
+- #158: Removed `utf-8` decoding for `IMAP` source to support for `ascii` encoded emails.
+
 ## v0.4.0 - 2021-11-11
 
 ### Added
