@@ -19,8 +19,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - "postgres"
-      - "redis"
+      redis:
+        condition: "service_started"
+      db:
+        condition: "service_healthy"
     <<: *nautobot-build
     <<: *nautobot-base
   worker:
@@ -32,7 +34,10 @@ services:
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
     depends_on:
-      - "nautobot"
+      nautobot:
+        condition: "service_started"
+      db:
+        condition: "service_healthy"
     <<: *nautobot-base
   celery_worker:
     healthcheck:
@@ -42,8 +47,10 @@ services:
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
     depends_on:
-      - "nautobot"
-      - "redis"
+      nautobot:
+        condition: "service_started"
+      db:
+        condition: "service_healthy"
     entrypoint:
       - "sh"
       - "-c"  # this is to evaluate the $NAUTOBOT_LOG_LEVEL from the env
