@@ -53,6 +53,9 @@ namespace.configure(
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": _compose_files(),
+            "nautobot_db_engine": "django.db.backends.postgresql",
+            "nautobot_db_port": "5432",
+            "nautobot_db_user": "nautobot",
         }
     }
 )
@@ -88,6 +91,9 @@ def docker_compose(context, command, **kwargs):
     build_env = {
         "NAUTOBOT_VER": context.nautobot_circuit_maintenance.nautobot_ver,
         "PYTHON_VER": context.nautobot_circuit_maintenance.python_ver,
+        "NAUTOBOT_DB_ENGINE": context.nautobot_circuit_maintenance.nautobot_db_engine,
+        "NAUTOBOT_DB_PORT": context.nautobot_circuit_maintenance.nautobot_db_port,
+        "NAUTOBOT_DB_USER": context.nautobot_circuit_maintenance.nautobot_db_user,
     }
     compose_command = f'docker-compose --project-name {context.nautobot_circuit_maintenance.project_name} --project-directory "{context.nautobot_circuit_maintenance.compose_dir}"'
     for compose_file in context.nautobot_circuit_maintenance.compose_files:
