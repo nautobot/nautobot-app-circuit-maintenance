@@ -427,10 +427,10 @@ class TestGmailAPISource(TestCase):
         NotificationSource.objects.exclude(name__in=[SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]]).delete()
         self.notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
-        with open(SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"], "w") as credentials_file:
+        with open(SOURCE_GMAIL_API_SERVICE_ACCOUNT["credentials_file"], "w", encoding="utf-8") as credentials_file:
             json.dump({"type": "service_account"}, credentials_file)
 
-        with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w") as credentials_file:
+        with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w", encoding="utf-8") as credentials_file:
             json.dump({"web": {}}, credentials_file)
 
         self.source = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
