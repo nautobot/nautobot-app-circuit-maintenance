@@ -11,6 +11,10 @@ x-nautobot-base: &nautobot-base
   env_file:
     - "dev.env"
     - "creds.env"
+  environment:
+    - NAUTOBOT_DB_ENGINE="${NAUTOBOT_DB_ENGINE}"
+    - NAUTOBOT_DB_PORT="${NAUTOBOT_DB_PORT}"
+    - NAUTOBOT_DB_USER="${NAUTOBOT_DB_USER}"
   tty: true
 
 version: "3.4"
