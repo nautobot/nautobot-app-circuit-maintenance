@@ -109,8 +109,6 @@ jobs:
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_VER: "${{ matrix.nautobot-version }}"
-      NAUTOBOT_DB_USER: "nautobot"
-      NAUTOBOT_DB_PASSWORD: "notverysecurepwd"
       NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
       NAUTOBOT_DB_PORT: "5432"
     steps:
@@ -136,9 +134,6 @@ jobs:
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_VER: "${{ matrix.nautobot-version }}"
-      NAUTOBOT_DB_USER: "root"
-      NAUTOBOT_DB_PASSWORD: "notverysecurepwd"
-      NAUTOBOT_DB_HOST: "127.0.0.1"
       NAUTOBOT_DB_ENGINE: "django.db.backends.mysql"
       NAUTOBOT_DB_PORT: "3306"
     steps:
