@@ -21,7 +21,7 @@ def is_truthy(arg):
     return bool(strtobool(arg))
 
 
-def _compose_files():
+def _compose_files(engine: str):
     """Helper function to dynamically determine if we need to use mysql or postgres as a DB backend.
 
     Returns:
@@ -33,7 +33,11 @@ def _compose_files():
         "docker-compose.dev.yml",
     ]
     env_vars = dotenv_values(os.path.join(os.path.dirname(__file__), "development/dev.env"))
-    if env_vars.get("NAUTOBOT_DB_ENGINE", "") == "django.db.backends.mysql":
+    if (
+        engine
+        and engine == "django.db.backends.mysql"
+        or env_vars.get("NAUTOBOT_DB_ENGINE", "") == "django.db.backends.mysql"
+    ):
         print("Using MySQL as a database backend!")
         files.append("docker-compose.mysql.yml")
     else:
@@ -52,7 +56,6 @@ namespace.configure(
             "python_ver": "3.6",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
-            "compose_files": _compose_files(),
             "nautobot_db_engine": "django.db.backends.postgresql",
             "nautobot_db_port": "5432",
             "nautobot_db_user": "nautobot",
@@ -96,7 +99,7 @@ def docker_compose(context, command, **kwargs):
         "NAUTOBOT_DB_USER": context.nautobot_circuit_maintenance.nautobot_db_user,
     }
     compose_command = f'docker-compose --project-name {context.nautobot_circuit_maintenance.project_name} --project-directory "{context.nautobot_circuit_maintenance.compose_dir}"'
-    for compose_file in context.nautobot_circuit_maintenance.compose_files:
+    for compose_file in _compose_files(context.nautobot_circuit_maintenance.nautobot_db_engine):
         compose_file_path = os.path.join(context.nautobot_circuit_maintenance.compose_dir, compose_file)
         compose_command += f' -f "{compose_file_path}"'
     compose_command += f" {command}"
