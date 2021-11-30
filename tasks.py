@@ -32,13 +32,7 @@ def _compose_files(engine: str):
         "docker-compose.base.yml",
         "docker-compose.dev.yml",
     ]
-    env_vars = dotenv_values(os.path.join(os.path.dirname(__file__), "development", "dev.env"))
-    if (
-        engine
-        and engine == "django.db.backends.mysql"
-        or env_vars.get("NAUTOBOT_DB_ENGINE", "") == "django.db.backends.mysql"
-    ):
-        print("Using MySQL as a database backend!")
+    if engine == "django.db.backends.mysql":
         files.append("docker-compose.mysql.yml")
     else:
         files.append("docker-compose.postgres.yml")
@@ -354,6 +348,11 @@ def check_migrations(context):
 def unittest(context, keepdb=False, label="nautobot_circuit_maintenance", failfast=False, buffer=True):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
+
+    if context.nautobot_circuit_maintenance.nautobot_db_engine == "django.db.backends.mysql":
+        print("Using MySQL as the database backend!")
+    else:
+        print("Using Postgres as the database backend!")
 
     if keepdb:
         command += " --keepdb"
