@@ -31,7 +31,7 @@ google-oauth = "^1.0.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.4"
 # Added due an issue with Markdown 3.3.5
-markdown = "<=3.3.4"
+markdown = "!=3.3.5"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"
