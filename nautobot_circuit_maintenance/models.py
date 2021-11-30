@@ -134,7 +134,7 @@ class Note(OrganizationalModel):
     """Model for maintenance notes."""
 
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=500)
     level = models.CharField(
         default=NoteLevelChoices.INFO,
         max_length=50,

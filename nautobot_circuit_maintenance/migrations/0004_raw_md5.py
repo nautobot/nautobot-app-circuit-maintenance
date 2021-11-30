@@ -23,17 +23,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="rawnotification",
             name="_raw_md5",
-            field=models.TextField(null=True),
+            field=models.CharField(null=True, max_length=512),
         ),
         migrations.RunPython(gen_raw_md5),
         migrations.AlterField(
             model_name="rawnotification",
             name="_raw_md5",
-            field=models.TextField(unique=True),
+            field=models.CharField(unique=True, max_length=512),
         ),
         migrations.AlterField(
             model_name="rawnotification",
             name="raw",
-            field=models.TextField(),
+            field=models.CharField(max_length=512),
         ),
     ]
