@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.2
+
+### Fixed
+
+- #162 - Fix inability to refresh OAuth authentication before token expires
+
 ## v0.4.1 - 2021-11-29
 
 ### Fixed
