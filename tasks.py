@@ -3,7 +3,6 @@
 import os
 from distutils.util import strtobool
 from invoke import Collection, task as invoke_task
-from dotenv import dotenv_values
 
 
 def is_truthy(arg):

@@ -46,7 +46,6 @@ pylint-django = "*"
 pydocstyle = "*"
 flake8 = "*"
 parameterized = "*"
-python-dotenv = "^0.19.1"
 mysqlclient = "*"
 
 
