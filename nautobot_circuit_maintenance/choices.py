@@ -18,6 +18,8 @@ class CircuitMaintenanceStatusChoices(ChoiceSet):
     COMPLETED = "COMPLETED"
     RE_SCHEDULED = "RE-SCHEDULED"
 
+    UNKNOWN = "UNKNOWN"
+
     CHOICES = (
         (TENTATIVE, "TENTATIVE"),
         (CONFIRMED, "CONFIRMED"),
@@ -25,6 +27,7 @@ class CircuitMaintenanceStatusChoices(ChoiceSet):
         (IN_PROCESS, "IN-PROCESS"),
         (COMPLETED, "COMPLETED"),
         (RE_SCHEDULED, "RE-SCHEDULED"),
+        (UNKNOWN, "UNKNOWN"),
     )
 
 

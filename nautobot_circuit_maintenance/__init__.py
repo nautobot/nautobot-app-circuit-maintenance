@@ -7,19 +7,21 @@ except ImportError:
 
 __version__ = metadata.version(__name__)
 
+from django.apps import apps as global_apps
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
 
 
-def custom_fields_extension(sender, **kwargs):  # pylint: disable=unused-argument
+def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: disable=unused-argument
     """Add extended custom fields."""
+    # pylint: disable=invalid-name
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    Provider = apps.get_model("circuits", "Provider")
+    CustomField = apps.get_model("extras", "CustomField")
     # pylint: disable=import-outside-toplevel
-    from django.contrib.contenttypes.models import ContentType
-    from nautobot.circuits.models import Provider
     from nautobot.extras.choices import CustomFieldTypeChoices
-    from nautobot.extras.models import CustomField
 
     for provider_cf_dict in [
         {
@@ -37,15 +39,15 @@ def custom_fields_extension(sender, **kwargs):  # pylint: disable=unused-argumen
         field.content_types.set([ContentType.objects.get_for_model(Provider)])
 
 
-def import_notification_sources(sender, **kwargs):  # pylint: disable=unused-argument
+def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylint: disable=unused-argument
     """Import Notification Sources from Nautobot_configuration.py.
 
     This is a temporary solution until a secrets backend is implemented.
     For now, we create the Notification Sources in the DB but the secrets are fetched via ENV.
     """
-    # pylint: disable=import-outside-toplevel
-    from nautobot.circuits.models import Provider
-    from nautobot_circuit_maintenance.models import NotificationSource
+    # pylint: disable=invalid-name
+    Provider = apps.get_model("circuits", "Provider")
+    NotificationSource = apps.get_model("nautobot_circuit_maintenance", "NotificationSource")
 
     desired_notification_sources_names = []
     for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
