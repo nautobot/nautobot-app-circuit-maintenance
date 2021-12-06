@@ -7,6 +7,7 @@ from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
 from circuit_maintenance_parser import init_provider, NotificationData
+from circuit_maintenance_parser.output import Status
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     create_circuit_maintenance,
@@ -387,6 +388,38 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(1, len(Note.objects.all()))
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "unknown-cids")
 
+    def test_create_circuit_maintenance_unknown_status(self):
+        """Test create_circuit_maintenance with an unknown status."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        RawNotification.objects.get_or_create(
+            subject=test_notification.subject,
+            provider=provider,
+            raw=test_notification.raw_payload,
+            sender=test_notification.sender,
+            source=self.notification_source,
+            stamp=datetime.now(timezone.utc),
+        )
+        parser_provider = init_provider(provider_type=test_notification.provider_type)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
+        parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
+        parsed_maintenance.status = "No idea!"
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
+            create_circuit_maintenance(
+                self.job,
+                test_notification,
+                f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+                parsed_maintenance,
+                provider,
+            )
+
+        self.assertEqual(1, len(CircuitMaintenance.objects.all()))
+        self.assertEqual(2, len(CircuitImpact.objects.all()))
+        self.assertEqual(0, len(Note.objects.all()))
+
+        self.assertEqual("UNKNOWN", CircuitMaintenance.objects.first().status)
+
     def test_update_circuit_maintenance(self):
         """Test update_circuit_maintenance."""
         notification_data = get_base_notification_data()
@@ -450,6 +483,31 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
         # Verify that both parsed notifications are linked to the CircuitMaintenance for future reference
         self.assertEqual(len(circuit_maintenance_entry.parsednotification_set.all()), 2)
+
+    def test_update_circuit_maintenance_status_no_change(self):
+        """Test update_circuit_maintenance with a "NO-CHANGE" status value."""
+        notification_data = get_base_notification_data()
+        test_notification = generate_email_notification(notification_data, self.source)
+        provider = Provider.objects.get(slug=test_notification.provider_type)
+        with patch(
+            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+        ) as mock_get_notifications:
+            mock_get_notifications.return_value = [test_notification]
+            self.job.run(commit=True)
+
+        # Adding changes
+        parser_provider = init_provider(provider_type=test_notification.provider_type)
+        data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
+        parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
+        parsed_maintenance.status = "NO-CHANGE"
+        maintenance_id = f"{provider.slug}-{parsed_maintenance.maintenance_id}"
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+
+        update_circuit_maintenance(self.job, test_notification, circuit_maintenance_entry, parsed_maintenance, provider)
+
+        circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
+        # Status should not be changed:
+        self.assertEqual("CONFIRMED", circuit_maintenance_entry.status)
 
     def test_create_or_update_circuit_maintenance_truncated_fields(self):
         """Test create_or_update_circuit_maintenance with long fields that must be truncated to fit the DB."""
