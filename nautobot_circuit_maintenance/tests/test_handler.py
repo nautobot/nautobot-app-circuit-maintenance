@@ -7,7 +7,6 @@ from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
 from circuit_maintenance_parser import init_provider, NotificationData
-from circuit_maintenance_parser.output import Status
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     create_circuit_maintenance,
@@ -405,14 +404,13 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
         parsed_maintenance.status = "No idea!"
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
-            create_circuit_maintenance(
-                self.job,
-                test_notification,
-                f"{provider.slug}-{parsed_maintenance.maintenance_id}",
-                parsed_maintenance,
-                provider,
-            )
+        create_circuit_maintenance(
+            self.job,
+            test_notification,
+            f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+            parsed_maintenance,
+            provider,
+        )
 
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(2, len(CircuitImpact.objects.all()))
