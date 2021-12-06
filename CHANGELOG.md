@@ -5,6 +5,7 @@
 ### Fixed
 
 - #162 - Fix inability to refresh OAuth authentication before token expires
+- #166 - Handle `NO-CHANGE` status from parser (networktocode/circuit-maintenance-parser#125), handle unknown statuses from parser, fix potential error during `nautobot-server post_migrate` signal handling.
 
 ## v0.4.1 - 2021-11-29
 
