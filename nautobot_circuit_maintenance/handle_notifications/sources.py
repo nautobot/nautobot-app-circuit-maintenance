@@ -14,8 +14,9 @@ import imaplib
 
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
-from google.oauth2 import service_account
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
 from django.conf import settings
@@ -590,7 +591,14 @@ class GmailAPIOauth(GmailAPI):
 
         if force_refresh or not self.credentials or not self.credentials.valid:
             if self.credentials and self.credentials.refresh_token and (self.credentials.expired or force_refresh):
-                self.credentials.refresh(Request())
+                try:
+                    self.credentials.refresh(Request())
+                except RefreshError:
+                    # Bad token, discard it
+                    notification_source._token = b""  # pylint: disable=protected-access
+                    notification_source.save()
+                    raise
+
                 notification_source.token = self.credentials
                 notification_source.save()
             else:
