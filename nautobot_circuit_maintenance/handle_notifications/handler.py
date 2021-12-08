@@ -10,6 +10,7 @@ from circuit_maintenance_parser import ProviderError, init_provider, Notificatio
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import Job, BooleanVar
 
+from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
@@ -45,7 +46,11 @@ def create_circuit_maintenance(
         start_time=datetime.datetime.fromtimestamp(parser_maintenance.start, tz=datetime.timezone.utc),
         end_time=datetime.datetime.fromtimestamp(parser_maintenance.end, tz=datetime.timezone.utc),
         description=parser_maintenance.summary,
-        status=parser_maintenance.status,
+        status=(
+            parser_maintenance.status
+            if parser_maintenance.status in CircuitMaintenanceStatusChoices.values()
+            else CircuitMaintenanceStatusChoices.UNKNOWN
+        ),
     )
     circuit_maintenance_entry.save()
     logger.log_success(obj=circuit_maintenance_entry, message="Created Circuit Maintenance.")
@@ -97,7 +102,11 @@ def update_circuit_maintenance(
     """Handles the update of an existent circuit maintenance."""
     maintenance_id = circuit_maintenance_entry.name
     circuit_maintenance_entry.description = parser_maintenance.summary
-    circuit_maintenance_entry.status = parser_maintenance.status
+    if parser_maintenance.status != "NO-CHANGE":
+        if parser_maintenance.status in CircuitMaintenanceStatusChoices.values():
+            circuit_maintenance_entry.status = parser_maintenance.status
+        else:
+            circuit_maintenance_entry.status = CircuitMaintenanceStatusChoices.UNKNOWN
     circuit_maintenance_entry.start_time = datetime.datetime.fromtimestamp(
         parser_maintenance.start, tz=datetime.timezone.utc
     )
