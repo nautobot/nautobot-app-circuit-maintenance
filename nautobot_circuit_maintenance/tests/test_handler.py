@@ -1,4 +1,5 @@
 """Tests for Handle Notifications methods."""
+import uuid
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
 from email.message import EmailMessage
@@ -61,13 +62,13 @@ END:VCALENDAR
     email_message = EmailMessage()
     email_message["From"] = "Sender <sender@example.com>"
     email_message["Date"] = format_datetime(notification_data["stamp"])
-    email_message["Subject"] = "Test subject"
+    email_message["Subject"] = "Test subject " + "1234567890" * 20
     email_message["Content-Type"] = "text/calendar"
     email_message.set_payload(template.render(obj=notification_data).encode("utf-8"))
 
     return MaintenanceNotification(
         msg_id=b"12345",
-        subject="Test subject",
+        subject="Test subject " + "1234567890" * 20,
         sender="sender@example.com",
         source=source,
         raw_payload=email_message.as_bytes(),
@@ -164,6 +165,20 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "parsed")
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "unknown-cids")
             self.job.log_debug.assert_called_with("1 notifications processed.")
+
+            # Do some checking of string representation length for potential change-logging issues
+            # (ObjectChange.object_repr field has a limit of 200 characters)
+            for model in (
+                RawNotification,
+                ParsedNotification,
+                CircuitMaintenance,
+                CircuitImpact,
+                Note,
+            ):
+                objectchange = model.objects.first().to_objectchange("create")
+                objectchange.request_id = uuid.uuid4()
+                objectchange.save()
+                self.assertLessEqual(len(str(model.objects.first())), 200)
 
     def test_run_no_notifications(self):
         """Test when a there are no notifications."""
@@ -335,7 +350,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification = generate_email_notification(notification_data, self.source)
         provider = Provider.objects.get(slug=test_notification.provider_type)
         RawNotification.objects.get_or_create(
-            subject=test_notification.subject,
+            subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
@@ -363,7 +378,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification = generate_email_notification(notification_data, self.source)
         provider = Provider.objects.get(slug=test_notification.provider_type)
         RawNotification.objects.get_or_create(
-            subject=test_notification.subject,
+            subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
@@ -393,7 +408,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification = generate_email_notification(notification_data, self.source)
         provider = Provider.objects.get(slug=test_notification.provider_type)
         RawNotification.objects.get_or_create(
-            subject=test_notification.subject,
+            subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
             raw=test_notification.raw_payload,
             sender=test_notification.sender,
@@ -579,7 +594,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification = generate_email_notification(notification_data, self.source)
         provider = Provider.objects.get(slug=test_notification.provider_type)
         RawNotification.objects.get_or_create(
-            subject=test_notification.subject,
+            subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
             raw=test_notification.raw_payload,
             sender=test_notification.sender,

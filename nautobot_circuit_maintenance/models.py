@@ -110,7 +110,8 @@ class CircuitImpact(OrganizationalModel):
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"Circuit {self.circuit} with impact {self.impact}"
+        # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
+        return f"Circuit {self.circuit} with impact {self.impact}"[:200]
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
@@ -151,7 +152,8 @@ class Note(OrganizationalModel):
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"{self.title}"
+        # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
+        return f"{self.title}"[:200]
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
@@ -298,7 +300,8 @@ class ParsedNotification(OrganizationalModel):
 
     def __str__(self):
         """String value for HTML rendering."""
-        return f"Parsed notification for {self.raw_notification.subject}"
+        # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
+        return f"Parsed notification for {self.raw_notification.subject}"[:200]
 
     def get_absolute_url(self):
         """Returns reverse loop up URL."""
