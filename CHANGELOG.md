@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.3
+
+### Fixed
+
+- #172 - Fix potential `DataError: value too long for type` when handling especially long email subjects
+
 ## v0.4.2
 
 ### Fixed
