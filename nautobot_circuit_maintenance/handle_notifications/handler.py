@@ -12,7 +12,6 @@ from nautobot.extras.jobs import Job, BooleanVar
 
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import (
-    MAX_NOTE_TITLE_LENGTH,
     CircuitImpact,
     CircuitMaintenance,
     MAX_MAINTENANCE_NAME_LENGTH,
