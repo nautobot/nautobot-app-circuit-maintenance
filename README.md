@@ -303,6 +303,14 @@ The project is coming with a CLI helper based on [invoke](http://www.pyinvoke.or
 
 Each command can be executed with `invoke <command>`. All commands support the arguments `--nautobot-ver` and `--python-ver` if you want to manually define the version of Python and Nautobot to use. Each command also has its own help `invoke <command> --help`
 
+By default, all the development environment uses the Postgres DB backend, if you want to use Mysql instead, you must export the following Invoke environment variables:
+
+```bash
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_ENGINE=django.db.backends.mysql
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_PORT=3306
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_USER=root
+```
+
 #### Local dev environment
 
 ```no-highlight
@@ -333,14 +341,6 @@ Each command can be executed with `invoke <command>`. All commands support the a
   pylint           Run pylint code analysis.
   tests            Run all tests for this plugin.
   unittest         Run Django unit tests for the plugin.
-```
-
-`unittest` uses by default the Postgres DB backend, if you want to test Mysql you must use Invoke environment variables:
-
-```bash
-export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_ENGINE=django.db.backends.mysql
-export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_PORT=3306
-export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_USER=root
 ```
 
 ## Questions
