@@ -156,7 +156,7 @@ class Migration(migrations.Migration):
                     "_custom_field_data",
                     models.JSONField(blank=True, default=dict, encoder=django.core.serializers.json.DjangoJSONEncoder),
                 ),
-                ("title", models.CharField(max_length=500)),
+                ("title", models.CharField(max_length=200)),
                 ("level", models.CharField(blank=True, default="INFO", max_length=50, null=True)),
                 ("comment", models.TextField()),
                 ("date", models.DateTimeField(default=django.utils.timezone.now)),

@@ -23,6 +23,7 @@ MAX_MAINTENANCE_NAME_LENGTH = 100
 MAX_NOTIFICATION_SENDER_LENGTH = 200
 MAX_NOTIFICATION_SUBJECT_LENGTH = 200
 MAX_NOTIFICATION_TOTAL_LENGTH = 16384
+MAX_NOTE_TITLE_LENGTH = 200
 
 
 @extras_features(
@@ -134,7 +135,7 @@ class Note(OrganizationalModel):
     """Model for maintenance notes."""
 
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
-    title = models.CharField(max_length=500)
+    title = models.CharField(max_length=MAX_NOTE_TITLE_LENGTH)
     level = models.CharField(
         default=NoteLevelChoices.INFO,
         max_length=50,
