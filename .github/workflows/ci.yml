@@ -145,7 +145,7 @@ jobs:
       - name: "Build Container"
         run: "poetry run invoke build"
       - name: "Run Tests"
-        run: "poetry run invoke unittest --failfast --keepdb"
+        run: "poetry run invoke unittest --failfast"
     needs:
       - "pylint"
   publish_gh:

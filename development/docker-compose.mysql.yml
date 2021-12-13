@@ -10,7 +10,7 @@ services:
       - "dev.env"
       - "creds.env"
     volumes:
-      - "lcm_mysql_data:/var/lib/mysql"
+      - "mysql_data:/var/lib/mysql"
     # ports:
     #   - "3306:3306"
     healthcheck:
@@ -18,4 +18,4 @@ services:
       timeout: "20s"
       retries: "10"
 volumes:
-  lcm_mysql_data:  # yamllint disable-line rule:empty-values
+  mysql_data:  # yamllint disable-line rule:empty-values
