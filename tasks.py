@@ -48,7 +48,8 @@ namespace.configure(
             "compose_files": ["docker-compose.redis.yml", "docker-compose.base.yml", "docker-compose.dev.yml"],
             "nautobot_db_engine": "django.db.backends.postgresql",
             "nautobot_db_port": "5432",
-            "nautobot_db_user": "nautobot",
+            # Keeping consistent typo in user to test compatibility
+            "nautobot_db_user": "nautbot",
         }
     }
 )
