@@ -5,7 +5,10 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.utilities.forms import (
     BootstrapMixin,
     DateTimePicker,
+    DynamicModelMultipleChoiceField,
+    StaticSelect2,
 )
+from nautobot.utilities.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import (
     AddRemoveTagsForm,
     CustomFieldBulkEditForm,
@@ -142,8 +145,12 @@ class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldFilterForm):
     model = RawNotification
 
     q = forms.CharField(required=False, label="Search")
+    provider = DynamicModelMultipleChoiceField(queryset=Provider.objects.all(), to_field_name="slug", required=False)
     sender = forms.CharField(required=False)
-    parsed = forms.BooleanField(required=False, widget=BooleanWidget())
+    source = DynamicModelMultipleChoiceField(
+        queryset=NotificationSource.objects.all(), to_field_name="slug", required=False
+    )
+    parsed = forms.NullBooleanField(required=False, widget=StaticSelect2(choices=BOOLEAN_WITH_BLANK_CHOICES))
     since = forms.DateTimeField(required=False, widget=DateTimePicker())
 
 

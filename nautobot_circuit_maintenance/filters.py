@@ -4,6 +4,7 @@ import logging
 import django_filters
 from django.db.models import Q
 
+from nautobot.circuits.models import Provider
 from nautobot.utilities.filters import BaseFilterSet
 from .models import CircuitMaintenance, CircuitImpact, RawNotification, NotificationSource
 
@@ -78,10 +79,22 @@ class RawNotificationFilterSet(BaseFilterSet):
     )
 
     since = django_filters.DateTimeFilter(field_name="stamp", lookup_expr="gte")
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name="provider__slug",
+        queryset=Provider.objects.all(),
+        to_field_name="slug",
+        label="Provider (slug)",
+    )
+    source = django_filters.ModelMultipleChoiceFilter(
+        field_name="source__slug",
+        queryset=NotificationSource.objects.all(),
+        to_field_name="slug",
+        label="Notification Source (slug)",
+    )
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = ["provider", "sender", "source", "parsed"]
+        fields = ["sender", "parsed"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""
@@ -92,14 +105,15 @@ class RawNotificationFilterSet(BaseFilterSet):
 
 
 class NotificationSourceFilterSet(BaseFilterSet):
-    """Filter capabilities for Notifiaction Source."""
+    """Filter capabilities for Notification Source."""
 
     q = django_filters.CharFilter(
         method="search",
         label="Search",
     )
 
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
+    class Meta:
+        """Meta class attributes for NotificationSourceFilterSet."""
         model = NotificationSource
         fields = ["name", "slug", "attach_all_providers"]
 

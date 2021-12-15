@@ -219,7 +219,7 @@ class RawNotificationListView(generic.ObjectListView):
     """View for listing all raw notifications."""
 
     table = tables.RawNotificationTable
-    queryset = models.RawNotification.objects.all()
+    queryset = models.RawNotification.objects.order_by("-stamp")
     filterset = filters.RawNotificationFilterSet
     filterset_form = forms.RawNotificationFilterSetForm
     action_buttons = ("export",)
