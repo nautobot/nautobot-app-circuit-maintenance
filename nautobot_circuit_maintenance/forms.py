@@ -7,6 +7,7 @@ from nautobot.utilities.forms import (
     DateTimePicker,
     DynamicModelMultipleChoiceField,
     StaticSelect2,
+    StaticSelect2Multiple,
 )
 from nautobot.utilities.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import (
@@ -17,6 +18,7 @@ from nautobot.extras.forms import (
     CustomFieldModelCSVForm,
     RelationshipModelForm,
 )
+from .choices import CircuitMaintenanceStatusChoices
 from .models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -73,19 +75,22 @@ class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldFilterForm):
 
     model = CircuitMaintenance
 
-    provider = forms.ModelChoiceField(
+    q = forms.CharField(required=False, label="Search")
+    ack = forms.NullBooleanField(required=False, widget=StaticSelect2(choices=BOOLEAN_WITH_BLANK_CHOICES))
+    status = forms.MultipleChoiceField(
+        choices=CircuitMaintenanceStatusChoices, required=False, widget=StaticSelect2Multiple()
+    )
+    provider = DynamicModelMultipleChoiceField(
         queryset=Provider.objects.all(),
+        to_field_name="slug",
         required=False,
     )
-    circuit = forms.ModelChoiceField(
+    circuit = DynamicModelMultipleChoiceField(
         queryset=Circuit.objects.all(),
         required=False,
     )
-    start_time = forms.DateTimeField(required=False, widget=DateTimePicker())
-    end_time = forms.DateTimeField(required=False, widget=DateTimePicker())
-    ack = forms.BooleanField(required=False, widget=BooleanWidget())
-
-    q = forms.CharField(required=False, label="Search")
+    start_time = forms.DateTimeField(label="Start time after", required=False, widget=DateTimePicker())
+    end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
 
 
 class CircuitMaintenanceCSVForm(CustomFieldModelCSVForm):

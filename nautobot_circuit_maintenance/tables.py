@@ -11,6 +11,8 @@ class CircuitMaintenanceTable(BaseTable):
     """Table to display maintenace model."""
 
     name = tables.LinkColumn(viewname="plugins:nautobot_circuit_maintenance:circuitmaintenance", args=[Accessor("id")])
+    circuits = tables.ManyToManyColumn(linkify_item=True)
+    providers = tables.ManyToManyColumn(linkify_item=True)
 
     pk = ToggleColumn()
 
@@ -18,7 +20,7 @@ class CircuitMaintenanceTable(BaseTable):
         """Meta for class CircuitMaintenanceTable."""
 
         model = CircuitMaintenance
-        fields = ("pk", "ack", "name", "status", "start_time", "end_time")
+        fields = ("pk", "ack", "name", "status", "providers", "circuits", "start_time", "end_time")
 
 
 class RawNotificationTable(BaseTable):
