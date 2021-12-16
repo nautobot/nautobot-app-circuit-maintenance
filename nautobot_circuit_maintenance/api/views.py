@@ -1,4 +1,7 @@
 """Views for API."""
+from django.contrib.contenttypes.models import ContentType
+from rest_framework import viewsets
+
 from nautobot.extras.api.views import CustomFieldModelViewSet
 from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 from nautobot_circuit_maintenance import filters
@@ -34,9 +37,23 @@ class MaintenanceCircuitImpactTaskView(CustomFieldModelViewSet):
     filterset_class = filters.CircuitImpactFilterSet
 
 
-class NotificationSourceTaskView(CustomFieldModelViewSet):
+class NotificationSourceTaskView(viewsets.ReadOnlyModelViewSet):
     """API view for Notification Source CRUD operations."""
 
     queryset = NotificationSource.objects.prefetch_related()
     serializer_class = NotificationSourceSerializer
     filterset_class = filters.NotificationSourceFilterSet
+
+    def get_serializer_context(self):
+        """Add custom fields to the serializer context, as in nautobot.extras.api.views.CustomFieldModelViewSet."""
+        # Gather all custom fields for the model
+        content_type = ContentType.objects.get_for_model(self.queryset.model)
+        custom_fields = content_type.custom_fields.all()
+
+        context = super().get_serializer_context()
+        context.update(
+            {
+                "custom_fields": custom_fields,
+            }
+        )
+        return context
