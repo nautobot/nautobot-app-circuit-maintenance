@@ -80,6 +80,15 @@
                         <td>Acknowledged</td>
                         <td>{{ object.ack }}</td>
                     </tr>
+                    <tr>
+                        <td>Notifying Provider</td>
+                        {% with object.parsednotification_set.first.raw_notification.provider as provider %}
+                            {% if provider %}
+                                <td><a href="{{ provider.get_absolute_url }}">{{ provider }}</a></td>
+                            {% else %}
+                                <td>{{ provider | placeholder }}</td>
+                            {% endif %}
+                        {% endwith %}
                 </table>
             </div>
         </div>
@@ -106,10 +115,10 @@
             <tbody>
                 <tr>
                     <th>ID</th>
-                    <th>Status</th>
                     <th>Impact</th>
-                    <th>Type</th>
                     <th>Provider</th>
+                    <th>Type</th>
+                    <th>Status</th>
                     <th>A Side</th>
                     <th>Z Side</th>
                     <th>Description</th>
@@ -120,18 +129,18 @@
                         <a href="{% url 'circuits:circuit' pk=circuit.circuit.id %}">{{ circuit.circuit.cid }}</a>
                     </td>
                     <td>
-                        {% if circuit.circuit.status %}
-                            <span class="label" style="color: {{circuit.circuit.get_status_color}}; background-color: #{{circuit.circuit.get_status_color}}">{{ circuit.circuit.get_status_display }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
                         {{ circuit.impact }}
                     </td>
                     <td>
-                        {{ circuit.circuit.type }}
+                        <a href="{{ circuit.circuit.provider.get_absolute_url }}">{{ circuit.circuit.provider }}</a>
                     </td>
                     <td>
-                        {{ circuit.circuit.provider }}
+                        <a href="{{ circuit.circuit.type.get_absolute_url }}">{{ circuit.circuit.type }}</a>
+                    </td>
+                    <td>
+                        {% if circuit.circuit.status %}
+                            <span class="label" style="color: {{circuit.circuit.get_status_color}}; background-color: #{{circuit.circuit.get_status_color}}">{{ circuit.circuit.get_status_display }}</span>
+                        {% endif %}
                     </td>
                     <td>
                         {{ circuit.circuit.termination_a.site }}
@@ -236,7 +245,7 @@
                         {{ parsed_notification.raw_notification.stamp }}
                     </td>
                     <td>
-                        {{ parsed_notification.json }}
+                        <pre>{{ parsed_notification.json | render_json }}</pre>
                     </td>
                 </tr>
                 {% endfor %}
