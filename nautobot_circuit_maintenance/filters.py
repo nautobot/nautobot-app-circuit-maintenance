@@ -38,6 +38,7 @@ class CircuitMaintenanceFilterSet(BaseFilterSet):
 
     class Meta:
         """Meta class attributes for CircuitMaintenanceFilterSet."""
+
         model = CircuitMaintenance
         fields = ["name", "status", "ack"]
 
@@ -115,6 +116,7 @@ class NotificationSourceFilterSet(BaseFilterSet):
 
     class Meta:
         """Meta class attributes for NotificationSourceFilterSet."""
+
         model = NotificationSource
         fields = ["name", "slug", "attach_all_providers"]
 

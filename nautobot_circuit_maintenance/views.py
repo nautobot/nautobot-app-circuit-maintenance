@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 class CircuitMaintenanceListView(generic.ObjectListView):
     """View for listing the config circuitmaintenance feature definition."""
 
-    queryset = models.CircuitMaintenance.objects.order_by("-start_time").prefetch_related(
-        "circuitimpact__circuit__provider"
-    )
+    queryset = models.CircuitMaintenance.objects.order_by("-start_time")
     table = tables.CircuitMaintenanceTable
     filterset = filters.CircuitMaintenanceFilterSet
     filterset_form = forms.CircuitMaintenanceFilterForm
