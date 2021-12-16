@@ -11,7 +11,7 @@
     <div class="row noprint">
         <div class="col-sm-8 col-md-9">
             <ol class="breadcrumb">
-                <li><a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance_list' %}">Circuit Maintenance</a></li>
+                <li><a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance_list' %}">Circuit Maintenances</a></li>
                 <li><a>{{ object.name }}</a></li>
             </ol>
         </div>
@@ -126,7 +126,7 @@
                 {% for circuit in circuits %}
                 <tr>
                     <td>
-                        <a href="{% url 'circuits:circuit' pk=circuit.circuit.id %}">{{ circuit.circuit.cid }}</a>
+                        <a href="{{ circuit.circuit.get_absolute_url }}">{{ circuit.circuit.cid }}</a>
                     </td>
                     <td>
                         {{ circuit.impact }}
@@ -191,7 +191,7 @@
                         {{ note.level }}
                     </td>
                     <td>
-                        <a href="{% url 'plugins:nautobot_circuit_maintenance:note' pk=note.id %}">{{ note.title }}</a>
+                        <a href="{{ note.get_absolute_url }}">{{ note.title }}</a>
                     </td>
                     <td>
                         {{ note.last_updated }}
@@ -239,7 +239,7 @@
                 {% for parsed_notification in parsednotification %}
                 <tr>
                     <td>
-                        <a href="{% url 'plugins:nautobot_circuit_maintenance:rawnotification' pk=parsed_notification.raw_notification.id %}">{{ parsed_notification.raw_notification.subject }}</a>
+                        <a href="{{ parsed_notification.raw_notification.get_absolute_url }}">{{ parsed_notification.raw_notification.subject }}</a>
                     </td>
                     <td>
                         {{ parsed_notification.raw_notification.stamp }}

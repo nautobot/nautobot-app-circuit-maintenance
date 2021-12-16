@@ -8,6 +8,15 @@
 {% block header %}
 
 
+<div class="row noprint">
+    <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li><a href="{% url 'plugins:nautobot_circuit_maintenance:note_list' %}">Notes</a></li>
+            <li><a>{{ object }}</a></li>
+        </ol>
+    </div>
+</div>
+
 <h1>{{ object.title }}</h1>
 
 {% include 'inc/created_updated.html' with obj=object %}
