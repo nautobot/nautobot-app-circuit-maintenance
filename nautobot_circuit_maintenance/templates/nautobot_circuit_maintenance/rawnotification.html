@@ -39,7 +39,7 @@
         </tr>
         <tr>
           <td>Provider</td>
-          <td>{{ object.provider }}</td>
+          <td><a href="{{ object.provider.get_absolute_url }}">{{ object.provider }}</a></td>
         </tr>
         <tr>
           <td>Sender</td>
@@ -47,16 +47,19 @@
         </tr>
         <tr>
           <td>Source</td>
-          <td>{{ object.source }}</td>
+          <td><a href="{{ object.source.get_absolute_url }}">{{ object.source }}</a></td>
         </tr>
         <tr>
           <td>Parsed</td>
           <td>
             {% if parsed_notification %}
-            <a href="{% url 'plugins:nautobot_circuit_maintenance:parsednotification' pk=parsed_notification.id %}"
-              >{{ object.parsed }}</a
-            >
-            {% else %} {{ object.parsed }} {% endif %}
+                <a href="{{ parsed_notification.get_absolute_url }}">{{ object.parsed }}</a>,
+                leading to maintenance <a href="{{ parsed_notification.maintenance.get_absolute_url }}">
+                    {{ parsed_notification.maintenance }}
+                </a>
+            {% else %}
+                {{ object.parsed }}
+            {% endif %}
           </td>
         </tr>
         <tr>
@@ -69,7 +72,7 @@
         </tr>
         <tr>
           <td>Raw</td>
-          <td>{{ raw_repr|linebreaks }}</td>
+          <td><pre>{{ raw_repr|linebreaks }}</pre></td>
         </tr>
       </table>
     </div>
