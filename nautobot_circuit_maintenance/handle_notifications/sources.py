@@ -14,8 +14,9 @@ import imaplib
 
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
-from google.oauth2 import service_account
+from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 
 from django.conf import settings
@@ -346,8 +347,7 @@ class IMAP(EmailSource):
     def fetch_email(self, job_logger: Job, msg_id: bytes) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID."""
         _, data = self.session.fetch(msg_id, "(RFC822)")
-        raw_email_string = data[0][1].decode("utf-8")
-        email_message = email.message_from_string(raw_email_string)
+        email_message = email.message_from_bytes(data[0][1])
 
         return self.process_email(job_logger, email_message, msg_id)
 
@@ -432,7 +432,7 @@ class GmailAPI(EmailSource):
 
         arbitrary_types_allowed = True
 
-    def load_credentials(self):
+    def load_credentials(self, force_refresh=False):
         """Load Credentials for Gmail API."""
         raise NotImplementedError
 
@@ -447,7 +447,7 @@ class GmailAPI(EmailSource):
 
     def _authentication_logic(self):
         """Inner method to run the custom class validation logic."""
-        self.load_credentials()
+        self.load_credentials(force_refresh=True)
 
     def extract_raw_payload(self, body: Dict, msg_id: str) -> bytes:
         """Extracts the raw_payload from body or attachement."""
@@ -581,7 +581,7 @@ class GmailAPIOauth(GmailAPI):
     See: https://developers.google.com/identity/protocols/oauth2/web-server
     """
 
-    def load_credentials(self):
+    def load_credentials(self, force_refresh=False):
         """Load Gmail API OAuth credentials."""
         notification_source = NotificationSource.objects.get(name=self.name)
         try:
@@ -589,9 +589,16 @@ class GmailAPIOauth(GmailAPI):
         except EOFError:
             logger.debug("Google OAuth Token has not been initialized yet.")
 
-        if not self.credentials or not self.credentials.valid:
-            if self.credentials and self.credentials.expired and self.credentials.refresh_token:
-                self.credentials.refresh(Request())
+        if force_refresh or not self.credentials or not self.credentials.valid:
+            if self.credentials and self.credentials.refresh_token and (self.credentials.expired or force_refresh):
+                try:
+                    self.credentials.refresh(Request())
+                except RefreshError:
+                    # Bad token, discard it
+                    notification_source._token = b""  # pylint: disable=protected-access
+                    notification_source.save()
+                    raise
+
                 notification_source.token = self.credentials
                 notification_source.save()
             else:
@@ -604,9 +611,9 @@ class GmailAPIOauth(GmailAPI):
 class GmailAPIServiceAccount(GmailAPI):
     """GmailAPIServiceAccount class."""
 
-    def load_credentials(self):
+    def load_credentials(self, force_refresh=False):
         """Load Gmail API Service Account credentials."""
-        if not self.credentials:
+        if force_refresh or not self.credentials:
             self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
             self.credentials = self.credentials.with_scopes(self.SCOPES + self.extra_scopes)
             self.credentials = self.credentials.with_subject(self.account)
