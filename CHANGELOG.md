@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.4
+
+- #176 - Add support for Mysql DB
+
 ## v0.4.3
 
 ### Fixed

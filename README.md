@@ -50,6 +50,11 @@ Plugin config parameters:
 
 The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [Usage](#Usage) section.
 
+Databases support:
+
+- Postgres
+- Mysql
+
 ## Usage
 
 ### 1. Define source emails per Provider
