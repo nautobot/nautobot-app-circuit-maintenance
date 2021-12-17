@@ -1,6 +1,5 @@
 """Tables for Circuit Maintenance."""
 import django_tables2 as tables
-from django_tables2.utils import Accessor
 
 from nautobot.utilities.tables import BaseTable, ToggleColumn
 
@@ -10,7 +9,9 @@ from .models import CircuitMaintenance, RawNotification, CircuitImpact, Notifica
 class CircuitMaintenanceTable(BaseTable):
     """Table to display maintenace model."""
 
-    name = tables.LinkColumn(viewname="plugins:nautobot_circuit_maintenance:circuitmaintenance", args=[Accessor("id")])
+    name = tables.Column(linkify=True)
+    circuits = tables.ManyToManyColumn(linkify_item=True)
+    providers = tables.ManyToManyColumn(linkify_item=True)
 
     pk = ToggleColumn()
 
@@ -18,16 +19,15 @@ class CircuitMaintenanceTable(BaseTable):
         """Meta for class CircuitMaintenanceTable."""
 
         model = CircuitMaintenance
-        fields = ("pk", "ack", "name", "status", "start_time", "end_time")
+        fields = ("pk", "ack", "name", "status", "providers", "circuits", "start_time", "end_time")
 
 
 class RawNotificationTable(BaseTable):
     """Table to display Raw Notifications model."""
 
-    subject = tables.LinkColumn(viewname="plugins:nautobot_circuit_maintenance:rawnotification", args=[Accessor("id")])
-    source = tables.LinkColumn(
-        viewname="plugins:nautobot_circuit_maintenance:notificationsource", args=[Accessor("source__slug")]
-    )
+    subject = tables.Column(linkify=True)
+    source = tables.Column(linkify=True)
+    provider = tables.Column(linkify=True)
 
     pk = ToggleColumn()
 
@@ -42,18 +42,23 @@ class CircuitImpactTable(BaseTable):
     """Table to display Circuit Impact model."""
 
     pk = ToggleColumn()
+    maintenance = tables.Column(linkify=True)
+    circuit = tables.Column(linkify=True)
+    impact = tables.Column(linkify=True)
 
     class Meta(BaseTable.Meta):
         """Meta for class CircuitImpactTable."""
 
         model = CircuitImpact
-        fields = ("pk", "level", "maintenance", "circuit", "impact")
+        fields = ("pk", "maintenance", "circuit", "impact")
 
 
 class NoteTable(BaseTable):
     """Table to display Note model."""
 
     pk = ToggleColumn()
+    maintenance = tables.Column(linkify=True)
+    title = tables.Column(linkify=True)
 
     class Meta(BaseTable.Meta):
         """Meta for class NoteTable."""
@@ -65,11 +70,9 @@ class NoteTable(BaseTable):
 class NotificationSourceTable(BaseTable):
     """Table to display Circuit Impact model."""
 
-    name = tables.LinkColumn(
-        viewname="plugins:nautobot_circuit_maintenance:notificationsource", args=[Accessor("slug")]
-    )
-
     pk = ToggleColumn()
+    name = tables.Column(linkify=True)
+    providers = tables.ManyToManyColumn(linkify_item=True)
 
     class Meta(BaseTable.Meta):
         """Meta for class NotificationSourceTable."""

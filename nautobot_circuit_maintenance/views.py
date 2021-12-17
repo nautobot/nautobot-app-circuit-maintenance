@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class CircuitMaintenanceListView(generic.ObjectListView):
     """View for listing the config circuitmaintenance feature definition."""
 
-    queryset = models.CircuitMaintenance.objects.all()
+    queryset = models.CircuitMaintenance.objects.order_by("-start_time")
     table = tables.CircuitMaintenanceTable
     filterset = filters.CircuitMaintenanceFilterSet
     filterset_form = forms.CircuitMaintenanceFilterForm
@@ -219,7 +219,7 @@ class RawNotificationListView(generic.ObjectListView):
     """View for listing all raw notifications."""
 
     table = tables.RawNotificationTable
-    queryset = models.RawNotification.objects.all()
+    queryset = models.RawNotification.objects.order_by("-stamp")
     filterset = filters.RawNotificationFilterSet
     filterset_form = forms.RawNotificationFilterSetForm
     action_buttons = ("export",)

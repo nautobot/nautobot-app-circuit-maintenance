@@ -4,6 +4,7 @@ import logging
 import django_filters
 from django.db.models import Q
 
+from nautobot.circuits.models import Circuit, Provider
 from nautobot.utilities.filters import BaseFilterSet
 from .models import CircuitMaintenance, CircuitImpact, RawNotification, NotificationSource
 
@@ -18,22 +19,26 @@ class CircuitMaintenanceFilterSet(BaseFilterSet):
         label="Search",
     )
 
-    # TODO: user nautobot.utilities.filters.MultiValueCharFilter
-    provider = django_filters.CharFilter(
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name="provider__slug",
+        queryset=Provider.objects.all(),
+        to_field_name="slug",
+        label="Provider (slug)",
         method="search_providers",
-        label="provider",
     )
 
-    # TODO: user nautobot.utilities.filters.MultiValueCharFilter
-    circuit = django_filters.CharFilter(
+    circuit = django_filters.ModelMultipleChoiceFilter(
+        queryset=Circuit.objects.all(),
+        label="Circuit",
         method="search_circuits",
-        label="circuit",
     )
 
     start_time = django_filters.DateTimeFilter(field_name="start_time", lookup_expr="gte")
     end_time = django_filters.DateTimeFilter(field_name="end_time", lookup_expr="lte")
 
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
+    class Meta:
+        """Meta class attributes for CircuitMaintenanceFilterSet."""
+
         model = CircuitMaintenance
         fields = ["name", "status", "ack"]
 
@@ -46,19 +51,17 @@ class CircuitMaintenanceFilterSet(BaseFilterSet):
 
     def search_providers(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search for Provider IDs."""
-        if not value or not value.strip():
+        if not value:
             return queryset
 
-        matching_maintenances = CircuitImpact.objects.filter(circuit__provider__id=value).values_list("maintenance")
-        return queryset.filter(id__in=matching_maintenances)
+        return queryset.filter(circuitimpact__circuit__provider__in=value)
 
     def search_circuits(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search for Circuit IDs."""
-        if not value or not value.strip():
+        if not value:
             return queryset
 
-        matching_maintenances = CircuitImpact.objects.filter(circuit__id=value).values_list("maintenance")
-        return queryset.filter(id__in=matching_maintenances)
+        return queryset.filter(circuitimpact__circuit__in=value)
 
 
 class CircuitImpactFilterSet(BaseFilterSet):
@@ -78,10 +81,22 @@ class RawNotificationFilterSet(BaseFilterSet):
     )
 
     since = django_filters.DateTimeFilter(field_name="stamp", lookup_expr="gte")
+    provider = django_filters.ModelMultipleChoiceFilter(
+        field_name="provider__slug",
+        queryset=Provider.objects.all(),
+        to_field_name="slug",
+        label="Provider (slug)",
+    )
+    source = django_filters.ModelMultipleChoiceFilter(
+        field_name="source__slug",
+        queryset=NotificationSource.objects.all(),
+        to_field_name="slug",
+        label="Notification Source (slug)",
+    )
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = ["provider", "sender", "source", "parsed"]
+        fields = ["sender", "parsed"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""
@@ -92,14 +107,16 @@ class RawNotificationFilterSet(BaseFilterSet):
 
 
 class NotificationSourceFilterSet(BaseFilterSet):
-    """Filter capabilities for Notifiaction Source."""
+    """Filter capabilities for Notification Source."""
 
     q = django_filters.CharFilter(
         method="search",
         label="Search",
     )
 
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
+    class Meta:
+        """Meta class attributes for NotificationSourceFilterSet."""
+
         model = NotificationSource
         fields = ["name", "slug", "attach_all_providers"]
 

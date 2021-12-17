@@ -53,6 +53,16 @@ class CircuitMaintenance(PrimaryModel):
 
     csv_headers = ["name", "start_time", "end_time", "description", "status", "ack"]
 
+    @property
+    def circuits(self):
+        """Queryset of Circuit records associated with this CircuitMaintenance."""
+        return Circuit.objects.filter(circuitimpact__maintenance=self)
+
+    @property
+    def providers(self):
+        """Queryset of Provider records associated with this CircuitMaintenance."""
+        return Provider.objects.filter(circuits__circuitimpact__maintenance=self)
+
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["start_time"]
 
