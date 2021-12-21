@@ -1,0 +1,21 @@
+---
+version: "3.4"
+
+services:
+  db:
+    image: "postgres:14-alpine"
+    env_file:
+      - "dev.env"
+      - "creds.env"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    # ports:
+    #   - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: "pg_isready --username=$$POSTGRES_USER --dbname=$$POSTGRES_DB"
+      interval: "10s"
+      timeout: "5s"
+      retries: 10
+
+volumes:
+  postgres_data: {}

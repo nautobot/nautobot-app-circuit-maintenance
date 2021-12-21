@@ -140,7 +140,7 @@ class Source(BaseModel):
             if not os.path.isfile(creds_filename):
                 raise ValueError(f"Credentials_file {creds_filename} for {name} is not available.")
 
-            with open(creds_filename) as credentials_file:
+            with open(creds_filename, encoding="utf-8") as credentials_file:
                 credentials = json.load(credentials_file)
                 if credentials.get("type") == "service_account":
                     gmail_api_class = GmailAPIServiceAccount
