@@ -1,8 +1,15 @@
 # Changelog
 
-## v0.4.4
+## v0.5.0
 
-- #176 - Add support for Mysql DB
+### Added
+
+- #159 - Add support for Mysql DB
+
+### Changed
+
+- #165 - Numerous UI/UX refinements and improvements. See #176 for details.
+
 
 ## v0.4.3
 

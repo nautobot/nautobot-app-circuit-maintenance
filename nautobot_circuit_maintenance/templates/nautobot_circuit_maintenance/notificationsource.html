@@ -7,6 +7,14 @@
 {% block title %}{{ object }}{% endblock%}
 {% block header %}
 
+<div class="row noprint">
+    <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li><a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_list' %}">Notification Sources</a></li>
+            <li><a>{{ object.name }}</a></li>
+        </ol>
+    </div>
+</div>
 
 <h1>{{ object.name }}</h1>
 
@@ -46,7 +54,7 @@
       <td>
           <ul>
               {% for provider in providers %}
-                  <li><a href="{% url 'circuits:provider' slug=provider.slug %}">{{ provider.name }}</a></li>
+                  <li><a href="{{ provider.get_absolute_url }}">{{ provider.name }}</a></li>
               {% endfor %}
           </ul>
       </td>
