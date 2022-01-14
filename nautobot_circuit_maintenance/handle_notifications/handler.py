@@ -18,6 +18,7 @@ from nautobot_circuit_maintenance.models import (
     MAX_MAINTENANCE_NAME_LENGTH,
     MAX_NOTIFICATION_SENDER_LENGTH,
     MAX_NOTIFICATION_SUBJECT_LENGTH,
+    MAX_NOTE_TITLE_LENGTH,
     Note,
     ParsedNotification,
     RawNotification,
@@ -69,7 +70,7 @@ def create_circuit_maintenance(
         else:
             note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
-                title=f"Nonexistent circuit ID {circuit.circuit_id}",
+                title=f"Nonexistent circuit ID {circuit.circuit_id}"[:MAX_NOTE_TITLE_LENGTH],
                 comment=(
                     f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
                     "maintenance."
@@ -145,7 +146,7 @@ def update_circuit_maintenance(
         else:
             note_entry, created = Note.objects.get_or_create(
                 maintenance=circuit_maintenance_entry,
-                title=f"Nonexistent circuit ID {circuit.circuit_id}",
+                title=f"Nonexistent circuit ID {circuit.circuit_id}"[:MAX_NOTE_TITLE_LENGTH],
                 comment=(
                     f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
                     "maintenance."

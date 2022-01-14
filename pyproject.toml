@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.4.3"
+version = "0.5.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
@@ -30,10 +30,14 @@ google-api-python-client = "^2.9.0"
 google-oauth = "^1.0.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.4"
+# Added due an issue with Markdown 3.3.5
+markdown = "!=3.3.5"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"
 black = "*"
+# Added pinned typed-add to overcome issues with black version
+typed-ast = "^1.5.0"
 django-debug-toolbar = "*"
 yamllint = "*"
 bandit = "*"
@@ -42,6 +46,8 @@ pylint-django = "*"
 pydocstyle = "*"
 flake8 = "*"
 parameterized = "*"
+mysqlclient = "*"
+
 
 [tool.poetry.extras]
 metrics = ["nautobot-capacity-metrics"]

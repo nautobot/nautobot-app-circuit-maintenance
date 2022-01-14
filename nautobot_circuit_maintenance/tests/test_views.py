@@ -24,7 +24,7 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     model = CircuitMaintenance
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
@@ -64,7 +64,7 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     model = CircuitImpact
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
@@ -134,7 +134,7 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
     model = Note
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
@@ -179,7 +179,7 @@ class NotificationSourceTest(
     model = NotificationSource
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
@@ -271,7 +271,7 @@ class RawNotificationTest(
     model = RawNotification
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
@@ -323,7 +323,7 @@ class ParsedNotificationTest(
     model = ParsedNotification
 
     def _get_base_url(self):
-        return "plugins:{}:{}_{{}}".format(self.model._meta.app_label, self.model._meta.model_name)
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""

@@ -46,9 +46,14 @@ Plugin config parameters:
 - `raw_notification_initial_days_since`: define how many days back the plugin will check for `RawNotification`s for each
   `NotificationSource`, in order to limit the number of notifications to be processed on the first run of the plugin.
   In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to **7 days**.
-- `raw_notification_size`: define how many bytes from a notification will be stored in the database to not store too big objects. If not defined, it defaults to **8192** bytes.
+- `raw_notification_size`: define how many bytes from a notification will be stored in the database to not store too big objects (maximum allowed is **16384** bytes). If not defined, it defaults to **8192** bytes.
 
 The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [Usage](#Usage) section.
+
+Databases support:
+
+- Postgres
+- Mysql
 
 ## Usage
 
@@ -131,7 +136,7 @@ There are also the following optional attributes:
   - `out-of-sequence` - Parsing of the message determined that it predates the latest already-processed message relevant to the same circuit maintenance event, so it is out of sequence.
   - `unknown-cids` - Parsing of the message determined that it references one or more circuit IDs (CIDs) that could not be found within Nautobot's database.
 
-> If you want to use the `labels` feature, you *must* include `"https://www.googleapis.com/auth/gmail.modify"` in the `extra_scopes` list so that the plugin will be allowed to make changes to the Gmail messages to apply the labels.
+> If you want to use the `labels` feature, you _must_ include `"https://www.googleapis.com/auth/gmail.modify"` in the `extra_scopes` list so that the plugin will be allowed to make changes to the Gmail messages to apply the labels.
 
 ```py
 PLUGINS_CONFIG = {
@@ -175,8 +180,8 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
 6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the appropriate scopes:
-    - `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com` are mandatory
-    - `https://www.googleapis.com/auth/gmail.modify` is additionally required if you want to use the automatic message labeling feature.
+   - `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com` are mandatory
+   - `https://www.googleapis.com/auth/gmail.modify` is additionally required if you want to use the automatic message labeling feature.
 7. Save the new client configuration by clicking _Authorize_.
 
 ###### 2.1.2.2 OAuth
@@ -302,6 +307,14 @@ The project is following Network to Code software development guideline and is l
 The project is coming with a CLI helper based on [invoke](http://www.pyinvoke.org/) to help setup the development environment. The commands are listed below in 3 categories `dev environment`, `utility` and `testing`.
 
 Each command can be executed with `invoke <command>`. All commands support the arguments `--nautobot-ver` and `--python-ver` if you want to manually define the version of Python and Nautobot to use. Each command also has its own help `invoke <command> --help`
+
+By default, all the development environment uses the Postgres DB backend, if you want to use Mysql instead, you must export the following Invoke environment variables:
+
+```bash
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_ENGINE=django.db.backends.mysql
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_PORT=3306
+export INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_DB_USER=root
+```
 
 #### Local dev environment
 

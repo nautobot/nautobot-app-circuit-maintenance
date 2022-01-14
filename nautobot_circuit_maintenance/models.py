@@ -22,6 +22,8 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
 MAX_MAINTENANCE_NAME_LENGTH = 100
 MAX_NOTIFICATION_SENDER_LENGTH = 200
 MAX_NOTIFICATION_SUBJECT_LENGTH = 200
+MAX_NOTIFICATION_TOTAL_LENGTH = 16384
+MAX_NOTE_TITLE_LENGTH = 200
 
 
 @extras_features(
@@ -52,6 +54,16 @@ class CircuitMaintenance(PrimaryModel):
     ack = models.BooleanField(default=False, null=True, blank=True)
 
     csv_headers = ["name", "start_time", "end_time", "description", "status", "ack"]
+
+    @property
+    def circuits(self):
+        """Queryset of Circuit records associated with this CircuitMaintenance."""
+        return Circuit.objects.filter(circuitimpact__maintenance=self)
+
+    @property
+    def providers(self):
+        """Queryset of Provider records associated with this CircuitMaintenance."""
+        return Provider.objects.filter(circuits__circuitimpact__maintenance=self)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["start_time"]
@@ -134,7 +146,7 @@ class Note(OrganizationalModel):
     """Model for maintenance notes."""
 
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
-    title = models.TextField()
+    title = models.CharField(max_length=MAX_NOTE_TITLE_LENGTH)
     level = models.CharField(
         default=NoteLevelChoices.INFO,
         max_length=50,
@@ -241,7 +253,7 @@ def add_provider_to_email_sources(sender, instance, created, **kwargs):  # pylin
 class RawNotification(OrganizationalModel):
     """Model for maintenance notifications in raw format."""
 
-    raw = models.BinaryField()
+    raw = models.BinaryField(max_length=MAX_NOTIFICATION_TOTAL_LENGTH)
     subject = models.CharField(max_length=MAX_NOTIFICATION_SUBJECT_LENGTH)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
     sender = models.CharField(max_length=MAX_NOTIFICATION_SENDER_LENGTH, default="", null=True, blank=True)
@@ -257,7 +269,8 @@ class RawNotification(OrganizationalModel):
     def save(self, *args, **kwargs):
         """Custom save for RawNotification."""
         # Limiting the size of the notification stored.
-        self.raw = self.raw[: PLUGIN_SETTINGS.get("raw_notification_size")]
+        notification_length = min(PLUGIN_SETTINGS.get("raw_notification_size"), MAX_NOTIFICATION_TOTAL_LENGTH)
+        self.raw = self.raw[:notification_length]
         super().save(*args, **kwargs)
 
     def __str__(self):
