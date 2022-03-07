@@ -202,11 +202,9 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/gmail_api_explorer_label_ids.png" class="center">
 </p>
 
-#### 2.2 Run `nautobot-server post_upgrade` command (if it's not the first time you run Nautobot)
+#### 2.2 Run `nautobot-server post_upgrade` command
 
-[post-upgrade](https://nautobot.readthedocs.io/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands, and it's used after changing the `nautobot_config.py` to apply the changes.
-
-> This only applies if you are changing a previously running Nautobot
+The [`nautobot-server post_upgrade`](https://nautobot.readthedocs.io/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
 
 
 #### 2.3 Add `Providers` to the Notification Sources
