@@ -202,7 +202,12 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/gmail_api_explorer_label_ids.png" class="center">
 </p>
 
-#### 2.2 Add `Providers` to the Notification Sources
+#### 2.2 Run `nautobot-server post_upgrade` command
+
+The [`nautobot-server post_upgrade`](https://nautobot.readthedocs.io/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
+
+
+#### 2.3 Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 
