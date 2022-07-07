@@ -47,6 +47,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         average_maintenance_duration = str(total_duration_in_minutes / CircuitMaintenance.objects.count()) + " minutes"
 
         # Get count of upcoming maintenances
+        upcoming_maintenance_count = self.calculate_future_maintenances()
 
         # Get average number of maintenances per carrier
 
@@ -57,7 +58,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             "Historical - 30 Days": len(historical_matrix["past_30_days_maintenance"]),
             "Historical - 365 Days": len(historical_matrix["past_365_days_maintenance"]),
             "Average Duration of Maintenances": average_maintenance_duration,
-            "Upcoming Outstanding Maintenances": "TBD",
+            "Future Maintenances": upcoming_maintenance_count,
             "Average Number of Maintenances Per Month": "TBD",
             "Average Number of Maintenances Per Carrier": "TBD",
         }
@@ -131,6 +132,20 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             "past_365_days_maintenance": self.get_maintenance_past_n_days(-365),
         }
         return return_dict
+
+    def calculate_future_maintenances(self):
+        """Method to calculate future maintenances.
+
+        Returns:
+            int: Count of future maintenances
+        """
+        today = datetime.date.today()
+        count = 0
+        for ckt_maint in self.queryset:
+            if ckt_maint.start_time.date() > today:
+                count += 1
+
+        return count
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
