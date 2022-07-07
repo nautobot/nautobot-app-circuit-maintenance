@@ -25,13 +25,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
     filterset_form = forms.CircuitMaintenanceFilterForm
     table = tables.CircuitMaintenanceTable
     template_name = "nautobot_circuit_maintenance/circuit_maintenance_overview.html"
-    queryset = models.CircuitMaintenance.objects.all()
+    queryset = models.CircuitMaintenance.objects.all()  # Needs to remain all objects, otherwise other calcs will fail.
 
     def setup(self, request, *args, **kwargs):
         """Using request object to perform filtering based on query params."""
         super().setup(request, *args, **kwargs)
-        all_maintenances = CircuitMaintenance.objects.all()
-
         upcoming_days_maintenances = self.get_maintenances_next_n_days(n_days=7)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
@@ -42,7 +40,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         ###############################################################
         total_duration_in_minutes = 0
 
-        for ckt_maint in all_maintenances:
+        for ckt_maint in self.queryset:
             duration = ckt_maint.end_time - ckt_maint.start_time
             total_duration_in_minutes += round(duration.seconds / 60.0, 0)
 
@@ -78,8 +76,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
 
         return self.extra_content
 
-    @staticmethod
-    def get_maintenances_next_n_days(n_days: int):
+    def get_maintenances_next_n_days(self, n_days: int):
         """Gets maintenances in the next n number of days.
 
         Args:
@@ -90,7 +87,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         """
         today = datetime.date.today()
         end_date = today + datetime.timedelta(days=n_days)
-        maintenances = CircuitMaintenance.objects.all()
+        maintenances = self.queryset
         return_list = []
         for maintenance in maintenances:
             if today <= maintenance.start_time.date() <= end_date:
@@ -98,8 +95,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
 
         return return_list
 
-    @staticmethod
-    def get_maintenance_past_n_days(n_days: int):
+    def get_maintenance_past_n_days(self, n_days: int):
         """Gets maintenances in the past n number of days.
 
         Args:
@@ -107,7 +103,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         """
         today = datetime.date.today()
         end_date = today + datetime.timedelta(days=n_days)
-        maintenances = CircuitMaintenance.objects.all()
+        maintenances = self.queryset
         return_list = []
         for maintenance in maintenances:
             if end_date <= maintenance.start_time.date() < today:
