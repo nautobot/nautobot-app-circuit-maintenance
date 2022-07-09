@@ -167,11 +167,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             str(ordered_ckt_maintenance.last().start_time.date()),
         ]
         start, end = [datet.strptime(_, "%Y-%m-%d") for _ in dates]
-        total_months = lambda dt: dt.month + 12 * dt.year
+        total_months = lambda dt: dt.month + 12 * dt.year  # noqa
         month_list = []
         for tot_m in range(total_months(start) - 1, total_months(end)):
-            y, m = divmod(tot_m, 12)
-            month_list.append(datet(y, m + 1, 1).strftime("%Y-%m"))
+            year, month = divmod(tot_m, 12)
+            month_list.append(datet(year, month + 1, 1).strftime("%Y-%m"))
         return month_list
 
     def get_maintenances_per_month(self):
