@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.5.0b1"
+version = "0.5.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
@@ -19,7 +19,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.7"
 nautobot = "*"
 nautobot-capacity-metrics = {version = "*", optional = true }
 # nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}

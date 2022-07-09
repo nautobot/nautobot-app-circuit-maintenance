@@ -1,4 +1,4 @@
-ARG NAUTOBOT_VER="1.0.1"
+ARG NAUTOBOT_VER="1.3.5"
 ARG PYTHON_VER=3.8
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
 
@@ -9,7 +9,7 @@ ARG NAUTOBOT_ROOT=/opt/nautobot
 
 ENV NAUTOBOT_ROOT ${NAUTOBOT_ROOT}
 
-RUN apt-get update && apt-get install -y gcc libmariadb-dev-compat libmariadb-dev
+RUN apt-get update && apt-get install -y gcc libmariadb-dev-compat libmariadb-dev libgeos-dev
 
 WORKDIR $NAUTOBOT_ROOT
 
