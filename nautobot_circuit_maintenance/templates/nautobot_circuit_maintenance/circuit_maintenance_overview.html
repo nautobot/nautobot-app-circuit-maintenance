@@ -48,8 +48,8 @@
             <table class="table table-hover table-headings">
                 <thead>
                     <tr class="even">
-                        <th>Site Name</th>
                         <th>Circuit ID</th>
+                        <th>Sites</th>
                         <th>Circuit Status</th>
                         <th>Maintenance Start</th>
                     </tr>
@@ -59,17 +59,14 @@
                         {% for maintenance in upcoming_maintenances %}
                             {% for circuit in maintenance.circuits %}
                             <td>
-                                {% if circuit.termination_a %}
-                                    {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
-                                <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name}}</a>
-                                    {% if circuit.termination_z and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}
-                                <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">, {{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>
-                                    {% endif %}
-                                    {% endwith %}
-                                {% endif %}
+                                <a href="{{ circuit.get_absolute_url }}">{{ circuit.cid }}</a>
                             </td>
                             <td>
-                                <a href="{{ circuit.get_absolute_url }}">{{ circuit.cid }}</a>
+                                {% if circuit.termination_a %}
+                                    {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
+                                <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name}}</a>{% if circuit.termination_z and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}, <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>{% endif %}
+                                    {% endwith %}
+                                {% endif %}
                             </td>
                             <td>
                                 {{ circuit.status.name }}

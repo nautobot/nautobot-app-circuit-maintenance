@@ -1,4 +1,5 @@
 """Views for Circuit Maintenance."""
+from datetime import datetime as datet
 import datetime
 import logging
 
@@ -8,7 +9,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from nautobot.core.views import generic
-from nautobot.circuits.models import Provider
+from nautobot.circuits.models import Circuit, Provider
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 from nautobot_circuit_maintenance.models import CircuitMaintenance
@@ -44,12 +45,14 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             duration = ckt_maint.end_time - ckt_maint.start_time
             total_duration_in_minutes += round(duration.seconds / 60.0, 0)
 
-        average_maintenance_duration = str(total_duration_in_minutes / CircuitMaintenance.objects.count()) + " minutes"
+        circuit_maint_count = CircuitMaintenance.objects.count()
+        if circuit_maint_count > 0:
+            average_maintenance_duration = str(round(total_duration_in_minutes / circuit_maint_count, 2)) + " minutes"
+        else:
+            average_maintenance_duration = "No maintenances found."
 
         # Get count of upcoming maintenances
         upcoming_maintenance_count = self.calculate_future_maintenances()
-
-        # Get average number of maintenances per carrier
 
         # Build up a dictionary of metrics to pass into the loop within the template
         metric_values = {
@@ -59,8 +62,10 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             "Historical - 365 Days": len(historical_matrix["past_365_days_maintenance"]),
             "Average Duration of Maintenances": average_maintenance_duration,
             "Future Maintenances": upcoming_maintenance_count,
-            "Average Number of Maintenances Per Month": "TBD",
-            "Average Number of Maintenances Per Carrier": "TBD",
+            "Average Number of Maintenances Per Month": round(self.get_maintenances_per_month(), 1),
+            "Next 30 Days, Maintenance to Circuit Ratio": round(
+                len(self.get_maintenances_next_n_days(n_days=30)) / Circuit.objects.count(), 2
+            ),
         }
 
         # Build out the extra content, but this does require that there is a method of `extra_content` to be created.
@@ -146,6 +151,42 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
                 count += 1
 
         return count
+
+    @staticmethod
+    def get_month_list():
+        """Gets the list of months that circuit maintenances have happened.
+
+        In order to know which months there are needed for a calculate average number of maintenances per month.
+
+        Returns:
+            list: List of months from first to last maintenance.
+        """
+        ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
+        dates = [
+            str(ordered_ckt_maintenance.first().start_time.date()),
+            str(ordered_ckt_maintenance.last().start_time.date()),
+        ]
+        start, end = [datet.strptime(_, "%Y-%m-%d") for _ in dates]
+        total_months = lambda dt: dt.month + 12 * dt.year
+        month_list = []
+        for tot_m in range(total_months(start) - 1, total_months(end)):
+            y, m = divmod(tot_m, 12)
+            month_list.append(datet(y, m + 1, 1).strftime("%Y-%m"))
+        return month_list
+
+    def get_maintenances_per_month(self):
+        """Calculates the number of circuit maintenances per month.
+
+        Returns:
+            float: Average maintenances per month
+        """
+        # Initialize each month of maintenances
+        months = self.get_month_list()
+
+        if len(months) == 0:
+            return 0
+
+        return len(self.queryset) / len(months)
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
