@@ -69,6 +69,9 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
 
+    def test_has_advanced_tag(self):
+        pass
+
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
