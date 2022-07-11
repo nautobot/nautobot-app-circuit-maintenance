@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
+from unittest import skip
 from unittest.mock import patch
 from datetime import datetime, timezone
 from django.conf import settings
@@ -69,6 +70,7 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
 
+    @skip
     def test_has_advanced_tag(self):
         pass
 
