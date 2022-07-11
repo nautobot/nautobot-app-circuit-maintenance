@@ -96,7 +96,6 @@ disable = """,
     too-few-public-methods,
     duplicate-code,
     too-many-ancestors,
-    arguments-differ,
     """
 
 [tool.pylint.miscellaneous]
