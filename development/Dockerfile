@@ -2,6 +2,7 @@ ARG NAUTOBOT_VER="1.3.5"
 ARG PYTHON_VER=3.8
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
 
+ARG NAUTOBOT_VER=${NAUTOBOT_VER}
 
 ENV prometheus_multiproc_dir=/prom_cache
 
