@@ -766,7 +766,7 @@ Django = ">=2.2"
 
 [[package]]
 name = "drf-yasg"
-version = "1.20.0"
+version = "1.20.3"
 description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
 category = "main"
 optional = false
@@ -775,11 +775,12 @@ python-versions = ">=3.6"
 [package.dependencies]
 coreapi = ">=2.3.3"
 coreschema = ">=0.0.4"
-Django = ">=2.2.16"
+django = ">=2.2.16"
 djangorestframework = ">=3.10.3"
 inflection = ">=0.3.1"
-packaging = "*"
-"ruamel.yaml" = ">=0.15.34"
+packaging = ">=21.0"
+pytz = ">=2021.1"
+"ruamel.yaml" = ">=0.16.13"
 swagger-spec-validator = {version = ">=2.1.0", optional = true, markers = "extra == \"validation\""}
 uritemplate = ">=3.0.0"
 
@@ -877,11 +878,11 @@ grpc = ["grpcio (>=1.33.2,<2.0dev)", "grpcio-status (>=1.33.2,<2.0dev)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.52.0"
+version = "2.54.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 google-api-core = ">=1.31.5,<2.0.0 || >2.3.0,<3.0.0dev"
@@ -892,7 +893,7 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.9.0"
+version = "2.9.1"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -953,11 +954,11 @@ six = "*"
 
 [[package]]
 name = "googleapis-common-protos"
-version = "1.56.3"
+version = "1.56.4"
 description = "Common protobufs used in Google APIs"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 protobuf = ">=3.15.0,<5.0.0dev"
@@ -1277,7 +1278,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "nautobot"
-version = "1.3.7"
+version = "1.3.8"
 description = "Source of truth and network automation platform."
 category = "main"
 optional = false
@@ -1285,7 +1286,7 @@ python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
 celery = ">=5.2.3,<5.3.0"
-Django = ">=3.2.13,<3.3.0"
+Django = ">=3.2.14,<3.3.0"
 django-ajax-tables = ">=1.1.1,<1.2.0"
 django-cacheops = ">=6.0,<6.1"
 django-celery-beat = ">=2.2.1,<2.3.0"
@@ -1960,7 +1961,7 @@ pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
 name = "svgwrite"
-version = "1.4.2"
+version = "1.4.3"
 description = "A Python library to create SVG drawings."
 category = "main"
 optional = false
@@ -2089,15 +2090,15 @@ pyyaml = "*"
 
 [[package]]
 name = "zipp"
-version = "3.8.0"
+version = "3.8.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)"]
-testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.0.1)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
+docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)", "jaraco.tidelift (>=1.4)"]
+testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-cov", "pytest-enabler (>=1.3)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy (>=0.9.1)"]
 
 [extras]
 metrics = ["nautobot-capacity-metrics"]
@@ -2420,10 +2421,7 @@ drf-spectacular-sidecar = [
     {file = "drf-spectacular-sidecar-2022.7.1.tar.gz", hash = "sha256:2dd95042a515e860993bbf945a49b78c454b824507a370bd8ba43f2b51b76399"},
     {file = "drf_spectacular_sidecar-2022.7.1-py3-none-any.whl", hash = "sha256:f0c304a6f56c3064f697d6ab815f632e4c3c9d385e79c6a9e69d6d5aa210ab09"},
 ]
-drf-yasg = [
-    {file = "drf-yasg-1.20.0.tar.gz", hash = "sha256:d50f197c7f02545d0b736df88c6d5cf874f8fea2507ad85ad7de6ae5bf2d9e5a"},
-    {file = "drf_yasg-1.20.0-py2.py3-none-any.whl", hash = "sha256:8b72e5b1875931a8d11af407be3a9a5ba8776541492947a0df5bafda6b7f8267"},
-]
+drf-yasg = []
 flake8 = [
     {file = "flake8-2.3.0-py2.py3-none-any.whl", hash = "sha256:c99cc9716d6655d9c8bcb1e77632b8615bf0abd282d7abd9f5c2148cad7fc669"},
     {file = "flake8-2.3.0.tar.gz", hash = "sha256:5ee1a43ccd0716d6061521eec6937c983efa027793013e572712c4da55c7c83e"},
@@ -2443,10 +2441,7 @@ gitpython = [
     {file = "GitPython-3.1.27.tar.gz", hash = "sha256:1c885ce809e8ba2d88a29befeb385fcea06338d3640712b59ca623c220bb5704"},
 ]
 google-api-core = []
-google-api-python-client = [
-    {file = "google-api-python-client-2.52.0.tar.gz", hash = "sha256:0ae3fa7cad2102e24a587986cee53afdbc95bd69b58f2c08f8fd881a20da5f14"},
-    {file = "google_api_python_client-2.52.0-py2.py3-none-any.whl", hash = "sha256:ac8c020d4db00914df4f8981236c109959f76c699b0ded428055cf9503c737cb"},
-]
+google-api-python-client = []
 google-auth = []
 google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
@@ -2693,10 +2688,7 @@ mysqlclient = [
     {file = "mysqlclient-2.1.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:dea88c8d3f5a5d9293dfe7f087c16dd350ceb175f2f6631c9cf4caf3e19b7a96"},
     {file = "mysqlclient-2.1.1.tar.gz", hash = "sha256:828757e419fb11dd6c5ed2576ec92c3efaa93a0f7c39e263586d1ee779c3d782"},
 ]
-nautobot = [
-    {file = "nautobot-1.3.7-py3-none-any.whl", hash = "sha256:cb37e6cdafb1be4a07b8b9fae8e4192e653350da2a7d449969c406ecd3751414"},
-    {file = "nautobot-1.3.7.tar.gz", hash = "sha256:13738c7ed1f7b9141ecce4c2d0f74405f2f5e21504c1560d0e71b56b29ded38b"},
-]
+nautobot = []
 nautobot-capacity-metrics = [
     {file = "nautobot-capacity-metrics-2.0.0.tar.gz", hash = "sha256:02fbf65a335047252fbc25b10d8bb74f764501479a5528b2b02d09f24913cccd"},
     {file = "nautobot_capacity_metrics-2.0.0-py3-none-any.whl", hash = "sha256:f8cb1e70b876cf7c553b58c7336f7e54bfa492ce29f085436919a7d6dd09cddd"},
@@ -3163,10 +3155,7 @@ stevedore = [
     {file = "stevedore-3.5.0-py3-none-any.whl", hash = "sha256:a547de73308fd7e90075bb4d301405bebf705292fa90a90fc3bcf9133f58616c"},
     {file = "stevedore-3.5.0.tar.gz", hash = "sha256:f40253887d8712eaa2bb0ea3830374416736dc8ec0e22f5a65092c1174c44335"},
 ]
-svgwrite = [
-    {file = "svgwrite-1.4.2-py3-none-any.whl", hash = "sha256:ca63d76396d1f6f099a2b2d8cf1419e1c1de8deece9a2b7f4da0632067d71d43"},
-    {file = "svgwrite-1.4.2.zip", hash = "sha256:d304a929f197d31647c287c10eee0f64378058e1c83a9df83433a5980864e59f"},
-]
+svgwrite = []
 swagger-spec-validator = [
     {file = "swagger-spec-validator-2.7.4.tar.gz", hash = "sha256:2aee5e1fc0503be9f8299378b10c92169572781573c6de3315e831fd0559ba73"},
     {file = "swagger_spec_validator-2.7.4-py2.py3-none-any.whl", hash = "sha256:4e373a4db5262e7257fde17d84c5c0178327b8057985ab1be63f580bfa009855"},
@@ -3294,7 +3283,4 @@ wrapt = [
     {file = "wrapt-1.14.1.tar.gz", hash = "sha256:380a85cf89e0e69b7cfbe2ea9f765f004ff419f34194018a6827ac0e3edfed4d"},
 ]
 yamllint = []
-zipp = [
-    {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
-    {file = "zipp-3.8.0.tar.gz", hash = "sha256:56bf8aadb83c24db6c4b577e13de374ccfb67da2078beba1d037c17980bf43ad"},
-]
+zipp = []
