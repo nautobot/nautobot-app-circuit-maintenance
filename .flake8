@@ -1,7 +1,4 @@
 [flake8]
 # E501: Line length is enforced by Black, so flake8 doesn't need to check it
 # W503: Black disagrees with this rule, as does PEP 8; Black wins
-# E402: Module level import not at top of file, due to importlib check
-# E701: Flake8 Catches errors in data model
-ignore = E501, W503, E701
-exclude = nautobot_circuit_maintenance/__init__.py
+ignore = E501, W503
