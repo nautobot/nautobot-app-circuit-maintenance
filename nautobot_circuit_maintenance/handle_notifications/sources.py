@@ -41,8 +41,8 @@ T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
 class Source(BaseModel):
     """Base class to retrieve notifications. To be extended for each scheme."""
 
-    name: str  # noqa: E701
-    url: str  # noqa: E701
+    name: str
+    url: str
 
     def get_account_id(self) -> str:
         """Method to get an identifier of the related account."""
@@ -173,21 +173,21 @@ class Source(BaseModel):
 class MaintenanceNotification(BaseModel):
     """Representation of all the data related to a Maintenance Notification."""
 
-    msg_id: bytes  # noqa: E701
-    source: Source  # noqa: E701
-    sender: str  # noqa: E701
-    subject: str  # noqa: E701
-    provider_type: str  # noqa: E701
-    raw_payload: bytes  # noqa: E701
-    date: str  # noqa: E701
+    msg_id: bytes
+    source: Source
+    sender: str
+    subject: str
+    provider_type: str
+    raw_payload: bytes
+    date: str
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
     """Abstract class that shares some methods and attributes accross email based sources."""
 
-    account: str  # noqa: E701
+    account: str
     emails_to_fetch = []
-    source_header: str = "From"  # noqa: E701
+    source_header: str = "From"
 
     def get_account_id(self) -> str:
         """Method to get an identifier of the related account."""
@@ -307,11 +307,11 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 class IMAP(EmailSource):
     """IMAP class, extending Source class."""
 
-    password: str  # noqa: E701
-    imap_server: str  # noqa: E701
-    imap_port: int = 993  # noqa: E701
+    password: str
+    imap_server: str
+    imap_port: int = 993
 
-    session: Optional[imaplib.IMAP4_SSL] = None  # noqa: E701
+    session: Optional[imaplib.IMAP4_SSL] = None
 
     class Config:
         """Pydantic BaseModel config."""
@@ -415,17 +415,17 @@ class IMAP(EmailSource):
 class GmailAPI(EmailSource):
     """GmailAPI class."""
 
-    credentials_file: str  # noqa: E701
-    account: str  # noqa: E701
-    service: Optional[Resource] = None  # noqa: E701
-    credentials: Optional[Union[service_account.Credentials, Credentials]] = None  # noqa: E701
+    credentials_file: str
+    account: str
+    service: Optional[Resource] = None
+    credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
     # The required scope for baseline functionality (add gmail.modify permission in extra_scopes to enable tagging)
     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
-    extra_scopes: List[str] = []  # noqa: E701
-    limit_emails_with_not_header_from: List[str] = []  # noqa: E701
-    labels: Dict[str, str] = {}  # noqa: E701
+    extra_scopes: List[str] = []
+    limit_emails_with_not_header_from: List[str] = []
+    labels: Dict[str, str] = {}
 
     class Config:
         """Pydantic BaseModel config."""
