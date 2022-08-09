@@ -33,7 +33,7 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     @skip
     def test_has_advanced_tab(self):
         """To remove tests"""
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @classmethod
     def setUpTestData(cls):
@@ -151,11 +151,11 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     @skip("Not implemented yet.")
     def test_has_advanced_tab(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @classmethod
     def setUpTestData(cls):
@@ -204,11 +204,11 @@ class NotificationSourceTest(
 
     @skip("Not implemented yet.")
     def test_has_advanced_tab(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @classmethod
     def setUpTestData(cls):
@@ -335,11 +335,11 @@ class RawNotificationTest(
 
     @skip("Not implemented yet.")
     def test_has_advanced_tab(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
 
 
 class ParsedNotificationTest(
@@ -407,4 +407,4 @@ class ParsedNotificationTest(
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
-        self.assertTrue()  # pylint: disable=no-value-for-parameter
+        pass
