@@ -17,8 +17,7 @@ User = get_user_model()
 class GraphQLTestCase(TestCase):
     """GraphQL tests."""
 
-    @classmethod
-    def setUp(cls):  # pylint: disable=arguments-differ
+    def setUp(cls):
         """Prepare GraphQL test setup."""
         cls.user = create_test_user("graphql_testuser")
 
