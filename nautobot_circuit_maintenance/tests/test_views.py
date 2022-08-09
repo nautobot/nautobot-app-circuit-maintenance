@@ -30,9 +30,8 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
 
-    @skip
+    @skip("Not implemented yet.")
     def test_has_advanced_tab(self):
-        """To remove tests"""
         pass
 
     @classmethod

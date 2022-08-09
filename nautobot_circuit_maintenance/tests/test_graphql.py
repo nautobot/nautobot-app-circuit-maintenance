@@ -17,9 +17,9 @@ User = get_user_model()
 class GraphQLTestCase(TestCase):
     """GraphQL tests."""
 
-    def setUp(cls):
+    def setUp(self):
         """Prepare GraphQL test setup."""
-        cls.user = create_test_user("graphql_testuser")
+        self.user = create_test_user("graphql_testuser")
 
         providers = (
             Provider(name="Provider 3", slug="provider-3"),
