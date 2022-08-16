@@ -1,27 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'generic/object_detail.html' %}
 {% load buttons %}
 {% load custom_links %}
 {% load helpers %}
 {% load plugins %}
-
-{% block title %}{{ object }}{% endblock%}
-
-{% block header %}
-
-<div class="row noprint">
-  <div class="col-sm-8 col-md-9">
-    <ol class="breadcrumb">
-      <li><a href="{% url 'plugins:nautobot_circuit_maintenance:rawnotification_list' %}">Raw Notifications</a></li>
-      <li><a href="{{ object.raw_notification.get_absolute_url }}">{{ object.raw_notification }}</a></li>
-      <li><a>{{ object }}</a></li>
-    </ol>
-  </div>
-</div>
-
-<h1>{{ object }}</h1>
-<div class="pull-right noprint">{% custom_links object %}</div>
-
-{% endblock %}
 
 {% block content %}
 
