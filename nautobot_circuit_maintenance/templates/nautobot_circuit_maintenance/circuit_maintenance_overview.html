@@ -23,28 +23,7 @@
     <!-- Visual block -->
     <div class="card">
         <div class="container">
-            <h3 class="text-left m-2 p-3">Metrics</h3>
-            <table class="table table-hover table-headings">
-                <thead>
-                    <tr class="even">
-                        <th>Metric</th>
-                        <th>Metric Value</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cm_metric_key, cm_metric_value in circuit_maint_metric_data.items %}
-                    <tr class="even">
-                        <td>{{ cm_metric_key }}</td>
-                        <td>{{ cm_metric_value }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="card">
-        <div class="container">
-            <h3 class="text s-2 p-3">Circuits With Maintenances in the Next 7 Days</h3>
+            <h3 class="text s-2 p-3">Circuits With Maintenances in the Next {{ n_days }} Days</h3>
             <table class="table table-hover table-headings">
                 <thead>
                     <tr class="even">
@@ -55,16 +34,16 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for maintenance in upcoming_maintenances %}
+                        {% for circuit in maintenance.circuits %}
                     <tr class="even">
-                        {% for maintenance in upcoming_maintenances %}
-                            {% for circuit in maintenance.circuits %}
                             <td>
                                 <a href="{{ circuit.get_absolute_url }}">{{ circuit.cid }}</a>
                             </td>
                             <td>
                                 {% if circuit.termination_a %}
                                     {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
-                                <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name}}</a>{% if circuit.termination_z and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}, <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>{% endif %}
+                                <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name }}</a>{% if circuit.termination_z.connected_endpoint and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}, <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>{% endif %}
                                     {% endwith %}
                                 {% endif %}
                             </td>
@@ -74,16 +53,16 @@
                             <td>
                                 {{ maintenance.start_time | date:'Y-m-d H:i' }}
                             </td>
-                            {% endfor %}
+                        </tr>
                         {% endfor %}
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
     <div class="card">
         <div class="container card-body">
-            <h3 class="text-left m-2 p-3">Devices with Maintenances in the Next 30 Days</h3>
+            <h3 class="text-left m-2 p-3">Devices with Maintenances in the Next {{ n_days }} Days</h3>
             <table class="table table-hover table-headings">
                 <thead>
                     <tr>
@@ -107,7 +86,7 @@
                             </td>
                         </tr>
                     {% endif %}
-                    {% if circuit.termination_z %}
+                    {% if circuit.termination_z.connected_endpoint %}
                         <tr class="even">
                             <td>
                                 {% with device_obj=circuit.termination_z.connected_endpoint.parent %}
@@ -123,6 +102,28 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="container">
+                <h3 class="text-left m-2 p-3">Metrics</h3>
+                <table class="table table-hover table-headings">
+                    <thead>
+                        <tr class="even">
+                            <th>Metric</th>
+                            <th>Metric Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cm_metric_key, cm_metric_value in circuit_maint_metric_data.items %}
+                        <tr class="even">
+                            <td>{{ cm_metric_key }}</td>
+                            <td>{{ cm_metric_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

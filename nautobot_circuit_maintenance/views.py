@@ -5,6 +5,7 @@ import logging
 
 import google_auth_oauthlib
 
+from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -31,7 +32,8 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
     def setup(self, request, *args, **kwargs):
         """Using request object to perform filtering based on query params."""
         super().setup(request, *args, **kwargs)
-        upcoming_days_maintenances = self.get_maintenances_next_n_days(n_days=7)
+        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days", 7)
+        upcoming_days_maintenances = self.get_maintenances_next_n_days(n_days=n_days)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
         historical_matrix = self._get_historical_matrix()
@@ -64,7 +66,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             "Future Maintenances": upcoming_maintenance_count,
             "Average Number of Maintenances Per Month": round(self.get_maintenances_per_month(), 1),
             "Next 30 Days, Maintenance to Circuit Ratio": round(
-                len(self.get_maintenances_next_n_days(n_days=30)) / Circuit.objects.count(), 2
+                len(self.get_maintenances_next_n_days(n_days=n_days)) / Circuit.objects.count(), 2
             ),
         }
 
@@ -74,6 +76,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         self.extra_content = {
             "upcoming_maintenances": upcoming_days_maintenances,
             "circuit_maint_metric_data": metric_values,
+            "n_days": n_days,
         }
 
     def extra_context(self):
