@@ -1,5 +1,4 @@
 """Views for Circuit Maintenance."""
-from datetime import datetime as datet
 import datetime
 import logging
 
@@ -32,8 +31,8 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
     def setup(self, request, *args, **kwargs):
         """Using request object to perform filtering based on query params."""
         super().setup(request, *args, **kwargs)
-        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days", 7)
-        upcoming_days_maintenances = self.get_maintenances_next_n_days(n_days=n_days)
+        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
+        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(n_days=n_days)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
         historical_matrix = self._get_historical_matrix()
@@ -54,18 +53,18 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             average_maintenance_duration = "No maintenances found."
 
         # Get count of upcoming maintenances
-        upcoming_maintenance_count = self.calculate_future_maintenances()
+        future_maintenance_count = self.calculate_future_maintenances()
 
         # Build up a dictionary of metrics to pass into the loop within the template
         metric_values = {
-            "7 Day Upcoming Maintenances": len(upcoming_days_maintenances),
+            "Upcoming Maintenances": len(maintenance_in_upcoming_days),
             "Historical - 7 Day": len(historical_matrix["past_7_days_maintenance"]),
             "Historical - 30 Days": len(historical_matrix["past_30_days_maintenance"]),
             "Historical - 365 Days": len(historical_matrix["past_365_days_maintenance"]),
             "Average Duration of Maintenances": average_maintenance_duration,
-            "Future Maintenances": upcoming_maintenance_count,
+            "Future Maintenances": future_maintenance_count,
             "Average Number of Maintenances Per Month": round(self.get_maintenances_per_month(), 1),
-            "Next 30 Days, Maintenance to Circuit Ratio": round(
+            "Future Maintenance to Circuit Ratio": round(
                 len(self.get_maintenances_next_n_days(n_days=n_days)) / Circuit.objects.count(), 2
             ),
         }
@@ -74,7 +73,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         # If this method is not defined, and returning the extra_content value, then the data will not be passed to the
         # template.
         self.extra_content = {
-            "upcoming_maintenances": upcoming_days_maintenances,
+            "upcoming_maintenances": maintenance_in_upcoming_days,
             "circuit_maint_metric_data": metric_values,
             "n_days": n_days,
         }
@@ -169,12 +168,12 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             str(ordered_ckt_maintenance.first().start_time.date()),
             str(ordered_ckt_maintenance.last().start_time.date()),
         ]
-        start, end = [datet.strptime(_, "%Y-%m-%d") for _ in dates]
+        start, end = [datetime.datetime.strptime(_, "%Y-%m-%d") for _ in dates]
         total_months = lambda dt: dt.month + 12 * dt.year  # noqa: E731
         month_list = []
         for tot_m in range(total_months(start) - 1, total_months(end)):
             year, month = divmod(tot_m, 12)
-            month_list.append(datet(year, month + 1, 1).strftime("%Y-%m"))
+            month_list.append(datetime.datetime(year, month + 1, 1).strftime("%Y-%m"))
         return month_list
 
     def get_maintenances_per_month(self):

@@ -6,7 +6,7 @@ A plugin for [Nautobot](https://github.com/nautobot/nautobot) to easily handle C
 
 ## Installation
 
-The plugin is available as a Python package in pypi and can be installed with pip
+The plugin is available as a Python package in Pypi and can be installed with pip
 
 ```shell
 pip install nautobot-circuit-maintenance
@@ -17,7 +17,7 @@ pip install nautobot-circuit-maintenance
 To ensure Circuit Maintenance is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-circuit-maintenance` package:
 
 ```no-highlight
-# echo nautobot-circuit-maintenance >> local_requirements.txt
+echo nautobot-circuit-maintenance >> local_requirements.txt
 ```
 
 Once installed, the plugin needs to be enabled in your `configuration.py`.
@@ -32,6 +32,7 @@ PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "raw_notification_initial_days_since": 100,
         "raw_notification_size": 16384,
+        "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
         "notification_sources": [
             {
               ...
