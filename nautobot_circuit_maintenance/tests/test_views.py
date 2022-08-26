@@ -17,6 +17,7 @@ from nautobot_circuit_maintenance.models import (
     ParsedNotification,
     RawNotification,
 )
+from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
 
 
 class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
@@ -407,3 +408,86 @@ class ParsedNotificationTest(
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
         pass
+
+
+class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
+    """View tests for CircuitMaintenance Dashboard."""
+
+    model = CircuitMaintenance
+
+    def _get_base_url(self):
+        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
+
+    def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
+        """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
+
+    @skip("Not implemented yet.")
+    def test_has_advanced_tab(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_edit_object_with_permission(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_edit_object_with_constrained_permission(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_create_object_with_permission(self):
+        pass
+
+    @skip("Not implemented.")
+    def test_create_object_with_constrained_permission(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_bulk_import_objects_with_permission(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_bulk_import_objects_with_constrained_permission(self):
+        pass
+
+    @skip("Not Implemented.")
+    def test_bulk_edit_objects_with_constrained_permission(self):
+        pass
+
+    @classmethod
+    def setUpTestData(cls):
+        """Setup environment for testing."""
+        cls.maintenances_before = []
+        cls.maintenances_after = []
+        cls.test_date = datetime.strptime("2022-08-25", "%Y-%m-%d").date()
+        cls.maintenances_before.append(
+            CircuitMaintenance.objects.create(
+                name="UT-TEST-1", start_time="2022-08-24 10:00:00", end_time="2022-08-24 12:00:00"
+            )
+        )
+
+        cls.maintenances_after.append(
+            CircuitMaintenance.objects.create(
+                name="UT-TEST-2", start_time="2022-08-26 10:00:00", end_time="2022-08-26 12:00:00"
+            )
+        )
+        cls.maintenances_after.append(
+            CircuitMaintenance.objects.create(
+                name="UT-TEST-3", start_time="2022-08-27 10:00:00", end_time="2022-08-27 12:00:00"
+            )
+        )
+
+    def test_get_maintenances_next_n_days(self):
+        """Test get maintenances in the next n days."""
+        test_object = CircuitMaintenanceOverview()
+
+        self.assertListEqual(
+            test_object.get_maintenances_next_n_days(start_date=self.test_date, n_days=7), self.maintenances_after
+        )
+
+    def test_get_maintenance_past_n_days(self):
+        """Test get maintenances in the past n days."""
+        test_object = CircuitMaintenanceOverview()
+
+        self.assertListEqual(
+            test_object.get_maintenance_past_n_days(start_date=self.test_date, n_days=-7), self.maintenances_before
+        )
