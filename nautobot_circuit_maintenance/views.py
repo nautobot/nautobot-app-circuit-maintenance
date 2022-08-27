@@ -33,7 +33,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         super().setup(request, *args, **kwargs)
         self.today = datetime.date.today()
         n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
-        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.self.today, n_days=n_days)
+        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
         historical_matrix = self._get_historical_matrix(start_date=self.today)
@@ -162,7 +162,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         return count
 
     @staticmethod
-    def get_month_list():
+    def total_months(datetime_obj):
+        """Method to return the total months."""
+        return datetime_obj.month + 12 * datetime_obj.year
+
+    def get_month_list(self):
         """Gets the list of months that circuit maintenances have happened.
 
         In order to know which months there are needed for a calculate average number of maintenances per month.
@@ -176,9 +180,8 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             str(ordered_ckt_maintenance.last().start_time.date()),
         ]
         start, end = [datetime.datetime.strptime(_, "%Y-%m-%d") for _ in dates]
-        total_months = lambda dt: dt.month + 12 * dt.year  # noqa: E731
         month_list = []
-        for tot_m in range(total_months(start) - 1, total_months(end)):
+        for tot_m in range(self.total_months(start) - 1, self.total_months(end)):
             year, month = divmod(tot_m, 12)
             month_list.append(datetime.datetime(year, month + 1, 1).strftime("%Y-%m"))
         return month_list

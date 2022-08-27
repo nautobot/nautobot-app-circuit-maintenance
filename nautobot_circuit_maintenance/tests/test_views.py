@@ -35,6 +35,10 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_has_advanced_tab(self):
         pass
 
+    @skip("Not implemented yet.")
+    def test_get_object_notes(self):
+        pass
+
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
@@ -77,6 +81,18 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     @skip("Not implemented yet.")
     def test_has_advanced_tab(self):
+        pass
+
+    @skip("Not implemented yet.")
+    def test_get_object_notes(self):
+        pass
+
+    @skip("Not implemented yet.")
+    def test_list_objects_unknown_filter_no_strict_filtering(self):
+        pass
+
+    @skip("Not implemented yet.")
+    def test_list_objects_unknown_filter_strict_filtering(self):
         pass
 
     @classmethod
@@ -155,6 +171,18 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
+        pass
+
+    @skip("Not Implemented")
+    def test_list_objects_unknown_filter_no_strict_filtering(self):
+        pass
+
+    @skip("Not Implemented")
+    def test_list_objects_unknown_filter_strict_filtering(self):
+        pass
+
+    @skip("Not Implemented")
+    def test_get_object_notes(self):
         pass
 
     @classmethod
@@ -545,8 +573,7 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_get_historical_matrix(self):
         """Test of _get_historical_matrix."""
         test_object = CircuitMaintenanceOverview()
-        result = test_object._get_historical_matrix(start_date=self.test_date)
-        print(result)
+        result = test_object._get_historical_matrix(start_date=self.test_date)  # pylint: disable=protected-access
 
         # Testing the length of the list items, the queryset will have these in a different order.
         self.assertEqual(len(result["past_7_days_maintenance"]), len(self.seven_days))
