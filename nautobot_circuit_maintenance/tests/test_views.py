@@ -558,3 +558,17 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
         result = test_object.calculate_future_maintenances(start_date=self.test_date)
 
         self.assertEqual(result, 2)
+
+    def test_get_month_list(self):
+        test_object = CircuitMaintenanceOverview()
+        months = test_object.get_month_list()
+        expected_months = ["2022-03", "2022-04", "2022-05", "2022-06", "2022-07", "2022-08"]
+
+        self.assertListEqual(months, expected_months)
+
+    def test_get_maintenances_per_month(self):
+        test_object = CircuitMaintenanceOverview()
+        expected_result = 5 / 6.0
+        result = test_object.get_maintenances_per_month()
+
+        self.assertEqual(expected_result, result)
