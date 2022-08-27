@@ -31,12 +31,12 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
     def setup(self, request, *args, **kwargs):
         """Using request object to perform filtering based on query params."""
         super().setup(request, *args, **kwargs)
-        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
         self.today = datetime.date.today()
-        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)
+        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
+        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.self.today, n_days=n_days)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
-        historical_matrix = self._get_historical_matrix()
+        historical_matrix = self._get_historical_matrix(start_date=self.today)
 
         ###############################################################
         # Get Average duration for the maintenances
@@ -121,8 +121,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
 
         return return_list
 
-    def _get_historical_matrix(self):
+    def _get_historical_matrix(self, start_date: datetime.date):
         """Gets the historical matrix of the past maintenances.
+
+        Args:
+            start_date (datetime.date): Date to start the search.
 
         Returns:
             dict: A dictionary that represents the historical matrix maintenance record data.
@@ -136,9 +139,9 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         # TODO: Move to a generic function set up, since this is something that should be exposed via the Capacity
         #       Metrics plugin when enabled.
         return_dict = {
-            "past_7_days_maintenance": self.get_maintenance_past_n_days(start_date=self.today, n_days=-7),
-            "past_30_days_maintenance": self.get_maintenance_past_n_days(start_date=self.today, n_days=-30),
-            "past_365_days_maintenance": self.get_maintenance_past_n_days(start_date=self.today, n_days=-365),
+            "past_7_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-7),
+            "past_30_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-30),
+            "past_365_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-365),
         }
         return return_dict
 

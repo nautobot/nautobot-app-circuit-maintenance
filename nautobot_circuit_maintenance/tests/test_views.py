@@ -453,28 +453,78 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_bulk_edit_objects_with_constrained_permission(self):
         pass
 
+    @skip("Not implemented.")
+    def test_get_object_notes(self):
+        pass
+
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
         cls.maintenances_before = []
         cls.maintenances_after = []
+        cls.seven_days = []
+        cls.thirty_days = []
+        cls.year_days = []
         cls.test_date = datetime.strptime("2022-08-25", "%Y-%m-%d").date()
-        cls.maintenances_before.append(
-            CircuitMaintenance.objects.create(
-                name="UT-TEST-1", start_time="2022-08-24 10:00:00", end_time="2022-08-24 12:00:00"
-            )
-        )
+        circuit_maintenances_create_list = [
+            {
+                "name": "UT-TEST-1",
+                "start_time": "2022-08-24 10:00:00",
+                "end_time": "2022-08-24 12:00:00",
+                "lists": ["maintenances_before", "7_days"],
+            },
+            {
+                "name": "UT-TEST-4",
+                "start_time": "2022-08-16 10:00:00",
+                "end_time": "2022-08-16 12:00:00",
+                "lists": ["maintenances_before", "30_days"],
+            },
+            {
+                "name": "UT-TEST-2",
+                "start_time": "2022-08-26 10:00:00",
+                "end_time": "2022-08-26 12:00:00",
+                "lists": ["maintenances_after"],
+            },
+            {
+                "name": "UT-TEST-3",
+                "start_time": "2022-08-27 10:00:00",
+                "end_time": "2022-08-27 12:00:00",
+                "lists": ["maintenances_after"],
+            },
+            {
+                "name": "UT-TEST-5",
+                "start_time": "2022-03-27 10:00:00",
+                "end_time": "2022-03-27 12:00:00",
+                "lists": ["maintenances_before", "365_days"],
+            },
+        ]
 
-        cls.maintenances_after.append(
-            CircuitMaintenance.objects.create(
-                name="UT-TEST-2", start_time="2022-08-26 10:00:00", end_time="2022-08-26 12:00:00"
+        for circuit_maintenance in circuit_maintenances_create_list:
+            ckt_mnt = CircuitMaintenance.objects.create(
+                name=circuit_maintenance["name"],
+                start_time=circuit_maintenance["start_time"],
+                end_time=circuit_maintenance["end_time"],
             )
-        )
-        cls.maintenances_after.append(
-            CircuitMaintenance.objects.create(
-                name="UT-TEST-3", start_time="2022-08-27 10:00:00", end_time="2022-08-27 12:00:00"
-            )
-        )
+
+            # Check for each list to append the maintenance test to
+            print(circuit_maintenance["lists"])
+            if "maintenances_before" in circuit_maintenance["lists"]:
+                cls.maintenances_before.append(ckt_mnt)
+
+            if "maintenances_after" in circuit_maintenance["lists"]:
+                cls.maintenances_after.append(ckt_mnt)
+
+            if "7_days" in circuit_maintenance["lists"]:
+                cls.seven_days.append(ckt_mnt)
+                cls.thirty_days.append(ckt_mnt)
+                cls.year_days.append(ckt_mnt)
+
+            if "30_days" in circuit_maintenance["lists"]:
+                cls.thirty_days.append(ckt_mnt)
+                cls.year_days.append(ckt_mnt)
+
+            if "365_days" in circuit_maintenance["lists"]:
+                cls.year_days.append(ckt_mnt)
 
     def test_get_maintenances_next_n_days(self):
         """Test get maintenances in the next n days."""
@@ -489,5 +539,22 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
         test_object = CircuitMaintenanceOverview()
 
         self.assertListEqual(
-            test_object.get_maintenance_past_n_days(start_date=self.test_date, n_days=-7), self.maintenances_before
+            test_object.get_maintenance_past_n_days(start_date=self.test_date, n_days=-7), self.seven_days
         )
+
+    def test_get_historical_matrix(self):
+        """Test of _get_historical_matrix."""
+        test_object = CircuitMaintenanceOverview()
+        expected_result = {
+            "past_7_days_maintenance": self.seven_days,
+            "past_30_days_maintenance": self.thirty_days,
+            "past_365_days_maintenance": self.year_days,
+        }
+        result = test_object._get_historical_matrix(start_date=self.test_date)
+        print(result)
+
+        # Testing the length of the list items, the queryset will have these in a different order.
+        self.assertEqual(len(result["past_7_days_maintenance"]), len(self.seven_days))
+        self.assertEqual(len(result["past_30_days_maintenance"]), len(self.thirty_days))
+        self.assertEqual(len(result["past_365_days_maintenance"]), len(self.year_days))
+        # self.assertDictEqual(result, expected_result)
