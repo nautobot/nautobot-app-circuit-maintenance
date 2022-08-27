@@ -20,6 +20,7 @@ from nautobot_circuit_maintenance.models import (
 from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
 
 
+
 class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     """View tests for CircuitMaintenance."""
 

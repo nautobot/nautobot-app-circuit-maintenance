@@ -175,6 +175,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             list: List of months from first to last maintenance.
         """
         ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
+
+        # Check for a database with no maintenances in it, return nothing
+        if ordered_ckt_maintenance.first() is None:
+            return []
+
         dates = [
             str(ordered_ckt_maintenance.first().start_time.date()),
             str(ordered_ckt_maintenance.last().start_time.date()),
