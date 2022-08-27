@@ -1,22 +1,10 @@
 # pylint: disable=duplicate-code
 """Test for Circuit Maintenace Views."""
 from unittest import skip
-from unittest.mock import patch
-from datetime import datetime, timezone
-from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from nautobot.users.models import ObjectPermission
+from datetime import datetime
 
-from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.utilities.testing import ViewTestCases
-from nautobot_circuit_maintenance.models import (
-    CircuitMaintenance,
-    CircuitImpact,
-    Note,
-    NotificationSource,
-    ParsedNotification,
-    RawNotification,
-)
+from nautobot_circuit_maintenance.models import CircuitMaintenance
 from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
 
 
