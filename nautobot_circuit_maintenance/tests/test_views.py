@@ -545,11 +545,6 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_get_historical_matrix(self):
         """Test of _get_historical_matrix."""
         test_object = CircuitMaintenanceOverview()
-        expected_result = {
-            "past_7_days_maintenance": self.seven_days,
-            "past_30_days_maintenance": self.thirty_days,
-            "past_365_days_maintenance": self.year_days,
-        }
         result = test_object._get_historical_matrix(start_date=self.test_date)
         print(result)
 
@@ -557,4 +552,9 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
         self.assertEqual(len(result["past_7_days_maintenance"]), len(self.seven_days))
         self.assertEqual(len(result["past_30_days_maintenance"]), len(self.thirty_days))
         self.assertEqual(len(result["past_365_days_maintenance"]), len(self.year_days))
-        # self.assertDictEqual(result, expected_result)
+
+    def test_calculate_future_maintenances(self):
+        test_object = CircuitMaintenanceOverview()
+        result = test_object.calculate_future_maintenances(start_date=self.test_date)
+
+        self.assertEqual(result, 2)

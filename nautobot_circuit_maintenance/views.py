@@ -54,7 +54,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             average_maintenance_duration = "No maintenances found."
 
         # Get count of upcoming maintenances
-        future_maintenance_count = self.calculate_future_maintenances()
+        future_maintenance_count = self.calculate_future_maintenances(start_date=self.today)
 
         # Build up a dictionary of metrics to pass into the loop within the template
         metric_values = {
@@ -145,15 +145,18 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         }
         return return_dict
 
-    def calculate_future_maintenances(self):
+    def calculate_future_maintenances(self, start_date: datetime.date):
         """Method to calculate future maintenances.
+
+        Args:
+            start_date (datetime.date): Date to start the search.
 
         Returns:
             int: Count of future maintenances
         """
         count = 0
         for ckt_maint in self.queryset:
-            if ckt_maint.start_time.date() > self.today:
+            if ckt_maint.start_time.date() > start_date:
                 count += 1
 
         return count
