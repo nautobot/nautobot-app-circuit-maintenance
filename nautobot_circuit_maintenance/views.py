@@ -43,7 +43,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         ###############################################################
         total_duration_in_minutes = 0
 
-        for ckt_maint in self.queryset:
+        for ckt_maint in self.queryset.all():
             duration = ckt_maint.end_time - ckt_maint.start_time
             total_duration_in_minutes += round(duration.seconds / 60.0, 0)
 
@@ -97,7 +97,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             Set: Set of maintenances that are up coming
         """
         end_date = start_date + datetime.timedelta(days=n_days)
-        maintenances = self.queryset
+        maintenances = self.queryset.all()
         return_list = []
         for maintenance in maintenances:
             if start_date <= maintenance.start_time.date() <= end_date:
@@ -113,7 +113,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             n_days (int): Should be a negative number for the number of days.
         """
         end_date = start_date + datetime.timedelta(days=n_days)
-        maintenances = self.queryset
+        maintenances = self.queryset.all()
         return_list = []
         for maintenance in maintenances:
             if end_date <= maintenance.start_time.date() < start_date:
@@ -155,7 +155,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             int: Count of future maintenances
         """
         count = 0
-        for ckt_maint in self.queryset:
+        for ckt_maint in self.queryset.all():
             if ckt_maint.start_time.date() > start_date:
                 count += 1
 
@@ -203,7 +203,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         if len(months) == 0:
             return 0
 
-        return len(self.queryset) / len(months)
+        return len(self.queryset.all()) / len(months)
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
