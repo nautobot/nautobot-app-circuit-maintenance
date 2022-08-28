@@ -1,4 +1,4 @@
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-public-methods
 """Test for Circuit Maintenace Views."""
 from unittest import skip
 from unittest.mock import patch
