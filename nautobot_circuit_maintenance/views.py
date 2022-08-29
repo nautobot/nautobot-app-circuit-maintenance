@@ -18,7 +18,7 @@ from nautobot_circuit_maintenance.models import CircuitMaintenance
 logger = logging.getLogger(__name__)
 
 
-class CircuitMaintenanceOverview(generic.ObjectListView):
+class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too-many-locals
     """View for an overview dashboard of summary view.
 
     This view provides a summary about the environment of circuit maintenances that have been recorded. Getting stats
