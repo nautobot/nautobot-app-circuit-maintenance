@@ -19,7 +19,13 @@ logger = logging.getLogger(__name__)
 
 
 class CircuitMaintenanceOverview(generic.ObjectListView):
-    """View for an overview dashboard of summary view."""
+    """View for an overview dashboard of summary view.
+
+    This view provides a summary about the environment of circuit maintenances that have been recorded. Getting stats
+    that provide a view into the upcoming maintenances and some metrics related to maintenances. This provides devices
+    that are going to be impacted in the next n_days depending on configuration. This is based on circuit termination
+    information.
+    """
 
     action_buttons = ("export",)
     filterset = filters.CircuitMaintenanceFilterSet
@@ -48,6 +54,8 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             total_duration_in_minutes += round(duration.seconds / 60.0, 0)
 
         circuit_maint_count = CircuitMaintenance.objects.count()
+
+        # Check for a greater than 0 number of maintenance objects
         if circuit_maint_count > 0:
             average_maintenance_duration = str(round(total_duration_in_minutes / circuit_maint_count, 2)) + " minutes"
         else:
@@ -55,6 +63,15 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
 
         # Get count of upcoming maintenances
         future_maintenance_count = self.calculate_future_maintenances(start_date=self.today)
+
+        circuit_object_count = Circuit.objects.count()
+        if circuit_object_count > 0:
+            circuit_count_ratio = round(
+                len(self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)) / circuit_object_count,
+                2,
+            )
+        else:
+            circuit_count_ratio = 0
 
         # Build up a dictionary of metrics to pass into the loop within the template
         metric_values = {
@@ -65,10 +82,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
             "Average Duration of Maintenances": average_maintenance_duration,
             "Future Maintenances": future_maintenance_count,
             "Average Number of Maintenances Per Month": round(self.get_maintenances_per_month(), 1),
-            "Future Maintenance to Circuit Ratio": round(
-                len(self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)) / Circuit.objects.count(),
-                2,
-            ),
+            "Future Maintenance to Circuit Ratio": circuit_count_ratio,
         }
 
         # Build out the extra content, but this does require that there is a method of `extra_content` to be created.
@@ -200,6 +214,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):
         # Initialize each month of maintenances
         months = self.get_month_list()
 
+        # This will handle any Division by 0 errors
         if len(months) == 0:
             return 0
 
