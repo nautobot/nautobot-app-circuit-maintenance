@@ -34,7 +34,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
     template_name = "nautobot_circuit_maintenance/circuit_maintenance_overview.html"
     queryset = models.CircuitMaintenance.objects.all()  # Needs to remain all objects, otherwise other calcs will fail.
 
-    def setup(self, request, *args, **kwargs):
+    def setup(self, request, *args, **kwargs):  # pylint: disable=too-many-locals
         """Using request object to perform filtering based on query params."""
         super().setup(request, *args, **kwargs)
         self.today = datetime.date.today()
