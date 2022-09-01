@@ -51,7 +51,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
 
         for ckt_maint in self.queryset.all():
             duration = ckt_maint.end_time - ckt_maint.start_time
-            total_duration_in_minutes += round(duration.seconds / 60.0, 0)
+            total_duration_in_minutes += round(duration.total_seconds() / 60.0, 0)
 
         circuit_maint_count = CircuitMaintenance.objects.count()
 
