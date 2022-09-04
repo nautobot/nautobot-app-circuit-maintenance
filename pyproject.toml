@@ -90,20 +90,12 @@ no-docstring-rgx="^(_|test_|Meta$)"
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
-#
-# arguments-differ:
-# 21:4: W0221: Number of parameters was 1 in 'TestCase.setUp' and is now 1 in overridden 'GraphQLTestCase.setUp'
-#
-# attribute-defined-outside-init
-# nautobot_circuit_maintenance/views.py:74:8: W0201: Attribute 'extra_content' defined outside __init__
 disable = """,
     line-too-long,
     bad-continuation,
     too-few-public-methods,
     duplicate-code,
     too-many-ancestors,
-    attribute-defined-outside-init,
-    arguments-differ,  
     """
 
 [tool.pylint.miscellaneous]

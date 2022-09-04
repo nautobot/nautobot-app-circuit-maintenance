@@ -33,11 +33,12 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
     table = tables.CircuitMaintenanceTable
     template_name = "nautobot_circuit_maintenance/circuit_maintenance_overview.html"
     queryset = models.CircuitMaintenance.objects.all()  # Needs to remain all objects, otherwise other calcs will fail.
+    today = datetime.date.today()
+    extra_content = None
 
-    def setup(self, request, *args, **kwargs):  # pylint: disable=too-many-locals
-        """Using request object to perform filtering based on query params."""
-        super().setup(request, *args, **kwargs)
-        self.today = datetime.date.today()
+    def extra_context(self):
+        """Extra content method on."""
+        # add global aggregations to extra context.
         n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
         maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)
 
@@ -94,10 +95,6 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             "n_days": n_days,
         }
 
-    def extra_context(self):
-        """Extra content method on."""
-        # add global aggregations to extra context.
-
         return self.extra_content
 
     def get_maintenances_next_n_days(self, start_date: datetime.date, n_days: int):
@@ -108,16 +105,13 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             n_days (int): Number of days up coming
 
         Returns:
-            Set: Set of maintenances that are up coming
+            List: List of maintenances that are up coming
         """
-        end_date = start_date + datetime.timedelta(days=n_days)
-        maintenances = self.queryset.all()
-        return_list = []
-        for maintenance in maintenances:
-            if start_date <= maintenance.start_time.date() <= end_date:
-                return_list.append(maintenance)
+        start_date_midnight = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+        end_date_midnight = start_date_midnight + datetime.timedelta(days=n_days)
+        maintenances = self.queryset.filter(start_time__gte=start_date_midnight, start_time__lte=end_date_midnight)
 
-        return return_list
+        return list(maintenances)
 
     def get_maintenance_past_n_days(self, start_date: datetime.date, n_days: int):
         """Gets maintenances in the past n number of days.
@@ -126,14 +120,11 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             start_date (datetime.date): Date to start the search.
             n_days (int): Should be a negative number for the number of days.
         """
-        end_date = start_date + datetime.timedelta(days=n_days)
-        maintenances = self.queryset.all()
-        return_list = []
-        for maintenance in maintenances:
-            if end_date <= maintenance.start_time.date() < start_date:
-                return_list.append(maintenance)
+        start_date_midnight = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+        end_date_midnight = start_date_midnight + datetime.timedelta(days=n_days)
+        maintenances = self.queryset.filter(start_time__gte=end_date_midnight, start_time__lte=start_date_midnight)
 
-        return return_list
+        return list(maintenances)
 
     def _get_historical_matrix(self, start_date: datetime.date):
         """Gets the historical matrix of the past maintenances.
@@ -168,10 +159,9 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         Returns:
             int: Count of future maintenances
         """
-        count = 0
-        for ckt_maint in self.queryset.all():
-            if ckt_maint.start_time.date() > start_date:
-                count += 1
+        count = self.queryset.filter(
+            start_time__gte=datetime.datetime.combine(start_date, datetime.datetime.min.time())
+        ).count()
 
         return count
 
