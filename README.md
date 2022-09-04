@@ -6,7 +6,7 @@ A plugin for [Nautobot](https://github.com/nautobot/nautobot) to easily handle C
 
 ## Installation
 
-The plugin is available as a Python package in Pypi and can be installed with pip
+The plugin is available as a Python package in PyPI and can be installed with `pip`:
 
 ```shell
 pip install nautobot-circuit-maintenance
