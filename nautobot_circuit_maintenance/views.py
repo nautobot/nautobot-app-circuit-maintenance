@@ -170,45 +170,26 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         """Method to return the total months."""
         return datetime_obj.month + 12 * datetime_obj.year
 
-    def get_month_list(self):
-        """Gets the list of months that circuit maintenances have happened.
-
-        In order to know which months there are needed for a calculate average number of maintenances per month.
-
-        Returns:
-            list: List of months from first to last maintenance.
-        """
-        ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
-
-        # Check for a database with no maintenances in it, return nothing
-        if ordered_ckt_maintenance.first() is None:
-            return []
-
-        dates = [
-            str(ordered_ckt_maintenance.first().start_time.date()),
-            str(ordered_ckt_maintenance.last().start_time.date()),
-        ]
-        start, end = [datetime.datetime.strptime(_, "%Y-%m-%d") for _ in dates]
-        month_list = []
-        for tot_m in range(self.total_months(start) - 1, self.total_months(end)):
-            year, month = divmod(tot_m, 12)
-            month_list.append(datetime.datetime(year, month + 1, 1).strftime("%Y-%m"))
-        return month_list
-
     def get_maintenances_per_month(self):
         """Calculates the number of circuit maintenances per month.
 
         Returns:
             float: Average maintenances per month
         """
-        # Initialize each month of maintenances
-        months = self.get_month_list()
-
-        # This will handle any Division by 0 errors
-        if len(months) == 0:
+        ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
+        if ordered_ckt_maintenance.count() < 2:
             return 0
 
-        return len(self.queryset.all()) / len(months)
+        end = ordered_ckt_maintenance.last().start_time
+        start = ordered_ckt_maintenance.first().start_time
+        # Get the number of years between the first and last date, multiply that by 12
+        # Then get the differences in months. Then add 1 to account for the current month.
+        delta_months = (end.year - start.year) * 12 + end.month - start.month + 1
+
+        if delta_months == 0:
+            return 0
+
+        return self.queryset.count() / delta_months
 
 
 class CircuitMaintenanceListView(generic.ObjectListView):
