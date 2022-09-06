@@ -186,9 +186,6 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         # Then get the differences in months. Then add 1 to account for the current month.
         delta_months = (end.year - start.year) * 12 + end.month - start.month + 1
 
-        if delta_months == 0:
-            return 0
-
         return self.queryset.count() / delta_months
 
 
