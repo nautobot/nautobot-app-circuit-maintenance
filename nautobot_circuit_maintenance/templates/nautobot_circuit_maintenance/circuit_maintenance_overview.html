@@ -35,7 +35,10 @@
                                     {% if circuit.termination_a.connected_endpoint %}
                                         {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
                                         {% comment %}Fix up this line after if move to Jinja templating. Unable to shrink due to whitespace {% endcomment %}
-                                            <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name }}</a>{% if circuit.termination_z.connected_endpoint and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}, <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>{% endif %}
+                                            <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name }}</a>
+                                            {% if circuit.termination_z.connected_endpoint and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}
+                                            | <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>
+                                            {% endif %}
                                         {% endwith %}
                                     {% endif %}
                                 </td>
