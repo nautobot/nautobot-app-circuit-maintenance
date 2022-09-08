@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from nautobot.users.models import ObjectPermission
 
 from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot.utilities.testing import ViewTestCases
+from nautobot.utilities.testing import ViewTestCases, ModelViewTestCase
 from nautobot_circuit_maintenance.models import (
     CircuitMaintenance,
     CircuitImpact,
@@ -438,7 +438,7 @@ class ParsedNotificationTest(
         pass
 
 
-class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
+class DashboardTest(ModelViewTestCase):
     """View tests for CircuitMaintenance Dashboard."""
 
     model = CircuitMaintenance
@@ -448,42 +448,6 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
-
-    @skip("Not implemented yet.")
-    def test_has_advanced_tab(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_edit_object_with_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_edit_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_create_object_with_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_create_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_import_objects_with_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_import_objects_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_edit_objects_with_constrained_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_notes(self):
-        pass
 
     @classmethod
     def setUpTestData(cls):
@@ -594,7 +558,7 @@ class DashboardTest(ViewTestCases.PrimaryObjectViewTestCase):
         self.assertEqual(expected_result, result)
 
 
-class DashboardTestZeroMaintenances(ViewTestCases.PrimaryObjectViewTestCase):
+class DashboardTestZeroMaintenances(ModelViewTestCase):
     """View tests for CircuitMaintenance Dashboard."""
 
     model = CircuitMaintenance
@@ -604,94 +568,6 @@ class DashboardTestZeroMaintenances(ViewTestCases.PrimaryObjectViewTestCase):
 
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
-
-    @skip("Not implemented yet.")
-    def test_has_advanced_tab(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_edit_object_with_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_edit_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_create_object_with_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_create_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_import_objects_with_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_import_objects_with_constrained_permission(self):
-        pass
-
-    @skip("Not Implemented.")
-    def test_bulk_edit_objects_with_constrained_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_notes(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_delete_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_delete_object_with_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_delete_object_without_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_edit_object_without_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_anonymous(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_changelog(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_with_constrained_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_with_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_get_object_without_permission(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_list_objects_filtered(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_list_objects_unknown_filter_no_strict_filtering(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_list_objects_unknown_filter_strict_filtering(self):
-        pass
-
-    @skip("Not implemented.")
-    def test_list_objects_with_constrained_permission(self):
-        pass
 
     @classmethod
     def setUpTestData(cls):
