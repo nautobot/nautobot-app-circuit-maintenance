@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.6.0
+
+### Added
+
+- #191 - Add Dashboard View
+- #187 - Add maintenance start date to Circuit Maintenance extension in Device detail view
+
+### Changed
+
+- #195 - Drop Python 3.6 support
+- #182 - Add Readme reference to post_upgrade
+- #180 - Update dependency google-auth-oauthlib to ^0.5.0
+
 ## v0.5.0
 
 ### Added
@@ -9,7 +22,6 @@
 ### Changed
 
 - #165 - Numerous UI/UX refinements and improvements. See #176 for details.
-
 
 ## v0.4.3
 

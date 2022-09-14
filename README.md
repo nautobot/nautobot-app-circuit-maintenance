@@ -6,7 +6,7 @@ A plugin for [Nautobot](https://github.com/nautobot/nautobot) to easily handle C
 
 ## Installation
 
-The plugin is available as a Python package in pypi and can be installed with pip
+The plugin is available as a Python package in PyPI and can be installed with `pip`:
 
 ```shell
 pip install nautobot-circuit-maintenance
@@ -17,7 +17,7 @@ pip install nautobot-circuit-maintenance
 To ensure Circuit Maintenance is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-circuit-maintenance` package:
 
 ```no-highlight
-# echo nautobot-circuit-maintenance >> local_requirements.txt
+echo nautobot-circuit-maintenance >> local_requirements.txt
 ```
 
 Once installed, the plugin needs to be enabled in your `configuration.py`.
@@ -32,6 +32,7 @@ PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "raw_notification_initial_days_since": 100,
         "raw_notification_size": 16384,
+        "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
         "notification_sources": [
             {
               ...
@@ -202,7 +203,12 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/gmail_api_explorer_label_ids.png" class="center">
 </p>
 
-#### 2.2 Add `Providers` to the Notification Sources
+#### 2.2 Run `nautobot-server post_upgrade` command
+
+The [`nautobot-server post_upgrade`](https://nautobot.readthedocs.io/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
+
+
+#### 2.3 Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 

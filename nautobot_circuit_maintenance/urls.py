@@ -6,6 +6,8 @@ from . import views
 from .models import CircuitMaintenance, CircuitImpact, Note, NotificationSource
 
 urlpatterns = [
+    # Overview
+    path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
     #
     #  Maintenance
     path("maintenance/", views.CircuitMaintenanceListView.as_view(), name="circuitmaintenance_list"),

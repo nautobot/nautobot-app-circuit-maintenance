@@ -14,6 +14,7 @@
                 <th>Maintenance</th>
                 <th>Impact</th>
                 <th>Status</th>
+                <th>Start Date</th>
                 <th>Acknowledged</th>
             </tr>
             {% for circuitimpact in circuitimpacts %}
@@ -26,6 +27,9 @@
                 </td>
                 <td>
                     {{ circuitimpact.maintenance.status }}
+                </td>
+                <td>
+                    {{ circuitimpact.maintenance.start_time }}
                 </td>
                 <td>
                     {{ circuitimpact.maintenance.ack }}

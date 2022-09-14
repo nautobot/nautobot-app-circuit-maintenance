@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load static %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+
+{% block header %}
+{% endblock %}
+{% block content %}
+
+<h1>{% block title %}Circuit Maintenance Dashboard{% endblock %}</h1>
+<div class="col-md-3">
+    <!-- Visual block -->
+    <div class="card">
+        <div class="container">
+            <h3 class="text s-2 p-3">Circuits With Maintenances in the Next {{ n_days }} Days</h3>
+            <table class="table table-hover table-headings">
+                <thead>
+                    <tr>
+                        <th>Circuit ID</th>
+                        <th>Sites</th>
+                        <th>Circuit Status</th>
+                        <th>Maintenance Start</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for maintenance in upcoming_maintenances %}
+                        {% for circuit in maintenance.circuits %}
+                            <tr>
+                                <td>
+                                    <a href="{{ circuit.get_absolute_url }}">{{ circuit.cid }}</a>
+                                </td>
+                                <td>
+                                    {% if circuit.termination_a.connected_endpoint %}
+                                        {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
+                                        {% comment %}Fix up this line after if move to Jinja templating. Unable to shrink due to whitespace {% endcomment %}
+                                            <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name }}</a>
+                                            {% if circuit.termination_z.connected_endpoint and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}
+                                            | <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ circuit.status.name }}
+                                </td>
+                                <td>
+                                    {{ maintenance.start_time | date:'Y-m-d H:i e' }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card">
+        <div class="container card-body">
+            <h3 class="text-left">Devices with Maintenances in the Next {{ n_days }} Days</h3>
+                <table class="table table-hover table-headings">
+                    <thead>
+                        <tr>
+                            <th>Device Name</th>
+                            <th>Maintenance Start</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for maintenance in upcoming_maintenances %}
+                            {% for circuit in maintenance.circuits %}
+                                {% if circuit.termination_a.connected_endpoint %}
+                                    <tr>
+                                        <td>
+                                            {% with device_obj=circuit.termination_a.connected_endpoint.parent %}
+                                            <a href="{{ device_obj.get_absolute_url }}">{{ device_obj.name }}</a> 
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {{ maintenance.start_time | date:'Y-m-d H:i e' }}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                                {% if circuit.termination_z.connected_endpoint %}
+                                    <tr>
+                                        <td>
+                                            {% with device_obj=circuit.termination_z.connected_endpoint.parent %}
+                                            <a href="{{ device_obj.get_absolute_url }}">{{ device_obj.name }}</a>
+                                            {% endwith %}
+                                        </td>
+                                        <td>
+                                            {{ maintenance.start_time | date:'Y-m-d H:i e' }}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="container">
+                <h3 class="text-left">Metrics</h3>
+                <table class="table table-hover table-headings">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Metric Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cm_metric_key, cm_metric_value in circuit_maint_metric_data.items %}
+                        <tr>
+                            <td>{{ cm_metric_key }}</td>
+                            <td>{{ cm_metric_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
