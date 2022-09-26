@@ -1,10 +1,11 @@
+"""Tests for Jobs being included."""
+# pylint: disable=missing-class-docstring,no-name-in-module
 from datetime import datetime
 from typing import NamedTuple
 
 from django.test import TestCase
 
 from nautobot_circuit_maintenance.jobs.site_search import check_for_overlap
-from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -15,9 +16,6 @@ class MockRecord(NamedTuple):
 
 
 class TestOverlap(TestCase):
-    def setUp(self) -> None:
-        model = CircuitMaintenance
-
     def test_check_for_overlap_false(self):
         record1 = MockRecord(
             start_time=datetime.strptime("2020-10-04 10:00:00", DATE_FORMAT),

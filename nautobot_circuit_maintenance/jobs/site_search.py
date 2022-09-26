@@ -1,17 +1,14 @@
 """Site searching Job definition."""
 import collections
 from datetime import datetime, date
-from django.conf import settings
 from typing import NamedTuple
 
-from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
+
 from nautobot.extras.jobs import Job
 from nautobot.circuits.models import Circuit
-from nautobot.dcim.models import Site
-from nautobot.extras.models import Tag
-from nautobot.utilities.choices import ColorChoices
 
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance
+from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 name = "Circuit Maintenance"  # pylint: disable=invalid-name
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
@@ -19,11 +16,26 @@ CIRCUIT_MAINTENANCE_TAG_COLOR = "Purple"
 
 
 class Range(NamedTuple):
+    """Range class for use within the check for overlap.
+
+    Args:
+        NamedTuple (NamedTupe): Named Tuple set up
+    """
+
     start: datetime
     end: datetime
 
 
 def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
+    """Checks for the overlap of two circuit maintenance records.
+
+    Args:
+        record1 (CircuitMaintenance): First maintenance record
+        record2 (CircuitMaintenance): Second maintenance record
+
+    Returns:
+        bool: Result of there is overlap
+    """
     # Build a couple of ranges
     range1 = Range(start=record1.start_time, end=record1.end_time)
     range2 = Range(start=record2.start_time, end=record2.end_time)
@@ -121,8 +133,7 @@ class FindSitesWithCircuitImpact(Job):
         today = date.today()
         circuit_maintenances = CircuitMaintenance.objects.filter(start_time__gte=today).order_by("start_time")
 
-        # Query for all of the circuits within Nautobot
-        all_circuits = Circuit.objects.all()
+        # Build a circuit mapper
         circuit_maintenance_mapper = build_sites_to_maintenance_mapper(circuit_maintenances)
 
         # Loop over each of the circuit maintenance records
