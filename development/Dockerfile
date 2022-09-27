@@ -19,11 +19,10 @@ RUN poetry config virtualenvs.create false \
 # -------------------------------------------------------------------------------------
 # Install Nautobot Plugin
 # -------------------------------------------------------------------------------------
-
-WORKDIR /source
+WORKDIR /tmp/install
 
 # Copy in only pyproject.toml/poetry.lock to help with caching this layer if no updates to dependencies
-COPY poetry.lock pyproject.toml /source/
+COPY poetry.lock pyproject.toml /tmp/install/
 
 # Add the requested Nautobot version to pyproject
 # to install the correct version based on the NAUTOBOT_VER argument
@@ -38,7 +37,9 @@ RUN poetry add nautobot==$NAUTOBOT_VER
 RUN poetry install --no-interaction --no-ansi --no-root -E metrics
 
 # Copy in the rest of the source code and install local Nautobot plugin
+WORKDIR /source
 COPY . /source
+RUN cp /tmp/install/* /source/
 RUN poetry install --no-interaction --no-ansi -E metrics
 
 COPY development/nautobot_config.py /opt/nautobot/nautobot_config.py
