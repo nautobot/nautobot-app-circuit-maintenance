@@ -1,8 +1,6 @@
-ARG NAUTOBOT_VER="1.3.5"
+ARG NAUTOBOT_VER="1.4.1"
 ARG PYTHON_VER=3.8
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
-
-ARG NAUTOBOT_VER=${NAUTOBOT_VER}
 
 ENV prometheus_multiproc_dir=/prom_cache
 
@@ -21,13 +19,17 @@ RUN poetry config virtualenvs.create false \
 # -------------------------------------------------------------------------------------
 # Install Nautobot Plugin
 # -------------------------------------------------------------------------------------
-
-WORKDIR /source
+WORKDIR /tmp/install
 
 # Copy in only pyproject.toml/poetry.lock to help with caching this layer if no updates to dependencies
-COPY poetry.lock pyproject.toml /source/
+COPY poetry.lock pyproject.toml /tmp/install/
 
-# Add Nautobot to the poetry file for testing
+# Add the requested Nautobot version to pyproject
+# to install the correct version based on the NAUTOBOT_VER argument
+# Otherwise Poetry will override the version in this container
+# with the one in the poetry.lock
+# Redifine NAUTOBOT_VER as a build arg as initial is defined outside FROM.
+ARG NAUTOBOT_VER="1.4.1"
 RUN poetry add nautobot==$NAUTOBOT_VER
 
 # --no-root declares not to install the project package since we're wanting to take advantage of caching dependency installation
@@ -35,7 +37,9 @@ RUN poetry add nautobot==$NAUTOBOT_VER
 RUN poetry install --no-interaction --no-ansi --no-root -E metrics
 
 # Copy in the rest of the source code and install local Nautobot plugin
+WORKDIR /source
 COPY . /source
+RUN cp /tmp/install/* /source/
 RUN poetry install --no-interaction --no-ansi -E metrics
 
 COPY development/nautobot_config.py /opt/nautobot/nautobot_config.py
