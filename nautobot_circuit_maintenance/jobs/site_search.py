@@ -136,6 +136,7 @@ class FindSitesWithMaintenanceOverlap(Job):
         circuit_maintenance_mapper = build_sites_to_maintenance_mapper(circuit_maintenances)
 
         # Loop over each of the circuit maintenance records
+        # pylint: disable=too-many-nested-blocks
         for circuit_maint in circuit_maintenances:
             # Get the list of sites
             sites: set = set()
