@@ -120,7 +120,6 @@ class FindSitesWithCircuitImpact(Job):
 
         name = "Find Sites With Circuit Impact"
         description = "Search for sites with multiple circuits, 1 or more circuit impacts."
-        read_only = True
 
     def run(self, data=None, commit=None):
         """Executes the Job.
