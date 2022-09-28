@@ -12,6 +12,7 @@ from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
 CIRCUIT_MAINTENANCE_TAG_COLOR = "Purple"
+CIRCUIT_IMPACT_SET = {"REDUCED-REDUNDANCY", "DEGRADED", "OUTAGE"}
 
 name = "Circuit Maintenance"  # pylint: disable=invalid-name
 
@@ -148,10 +149,18 @@ class FindSitesWithMaintenanceOverlap(Job):
                     if circuit_maint == other_circuit_maint:
                         continue
                     if check_for_overlap(circuit_maint, other_circuit_maint):
-                        self.log_warning(
-                            obj=site,
-                            message=f"There is an overlapping maintenance for site: {site.name}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
-                        )
+                        if PLUGIN_SETTINGS.get("overlap_job_log_only_impacts"):
+                            for impact in circuit_maint.circuitimpact_set:
+                                if impact.impact in CIRCUIT_IMPACT_SET:
+                                    self.log_warning(
+                                        obj=site,
+                                        message=f"There is an overlapping maintenance for site: {site.name}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                                    )
+                        else:
+                            self.log_warning(
+                                obj=site,
+                                message=f"There is an overlapping maintenance for site: {site.name}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                            )
                     else:
                         # Log success for each time there is a known circuit still available at the site at the same time
                         self.log_success(
