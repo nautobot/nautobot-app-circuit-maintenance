@@ -141,7 +141,7 @@ class FindSitesWithMaintenanceOverlap(Job):
             for circuit in circuit_maint.circuits:
                 sites.add(get_sites_from_circuit(circuit))
 
-            # Check to see if there are any circuit maintenances that are duplicated time
+            # Check to see if there are any circuit maintenances that are overlapping at some moment in time
             for site in sites:
                 for other_circuit_maint in circuit_maintenance_mapper[site.name]:
                     # Report failures for any time where a circuit will take an outage
