@@ -119,7 +119,7 @@ class FindSitesWithMaintenanceOverlap(Job):
         """Meta definition for the Job."""
 
         name = "Find Sites With Circuit Maintenance Overlap"
-        description = "Search for sites with multiple circuits, 1 or more circuit impacts."
+        description = "Search for sites with overlapping circuit maintenances, 1 or more circuit impacts, assuming only TWO circuits per site."
 
     def run(self, data=None, commit=None):
         """Executes the Job.
