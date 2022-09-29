@@ -33,6 +33,7 @@ PLUGINS_CONFIG = {
         "raw_notification_initial_days_since": 100,
         "raw_notification_size": 16384,
         "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
+        "overlap_job_log_only_impacts": False, # Defaults for False to alert on any notification, regardless of impact. True if there needs to be a known impact.
         "notification_sources": [
             {
               ...
@@ -215,41 +216,6 @@ In the Circuit Maintenance plugin UI section, there is a **Notification Sources*
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
 
 > Note that for emails from a given Provider to be processed, you must _both_ define a source email address(es) for that Provider (Usage section 1, above) _and_ add that provider to a specific Notification Source as described in this section.
-
-### 3. Run Handle Notifications Job
-
-There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the emails sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
-Each notification will be parsed using the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser) library, and if a valid parsing is executed, a new **Circuit Maintenance** will be created, or if it was already created, it will updated with the new data.
-
-So, for each email notification received, several objects will be created:
-
-#### 3.1 Notification
-
-Each notification received will create a related object, containing the raw data received, and linking to the corresponding **parsed notification** in case the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser) was able to parse it correctly.
-
-#### 3.2 Parsed Notification
-
-When a notification was successfully parsed, it will create a **parsed notification** object, that will contain the structured output from the parser library , following the recommendation defined in [draft NANOG BCOP](https://github.com/jda/maintnote-std/blob/master/standard.md), and a link to the related **Circuit Maintenance** object created.
-
-#### 3.3 Circuit Maintenance
-
-The **Circuit Maintenance** is where all the necessary information related to a Circuit maintenance is tracked, and reuses most of the data model defined in the parser library.
-
-Attributes:
-
-- Name: name or identifier of the maintenance.
-- Description: description of the maintenance.
-- Status: current state of the maintenance.
-- Start time: defined start time of the maintenance work.
-- End time: defined end time of the maintenance work.
-- Ack: boolean to show if the maintenance has been properly handled by the operator.
-- Circuits: list of circuits and its specific impact linked to this maintenance.
-- Notes: list of internal notes linked to this maintenance.
-- Notifications: list of all the parsed notifications that have been processed for this maintenance.
-
-<p align="center">
-<img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_maintenance.png" width="800" class="center">
-</p>
 
 ### Metrics
 

@@ -111,6 +111,12 @@ def build_sites_to_maintenance_mapper(maintenance_queryset):
 class FindSitesWithMaintenanceOverlap(Job):
     """Nautobot Job definition for finding sites without redundant circuit for impactful maintenance.
 
+    Current iteration of this job assumes that many sites will be only dual carrier connected. The searches are going
+    to search for a single overlap in this first iteration.
+
+    Future iterations may include the ability to search for multiple circuit overlaps that would allow for just a single
+    circuit to be available.
+
     Args:
         Job (Nautobot Job): Nautobot Job parent class
     """
