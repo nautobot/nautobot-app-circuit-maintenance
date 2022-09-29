@@ -61,14 +61,14 @@ def get_sites_from_circuit(circuit: Circuit):
 
 
     Returns:
-        set: Set of Nautobot Site objects
+        list: List of Nautobot Site objects
     """
     site_set: set = set()
     for term in [circuit.termination_a, circuit.termination_z]:
         if term is not None and getattr(term, "provider_network") is None:
             site_set.add(term.site)
 
-    return site_set
+    return list(site_set)
 
 
 def build_sites_to_maintenance_mapper(maintenance_queryset):
@@ -137,16 +137,16 @@ class FindSitesWithMaintenanceOverlap(Job):
 
         # Loop over each of the circuit maintenance records
         # pylint: disable=too-many-nested-blocks
-        counter = 0
+        counter: int = 0
         for circuit_maint in circuit_maintenances:
             counter += 1
             # Get the list of sites
-            sites: set = set()
+            site_list: list = []
             for circuit in circuit_maint.circuits:
-                sites.add(get_sites_from_circuit(circuit))
+                site_list += get_sites_from_circuit(circuit)
 
             # Check to see if there are any circuit maintenances that are overlapping at some moment in time
-            for site in sites:
+            for site in site_list:
                 for other_circuit_maint in circuit_maintenance_mapper[site.name]:
                     # Report failures for any time where a circuit will take an outage
                     if circuit_maint == other_circuit_maint:
@@ -166,9 +166,7 @@ class FindSitesWithMaintenanceOverlap(Job):
                             )
                     else:
                         # Log success for each time there is a known circuit still available at the site at the same time
-                        self.log_info(
-                            obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found."
-                        )
+                        self.log_debug(message="Checked maintenance for overlap, no overlap was found.")
 
         self.log_success(
             obj=None,
