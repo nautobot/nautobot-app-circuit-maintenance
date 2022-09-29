@@ -137,7 +137,9 @@ class FindSitesWithMaintenanceOverlap(Job):
 
         # Loop over each of the circuit maintenance records
         # pylint: disable=too-many-nested-blocks
+        counter = 0
         for circuit_maint in circuit_maintenances:
+            counter += 1
             # Get the list of sites
             sites: set = set()
             for circuit in circuit_maint.circuits:
@@ -167,3 +169,8 @@ class FindSitesWithMaintenanceOverlap(Job):
                         self.log_info(
                             obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found."
                         )
+
+        self.log_success(
+            obj=None,
+            message=f"Successfully checked through {counter} maintenance notification{s if counter > 1 else ''}.",
+        )
