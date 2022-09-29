@@ -164,6 +164,6 @@ class FindSitesWithMaintenanceOverlap(Job):
                             )
                     else:
                         # Log success for each time there is a known circuit still available at the site at the same time
-                        self.log_success(
+                        self.log_info(
                             obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found."
                         )
