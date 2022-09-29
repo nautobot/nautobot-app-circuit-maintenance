@@ -172,5 +172,5 @@ class FindSitesWithMaintenanceOverlap(Job):
 
         self.log_success(
             obj=None,
-            message=f"Successfully checked through {counter} maintenance notification{s if counter > 1 else ''}.",
+            message=f"Successfully checked through {counter} maintenance notification{'s' if counter > 1 else ''}.",
         )
