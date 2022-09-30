@@ -33,7 +33,7 @@ PLUGINS_CONFIG = {
         "raw_notification_initial_days_since": 100,
         "raw_notification_size": 16384,
         "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
-        "overlap_job_log_only_impacts": False, # Defaults for False to alert on any notification, regardless of impact. True if there needs to be a known impact.
+        "overlap_job_exclude_no_impact": False, # Exclude in job warnings the impact of `No-Impact`
         "notification_sources": [
             {
               ...
