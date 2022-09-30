@@ -83,7 +83,7 @@ class CircuitMaintenanceConfig(PluginConfig):
     author_email = "opensource@networktocode.com"
     description = "Automatically handle network circuit maintenance notifications."
     base_url = "circuit-maintenance"
-    min_version = "1.0.0-beta.4"
+    min_version = "1.4.0"
     max_version = "1.999"
     required_settings = []
     default_settings = {
