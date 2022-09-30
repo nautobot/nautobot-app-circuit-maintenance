@@ -19,8 +19,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
-nautobot = "*"
+python = "^3.8, <4.0.0"
+nautobot = "^1.4"
 nautobot-capacity-metrics = {version = "*", optional = true }
 # nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
 bs4 = "^0.0.1"
@@ -46,7 +46,7 @@ pylint-django = "*"
 pydocstyle = "*"
 flake8 = "*"
 parameterized = "*"
-mysqlclient = "*"
+# mysqlclient = "*"
 
 
 [tool.poetry.extras]
