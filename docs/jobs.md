@@ -35,6 +35,6 @@ Attributes:
 
 ## Circuit Overlap Job
 
-The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a site. The variable `overlap_job_log_only_impacts` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job. 
+The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a site. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job. 
 
 Use the Job regularly to search for the overlap and review any log message that has a Warning level that will indicate that there is a possible overlapping maintenance.
