@@ -101,7 +101,9 @@ def build_sites_to_maintenance_mapper(maintenance_queryset):
         for circuit in record.circuits:
             # Check both termination A and Z for values of None, add that record to the set for each site
             for term in [circuit.termination_a, circuit.termination_z]:
-                if term is not None:
+                # If the circuit is connected to a provider network, then it will return None for a site.
+                # Also only checks connected circuits.
+                if term.site is not None:
                     return_dictionary[term.site.name].add(record)
 
     return dict(return_dictionary)
@@ -162,12 +164,12 @@ class FindSitesWithMaintenanceOverlap(Job):
                                 if impact.impact != "NO-IMPACT":
                                     self.log_warning(
                                         obj=site,
-                                        message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_date}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                                        message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                                     )
                         else:
                             self.log_warning(
                                 obj=site,
-                                message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_date}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                                message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                             )
                     else:
                         # Log success for each time there is a known circuit still available at the site at the same time
