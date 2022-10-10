@@ -91,6 +91,7 @@ class CircuitMaintenanceConfig(PluginConfig):
         "raw_notification_initial_days_since": 7,
         "raw_notification_size": 8192,
         "dashboard_n_days": 30,
+        "overlap_job_exclude_no_impact": False,
     }
     caching_config = {}
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
