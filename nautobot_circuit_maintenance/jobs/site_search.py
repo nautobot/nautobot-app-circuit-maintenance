@@ -143,6 +143,7 @@ class FindSitesWithMaintenanceOverlap(Job):
         # Loop over each of the circuit maintenance records
         # pylint: disable=too-many-nested-blocks
         counter: int = 0
+        maintenance_list = []
         for circuit_maint in circuit_maintenances:
             counter += 1
             # Get the list of sites
@@ -154,6 +155,10 @@ class FindSitesWithMaintenanceOverlap(Job):
             for site in site_list:
                 for other_circuit_maint in circuit_maintenance_mapper[site.name]:
                     # Report failures for any time where a circuit will take an outage
+                    maintenance_list.append(circuit_maint)
+                    # Check to see if the other circuit maintenance has already had overlap checked.
+                    if other_circuit_maint in maintenance_list:
+                        continue
                     if circuit_maint == other_circuit_maint:
                         continue
                     if check_for_overlap(circuit_maint, other_circuit_maint):
