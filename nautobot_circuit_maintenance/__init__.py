@@ -84,7 +84,8 @@ class CircuitMaintenanceConfig(PluginConfig):
     description = "Automatically handle network circuit maintenance notifications."
     base_url = "circuit-maintenance"
     min_version = "1.0.0-beta.4"
-    max_version = "1.999"
+    # Limiting max version until issue #218 is fixed
+    max_version = "1.3.9"
     required_settings = []
     default_settings = {
         "raw_notification_initial_days_since": 7,

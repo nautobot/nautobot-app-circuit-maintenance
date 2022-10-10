@@ -40,7 +40,7 @@ namespace = Collection("nautobot_circuit_maintenance")
 namespace.configure(
     {
         "nautobot_circuit_maintenance": {
-            "nautobot_ver": "latest",
+            "nautobot_ver": "1.3.9",
             "project_name": "nautobot_circuit_maintenance",
             "python_ver": "3.7",
             "local": False,
