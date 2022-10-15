@@ -143,10 +143,22 @@
                         {% endif %}
                     </td>
                     <td>
-                        {{ circuit.circuit.termination_a.site }}
+                    {% if circuit.circuit.termination_a.location %}
+                        {{ circuit.circuit.termination_a.location }}
+                    {% elif circuit.circuit.termination_a.provider_network %}
+                        {{ circuit.circuit.termination_a.provider_network }}
+                    {% else %}
+                        {{ circuit.circuit.termination_a.site | placeholder }}
+                    {% endif %}
                     </td>
                     <td>
-                        {{ circuit.circuit.termination_z.site }}
+                    {% if circuit.circuit.termination_z.location %}
+                        {{ circuit.circuit.termination_z.location }}
+                    {% elif circuit.circuit.termination_z.provider_network %}
+                        {{ circuit.circuit.termination_z.provider_network }}
+                    {% else %}
+                        {{ circuit.circuit.termination_z.site | placeholder }}
+                    {% endif %}
                     </td>
                     <td>
                         {{ circuit.circuit.description }}
