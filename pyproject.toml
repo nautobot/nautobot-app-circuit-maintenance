@@ -19,7 +19,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8, <4.0.0"
+python = "^3.7, <4.0.0"
 nautobot = "^1.4"
 nautobot-capacity-metrics = {version = "*", optional = true }
 # nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
