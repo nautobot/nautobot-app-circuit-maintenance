@@ -130,8 +130,8 @@ class FindSitesWithMaintenanceOverlap(Job):
         """Executes the Job.
 
         Args:
-            data (_type_, optional): _description_. Defaults to None.
-            commit (_type_, optional): _description_. Defaults to None.
+            data (dict, optional): Data from Nautobot from. Defaults to None.
+            commit (bool, optional): Commit boolean. Defaults to None.
         """
         # Query for all of the circuits maintenances that are on going in the future
         today = date.today()
