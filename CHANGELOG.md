@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6.1
+
+### Added
+
+- #214 - Maintenance Overlap Job Addition
+
+### Fixed
+
+- #222 - Fix for circuit maintenance detail view. Show approriate A and Z termination sides.
+- #216 - Fix variable naming in Overlapping Maintenance Job: start_date instead of start_time.
+- #208 - Fix CI credentials.
+
 ## v0.6.0
 
 ### Added
