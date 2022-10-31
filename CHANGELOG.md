@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.0
+
+- Adds ability to search for overlapping jobs
+
 ## v0.6.0
 
 ### Added
