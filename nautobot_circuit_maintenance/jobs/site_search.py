@@ -1,7 +1,6 @@
 """Site searching Job definition."""
 import collections
-from datetime import datetime, date
-from typing import NamedTuple
+from datetime import date
 
 from django.conf import settings
 
