@@ -133,12 +133,14 @@ class FindSitesWithMaintenanceOverlap(Job):
                 site_set.update(get_sites_from_circuit(circuit))
 
             processed_maintenance_list.append(circuit_maint)
-            overlapping_maintenance = False
+            overlapping_maintenance = False  # Flag for overlapping maintenance present
             # Check to see if there are any circuit maintenances that are overlapping at some moment in time
             for site in site_set:
                 for other_circuit_maint in circuit_maintenance_mapper[site.name]:
                     # Report failures for any time where a circuit will take an outage
                     # Check to see if the other circuit maintenance has already had overlap checked.
+                    # If this is the same circuit maintenance record, that will also show up in the processed list
+                    # since the list is being added to before the loop.
                     if other_circuit_maint in processed_maintenance_list:
                         continue
                     if check_for_overlap(circuit_maint, other_circuit_maint):
