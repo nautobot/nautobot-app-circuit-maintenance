@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 from django.conf import settings
 
-from nautobot.extras.jobs import Job
+from nautobot.extras.jobs import BooleanVar, Job
 from nautobot.circuits.models import Circuit
 
 from nautobot_circuit_maintenance.models import CircuitMaintenance
@@ -14,17 +14,6 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
 CIRCUIT_MAINTENANCE_TAG_COLOR = "Purple"
 
 name = "Circuit Maintenance"  # pylint: disable=invalid-name
-
-
-class DateTimeRange(NamedTuple):
-    """Range class for use within the check for overlap.
-
-    Args:
-        NamedTuple (NamedTupe): Parent class
-    """
-
-    start: datetime
-    end: datetime
 
 
 def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
@@ -37,22 +26,13 @@ def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
     Returns:
         bool: Result of there is overlap
     """
-    # Build a couple of ranges
-    range1 = DateTimeRange(start=record1.start_time, end=record1.end_time)
-    range2 = DateTimeRange(start=record2.start_time, end=record2.end_time)
+    if record1.end_time < record2.start_time or record1.start_time > record2.end_time:
+        return False
 
-    # Determine the latest start and the earliest end to determine overlap
-    latest_start = max(range1.start, range2.start)
-    earliest_end = min(range1.end, range2.end)
-
-    # Get the delta, compare versus 0 (negative number is no overlap)
-    delta = (earliest_end - latest_start).days + 1
-
-    # If delta is negative there is no overlap, return false
-    return delta > 0
+    return True
 
 
-def get_sites_from_circuit(circuit: Circuit):
+def get_sites_from_circuit(circuit: Circuit) -> set:
     """Get a list of sites from a circuit object in Nautobot.
 
     Args:
@@ -67,7 +47,7 @@ def get_sites_from_circuit(circuit: Circuit):
         if term is not None and getattr(term, "provider_network") is None:
             site_set.add(term.site)
 
-    return list(site_set)
+    return site_set
 
 
 def build_sites_to_maintenance_mapper(maintenance_queryset):
@@ -101,8 +81,9 @@ def build_sites_to_maintenance_mapper(maintenance_queryset):
         for circuit in record.circuits:
             # Check both termination A and Z for values of None, add that record to the set for each site
             for term in [circuit.termination_a, circuit.termination_z]:
-                if term.site is not None:
-                    return_dictionary[term.site.name].add(record)
+                if term is not None:
+                    if term.site is not None:
+                        return_dictionary[term.site.name].add(record)
 
     return dict(return_dictionary)
 
@@ -119,6 +100,8 @@ class FindSitesWithMaintenanceOverlap(Job):
     Args:
         Job (Nautobot Job): Nautobot Job parent class
     """
+
+    job_debug = BooleanVar(description="Enable for more verbose debug logging")
 
     class Meta:
         """Meta definition for the Job."""
@@ -142,43 +125,43 @@ class FindSitesWithMaintenanceOverlap(Job):
 
         # Loop over each of the circuit maintenance records
         # pylint: disable=too-many-nested-blocks
-        counter: int = 0
         processed_maintenance_list = []  # List of the processed maintenance records
         for circuit_maint in circuit_maintenances:
-            counter += 1
-            # Get the list of sites
-            site_list: list = []
+            # Get the set of sites
+            site_set: set = set()
             for circuit in circuit_maint.circuits:
-                site_list += get_sites_from_circuit(circuit)
+                site_set.update(get_sites_from_circuit(circuit))
 
+            processed_maintenance_list.append(circuit_maint)
+            overlapping_maintenance = False
             # Check to see if there are any circuit maintenances that are overlapping at some moment in time
-            for site in site_list:
+            for site in site_set:
                 for other_circuit_maint in circuit_maintenance_mapper[site.name]:
                     # Report failures for any time where a circuit will take an outage
-                    processed_maintenance_list.append(circuit_maint)
                     # Check to see if the other circuit maintenance has already had overlap checked.
                     if other_circuit_maint in processed_maintenance_list:
                         continue
-                    if circuit_maint == other_circuit_maint:
-                        continue
                     if check_for_overlap(circuit_maint, other_circuit_maint):
+                        overlapping_maintenance = True
                         if PLUGIN_SETTINGS.get("overlap_job_exclude_no_impact"):
                             for impact in circuit_maint.circuitimpact_set:
                                 if impact.impact != "NO-IMPACT":
                                     self.log_warning(
                                         obj=site,
-                                        message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                                        message=f"There is an overlapping __no-impact__ maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                                     )
                         else:
                             self.log_warning(
                                 obj=site,
                                 message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                             )
-                    else:
-                        # Log success for each time there is a known circuit still available at the site at the same time
-                        self.log_debug(message="Checked maintenance for overlap, no overlap was found.")
+
+            # Log success for each time there is a known circuit still available at the site at the same time
+            if overlapping_maintenance is False:
+                if data["job_debug"]:
+                    self.log_info(obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found.")
 
         self.log_success(
             obj=None,
-            message=f"Successfully checked through {counter} maintenance notification{'s' if counter > 1 else ''}.",
+            message=f"Successfully checked through {circuit_maintenances.count()} maintenance notification{'s'[:circuit_maintenances.count()^1]}.",
         )
