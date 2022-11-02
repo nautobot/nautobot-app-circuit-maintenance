@@ -25,7 +25,7 @@ def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
     Returns:
         bool: True if there is overlap, otherwise False.
     """
-    if record1.end_time < record2.start_time or record1.start_time > record2.end_time:
+    if record1.end_time < record2.start_time or record2.end_time < record1.start_time:
         return False
 
     return True
