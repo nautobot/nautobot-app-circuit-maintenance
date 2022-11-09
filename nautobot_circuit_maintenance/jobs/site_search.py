@@ -81,7 +81,7 @@ def build_sites_to_maintenance_mapper(maintenance_queryset):
             # Check both termination A and Z for values of None, add that record to the set for each site
             for term in [circuit.termination_a, circuit.termination_z]:
                 if term is not None and term.site is not None:
-                        return_dictionary[term.site.name].add(record)
+                    return_dictionary[term.site.name].add(record)
 
     return dict(return_dictionary)
 
