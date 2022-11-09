@@ -1,8 +1,21 @@
 # Changelog
 
-## v0.7.0
+## v0.6.2
 
-- Adds ability to search for overlapping jobs
+- (#221) Fixes error in Overlap Job
+- (#221) Adds watchmedo to auto reload worker containers during job development
+
+## v0.6.1
+
+### Added
+
+- #214 - Maintenance Overlap Job Addition
+
+### Fixed
+
+- #222 - Fix for circuit maintenance detail view. Show approriate A and Z termination sides.
+- #216 - Fix variable naming in Overlapping Maintenance Job: start_date instead of start_time.
+- #208 - Fix CI credentials.
 
 ## v0.6.0
 
