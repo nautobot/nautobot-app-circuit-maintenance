@@ -59,4 +59,5 @@ services:
       - "sh"
       - "-c"  # this is to evaluate the $NAUTOBOT_LOG_LEVEL from the env
       - "nautobot-server celery worker -B -l $$NAUTOBOT_LOG_LEVEL"  # $$ because of docker-compose
+      - "watchmedo auto-restart --directory './' --pattern '*.py' --recursive -- nautobot-server celery worker -l $$NAUTOBOT_LOG_LEVEL --events"
     <<: *nautobot-base
