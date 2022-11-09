@@ -25,7 +25,7 @@ def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
     Returns:
         bool: True if there is overlap, otherwise False.
     """
-    if record1.end_time < record2.start_time or record1.start_time > record2.end_time:
+    if record1.end_time < record2.start_time or record2.end_time < record1.start_time:
         return False
 
     return True
@@ -80,8 +80,7 @@ def build_sites_to_maintenance_mapper(maintenance_queryset):
         for circuit in record.circuits:
             # Check both termination A and Z for values of None, add that record to the set for each site
             for term in [circuit.termination_a, circuit.termination_z]:
-                if term is not None:
-                    if term.site is not None:
+                if term is not None and term.site is not None:
                         return_dictionary[term.site.name].add(record)
 
     return dict(return_dictionary)
