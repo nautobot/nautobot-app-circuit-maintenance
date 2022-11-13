@@ -147,7 +147,7 @@ class FindSitesWithMaintenanceOverlap(Job):
                                 if impact.impact != "NO-IMPACT":
                                     self.log_warning(
                                         obj=site,
-                                        message=f"There is an overlapping __no-impact__ maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
+                                        message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                                     )
                                 overlapping_maintenance = True
 
