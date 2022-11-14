@@ -159,9 +159,8 @@ class FindSitesWithMaintenanceOverlap(Job):
                             overlapping_maintenance = True
 
             # Log success for when there is not an overlapping maintenance at a site
-            if overlapping_maintenance is False:
-                if data["job_debug"]:
-                    self.log_info(obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found.")
+            if overlapping_maintenance is False and data["job_debug"]:
+                self.log_info(obj=circuit_maint, message="Checked maintenance for overlap, no overlap was found.")
 
         self.log_success(
             obj=None,
