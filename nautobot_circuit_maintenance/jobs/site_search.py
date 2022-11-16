@@ -142,6 +142,7 @@ class FindSitesWithMaintenanceOverlap(Job):
                     if other_circuit_maint in processed_maintenance_list:
                         continue
                     if check_for_overlap(circuit_maint, other_circuit_maint):
+                        overlapping_maintenance = True
                         if PLUGIN_SETTINGS.get("overlap_job_exclude_no_impact"):
                             for circuit_impact in circuit_maint.circuitimpact_set:
                                 if circuit_impact.impact != "NO-IMPACT":
@@ -153,7 +154,6 @@ class FindSitesWithMaintenanceOverlap(Job):
                             obj=site,
                             message=f"There is an overlapping maintenance for site: {site.name} on {circuit_maint.start_time}. Other maintenances: {other_circuit_maint}|{circuit_maint}",
                         )
-                        overlapping_maintenance = True
 
             # Log success for when there is not an overlapping maintenance at a site
             if overlapping_maintenance is False and data["job_debug"]:
