@@ -147,7 +147,7 @@ class FindSitesWithMaintenanceOverlap(Job):
                             for circuit_impact in circuit_maint.circuitimpact_set:
                                 if circuit_impact.impact != "NO-IMPACT":
                                     break
-
+                            else:
                                 continue
 
                         self.log_warning(
