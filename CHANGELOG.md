@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.2
+
+### Fixed
+
+- #221 - Fixes error in Overlap Job
+
+### Added
+
+- #221 - Adds watchmedo to auto reload worker containers during job development
+
 ## v0.6.1
 
 ### Added
