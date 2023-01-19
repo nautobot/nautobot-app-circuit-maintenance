@@ -255,6 +255,9 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# Jetbrains IDE configs
+.idea/
+
 # Editor-based Rest Client
 .idea/httpRequests
 
