@@ -22,9 +22,7 @@ packages = [
 python = "^3.7"
 nautobot = "*"
 nautobot-capacity-metrics = {version = "*", optional = true }
-# nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop"}
 bs4 = "^0.0.1"
-pydantic = "^1.8.1"
 circuit-maintenance-parser = "^2.0.0"
 google-api-python-client = "^2.9.0"
 google-oauth = "^1.0.0"
