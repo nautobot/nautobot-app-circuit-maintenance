@@ -1,78 +1,41 @@
 {% extends 'generic/object_detail.html' %}
-{% load buttons %}
-{% load custom_links %}
-{% load helpers %}
-{% load plugins %}
 
-{% block title %}{{ object }}{% endblock%}
-{% block header %}
+{% block masthead %}
+    <h1>{{ object.title }}</h1>
+{% endblock masthead %}
 
-
-<div class="row noprint">
-    <div class="col-sm-8 col-md-9">
-        <ol class="breadcrumb">
-            <li><a href="{% url 'plugins:nautobot_circuit_maintenance:note_list' %}">Notes</a></li>
-            <li><a>{{ object }}</a></li>
-        </ol>
-    </div>
-</div>
-
-<h1>{{ object.title }}</h1>
-
-{% include 'inc/created_updated.html' with obj=object %}
-
-<div class="pull-right noprint">{% custom_links object %}</div>
-
-<ul class="nav nav-tabs">
-  <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
-      <a href="{{ object.get_absolute_url }}">Note</a>
-  </li>
-  {% if perms.extras.view_objectchange %}
-      <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
-          <a href="{% url 'plugins:nautobot_circuit_maintenance:note_changelog' pk=object.pk %}">Change Log</a>
-      </li>
-  {% endif %}
-</ul>
-
-{% endblock %} {% block content %}
-
-<div class="row">
-  <div class="col-md-6">
+{% block content_left_page %}
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <strong>Info</strong>
-      </div>
-      <table class="table table-hover panel-body attr-table">
-        <tr>
-          <td>Title</td>
-          <td>
-            <span class="">{{ object.title }}</span>
-          </td>
-        </tr>
-        <tr>
-          <td>Level</td>
-          <td>{{ object.level }}</td>
-        </tr>
-        <tr>
-            <td>Maintenance</td>
-            <td>
-                <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance' pk=object.maintenance.id %}"
-                  >{{ object.maintenance }}</a
-                >
-              </td>
-        </tr>
-        <tr>
-            <td>Comment</td>
-            <td>{{ object.comment }}</td>
-        </tr>
-        <tr>
-            <td>Last Updated</td>
-            <td>{{ object.last_updated }}</td>
-        </tr>
-      </table>
+        <div class="panel-heading">
+            <strong>Info</strong>
+        </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Title</td>
+                <td>
+                    <span class="">{{ object.title }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Level</td>
+                <td>{{ object.level }}</td>
+            </tr>
+            <tr>
+                <td>Maintenance</td>
+                <td>
+                    <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance' pk=object.maintenance.id %}"
+                    >{{ object.maintenance }}</a
+                    >
+                </td>
+            </tr>
+            <tr>
+                <td>Comment</td>
+                <td>{{ object.comment }}</td>
+            </tr>
+            <tr>
+                <td>Last Updated</td>
+                <td>{{ object.last_updated }}</td>
+            </tr>
+        </table>
     </div>
-  </div>
-</div>
-{% include 'inc/custom_fields_panel.html' %}
-{% include 'inc/relationships_panel.html' %}
 {% endblock %}

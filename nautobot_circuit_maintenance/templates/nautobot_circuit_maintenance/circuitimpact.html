@@ -1,79 +1,27 @@
 {% extends 'generic/object_detail.html' %}
-{% load buttons %}
-{% load custom_links %}
-{% load helpers %}
-{% load plugins %}
 
-{% block title %}{{ object }}{% endblock %}
-
-{% block header %}
-
-    <div class="row noprint">
-        <div class="col-sm-8 col-md-9">
-            <ol class="breadcrumb">
-                <li><a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_list' %}">Circuit Impact</a></li>
-                <li><a>{{ object }}</a></li>
-            </ol>
+{% block content_left_page %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Info</strong>
         </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Maintenance</td>
+                <td>
+                    <a href="{{ object.maintenance.get_absolute_url }}">{{ object.maintenance.name }}</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Circuit</td>
+                <td>
+                    <a href="{{ object.circuit.get_absolute_url }}">{{ object.circuit.cid }}</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Impact</td>
+                <td>{{ object.impact }}</td>
+            </tr>
+        </table>
     </div>
-
-    <div class="pull-right noprint">
-        {% plugin_buttons object %}
-        {% if perms.nautobot_circuit_maintenance.edit_circuitimpact %}
-            {% edit_button object %}
-        {% endif %}
-        {% if perms.nautobot_circuit_maintenance.delete_circuitimpact %}
-            {% delete_button object %}
-        {% endif %}
-    </div>
-
-
-    <h1>{{ object }}</h1>
-        {% include 'inc/created_updated.html' with obj=object %}
-    <div class="pull-right noprint">
-        {% custom_links object %}
-    </div>
-
-    <ul class="nav nav-tabs">
-        <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
-            <a href="{{ object.get_absolute_url }}">Circuit Impact</a>
-        </li>
-        <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_changelog' pk=object.pk %}">Change Log</a>
-        </li>
-    </ul>
-
-{% endblock %}
-
-{% block content %}
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <strong>Info</strong>
-                </div>
-                <table class="table table-hover panel-body attr-table">
-                    <tr>
-                        <td>Maintenance</td>
-                        <td>
-                            <a href="{{ object.maintenance.get_absolute_url }}">{{ object.maintenance.name }}</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Circuit</td>
-                        <td>
-                            <a href="{{ object.circuit.get_absolute_url }}">{{ object.circuit.cid }}</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Impact</td>
-                        <td>{{ object.impact }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% include 'inc/custom_fields_panel.html' %}
-    {% include 'inc/relationships_panel.html' %}
 {% endblock %}
