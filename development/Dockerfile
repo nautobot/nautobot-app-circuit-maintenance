@@ -1,4 +1,4 @@
-ARG NAUTOBOT_VER="1.4.1"
+ARG NAUTOBOT_VER="1.4.7"
 ARG PYTHON_VER=3.8
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
 
@@ -13,7 +13,8 @@ RUN apt-get update && apt-get install -y gcc libmariadb-dev-compat libmariadb-de
 WORKDIR $NAUTOBOT_ROOT
 
 # Configure poetry
-RUN poetry config virtualenvs.create false \
+RUN poetry self update \
+    && poetry config virtualenvs.create false \
     && poetry config installer.parallel false
 
 # -------------------------------------------------------------------------------------
@@ -29,7 +30,7 @@ COPY poetry.lock pyproject.toml /tmp/install/
 # Otherwise Poetry will override the version in this container
 # with the one in the poetry.lock
 # Redifine NAUTOBOT_VER as a build arg as initial is defined outside FROM.
-ARG NAUTOBOT_VER="1.4.1"
+ARG NAUTOBOT_VER="1.4.7"
 RUN poetry add nautobot==$NAUTOBOT_VER
 
 # --no-root declares not to install the project package since we're wanting to take advantage of caching dependency installation
