@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- #221 - Fixes error in Overlap Job
+- #221 - Fixes where duplicate maintence records show jobs
 
 ### Added
 
