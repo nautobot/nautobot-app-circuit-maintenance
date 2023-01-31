@@ -4,11 +4,16 @@
 
 ### Fixed
 
-- #221 - Fixes error in Overlap Job
+- #221 - Fixes where duplicate maintence records show jobs
 
 ### Added
 
 - #221 - Adds watchmedo to auto reload worker containers during job development
+
+### Changed
+
+- #234 - Unpin `pydantic` from dependencies, and use the one from the `circuit-maintenance-parser`
+- #230 - Update **init**.py to better describe the app in the UI
 
 ## v0.6.1
 
