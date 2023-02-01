@@ -10,7 +10,7 @@ In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we w
 
 These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
 
-Also, by default, the Provider **slug** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CentruryLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
+Also, by default, the Provider **slug** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
 
 ### Configure Notification Sources in `nautobot_config.py`
 
@@ -26,7 +26,7 @@ There is also one optional attribute:
 - `attach_all_providers`: Flag that enables auto linking of newly created `Providers` to this Notification Source.
 
 !!! note
-    Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as URL scheme
+    Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as a URL scheme
 
 #### IMAP
 
@@ -133,7 +133,7 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 
 ##### OAuth
 
-To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/web-server) integration:
+To create an [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/web-server) integration:
 
 3. Still under **APIs and Services**, in **Credentials**, create a new **OAuth client ID** selecting the **Web application** application type.
 4. Under **Authorized redirect URIs** add the location where your Nautobot server is listening plus `plugins/circuit-maintenance/source/google_oauth2callback/`. For instance: `http://localhost:8080/plugins/circuit-maintenance/source/google_oauth2callback/`
@@ -146,7 +146,7 @@ To create a [OAuth 2.0](https://developers.google.com/identity/protocols/oauth2/
 
 While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI doesn't appear to expose the underlying label IDs that need to be used with the Gmail API. The easiest way to look these up is to use the [Gmail for Developers API Explorer](https://developers.google.com/gmail/api/reference/rest/v1/users.labels/list) to log in as the desired user and query for the existing labels and their IDs.
 
-![](../images/gmail_api_explorer_label_ids.png)
+![screenshot of gmail interactive api](../images/gmail_api_explorer_label_ids.png)
 
 #### Run `nautobot-server post_upgrade` command
 
@@ -241,10 +241,4 @@ Attributes:
 
 The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a site. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job.
 
-Use the Job regularly to search for the overlap and review any log message that has a Warning level that will indicate that there is a possible overlapping maintenance.
-
-
-## Screenshots
-
-!!! warning "Developer Note - Remove Me!"
-    Ideally captures every view exposed by the App. Should include a relevant dataset.
+Use the Job regularly to search for overlapping maintenance and review any log message that has a Warning level that will indicate that there is a possible overlapping maintenance.
