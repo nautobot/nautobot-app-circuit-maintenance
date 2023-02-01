@@ -7,21 +7,21 @@ This document provides an overview of the App including critical information and
 
 ## Description
 
+A plugin for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circuit Maintenance events related to Circuits in Nautobot.
+
+`nautobot-circuit-maintenance` lets you handle provider maintenances for your Circuits based on notifications received by email through leveraging [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser), a maintenance notification parser library for multiple network service providers that exposes structured data following a recommendation defined in this [draft NANOG BCOP](https://github.com/jda/maintnote-std/blob/master/standard.md), in addition to supporting text based parsing to extract maintenance dates, impacted circuits, and severity of the maintenance.
 
 ## Audience (User Personas) - Who should use this App?
 
-!!! warning "Developer Note - Remove Me!"
-    Who is this meant for/ who is the common user of this app?
+This app is meant for any set of users that have to be aware of and administer Circuit Maintenance events within their remit. Both administrators and operators are aided by seeing exactly which circuits, which sites, and this which users and services will be affected by provider maintenance. 
 
 ## Authors and Maintainers
 
-## Nautobot Features Used
+Author: @chadell
 
-!!! warning "Developer Note - Remove Me!"
-    What is shown today in the Installed Plugins page in Nautobot. What parts of Nautobot does it interact with, what does it add etc. ?
+Maintainers:
 
-### Extras
-
-!!! warning "Developer Note - Remove Me!"
-    Custom Fields - things like which CFs are created by this app?
-    Jobs - are jobs, if so, which ones, installed by this app?
+- @chadell
+- @glennmatthews
+- @pke11y
+- @scetron
