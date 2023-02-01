@@ -1,7 +1,5 @@
 # Architecture Decision Records
 
-The intention is to document deviations from a standard Model View Controller (MVC) design.
+## Circuit Maintenance Parser
 
-!!! warning "Developer Note - Remove Me!"
-    Optional page, remove if not applicable.
-    For examples see [Golden Config](https://github.com/nautobot/nautobot-plugin-golden-config/tree/develop/docs/dev/dev_adr.md) and [nautobot-plugin-reservation](https://github.com/networktocode/nautobot-plugin-reservation/blob/develop/docs/dev/dev_adr.md).
+The Circuit Maintenance Parser library is separated from the Nautobot Plugin to increase it's usability outside of situations where Nautobot may not be installed or may be too heavy of tool in a specific use case. This also allows us to decouple plugin development from parser development.
