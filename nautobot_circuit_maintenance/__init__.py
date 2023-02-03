@@ -83,7 +83,7 @@ class CircuitMaintenanceConfig(PluginConfig):
     author_email = "opensource@networktocode.com"
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
-    min_version = "1.0.0-beta.4"
+    min_version = "1.2"
     max_version = "1.999"
     required_settings = []
     default_settings = {
