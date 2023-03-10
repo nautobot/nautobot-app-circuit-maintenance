@@ -2,6 +2,14 @@
 
 This document describes common use-cases and scenarios for this App.
 
+## Use Cases
+
+This app is generally used for integrating Circuit Maintenace notifcations from your Service Providers into your source of truth. It helps manage all the different notifications across circuits deployed within the organization. 
+
+Once setup, Notifcations from your provider will get parsed, and notifiation objects will be created. These notification objects show both a visual cue on circuits in Nautobot as well as dashboards and other places to consume the information. 
+
+When notifications are created, there is also a Job that may be run to determine if any Circuit Maintenance activities overlap on specific site, which may affect redundancy for the site. 
+
 ## General Usage
 
 ### Define source emails per Provider
@@ -201,9 +209,9 @@ PLUGINS_CONFIG = {
 }
 ```
 
-### Jobs
+## Jobs
 
-#### Run Handle Notifications Job
+### Run Handle Notifications Job
 
 There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the email sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
 
