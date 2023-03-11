@@ -43,10 +43,10 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def setUpTestData(cls):
         """Setup environment for testing."""
         CircuitMaintenance.objects.create(
-            name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
+            name="UT-TEST-1", start_time="2020-10-04T10:00:00", end_time="2020-10-04 12:00:00"
         )
         CircuitMaintenance.objects.create(
-            name="UT-TEST-2", start_time="2020-10-05 10:00:00", end_time="2020-10-05 12:00:00"
+            name="UT-TEST-2", start_time="2020-10-05T10:00:00", end_time="2020-10-05 12:00:00"
         )
 
         cls.form_data = {
@@ -58,9 +58,9 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
 
         cls.csv_data = (
             "name,start_time,end_time,description",
-            "UT-TEST-20, 2020-10-06 10:00:00, 2020-10-06 12:00:00, TEST 20 descr",
-            "UT-TEST-21, 2020-10-06 10:00:00, 2020-10-06 12:00:00, TEST 21 descr",
-            "UT-TEST-22, 2020-10-06 10:00:00, 2020-10-06 12:00:00, TEST 22 descr",
+            "UT-TEST-20, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 20 descr",
+            "UT-TEST-21, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 21 descr",
+            "UT-TEST-22, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 22 descr",
         )
 
         cls.bulk_edit_data = {
@@ -199,9 +199,9 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
         cls.form_data = {"maintenance": maintenance, "title": "Note 3", "level": "INFO", "comment": "comment 3"}
 
         cls.csv_data = (
-            "maintenance,title,comment",
-            f"{maintenance.pk}, Note 4, comment 4",
-            f"{maintenance.pk}, Note 5, comment 5",
+            "maintenance,title,level,comment",
+            f"{maintenance.pk}, Note 4, INFO, comment 4",
+            f"{maintenance.pk}, Note 5, INFO, comment 5",
         )
 
         cls.bulk_edit_data = {"level": "WARNING"}
