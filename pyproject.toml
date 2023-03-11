@@ -38,7 +38,8 @@ markdown = "!=3.3.5"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"
-black = "*"
+# Black 23.x.x configuration changes and migration files are taken into account
+black = "^22.6.0"
 django-debug-toolbar = "*"
 yamllint = "*"
 bandit = "*"
