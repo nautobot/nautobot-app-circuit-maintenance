@@ -29,7 +29,6 @@ There are two mandatory attributes (other keys are dependent on the integration 
 
 The [`nautobot-server post_upgrade`](https://docs.nautobot.com/projects/core/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
 
-
 #### Add `Providers` to the Notification Sources
 
 In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
@@ -37,7 +36,7 @@ In the Circuit Maintenance plugin UI section, there is a **Notification Sources*
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
 
 !!! note
-    Note that for emails from a given Provider to be processed, you must _both_ define a source email address(es) for that Provider (Usage section 1, above) _and_ add that provider to a specific Notification Source as described in this section.
+Note that for emails from a given Provider to be processed, you must _both_ define a source email address(es) for that Provider (Usage section 1, above) _and_ add that provider to a specific Notification Source as described in this section.
 
 #### Run Handle Notifications Job
 
@@ -73,9 +72,7 @@ Attributes:
 
 ![Circuit Maintenance Job](../images/circuit_maintenance.png)
 
-
-
 ## What are the next steps?
 
-!!! warning "Developer Note - Remove Me!"
-    After taking the first steps, what else could the users look at doing.
+- Continue adding new providers referenced in the `NotificationSources` that will bring new maintenances into Nautobot circuits.
+- If you find some notification that can't be parsed successfully, open an issue in the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser).
