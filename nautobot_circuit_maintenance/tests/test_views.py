@@ -41,7 +41,6 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
 
     @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
     def test_queryset_to_csv(self):
-        """Disabled test"""
         pass
 
     @classmethod
