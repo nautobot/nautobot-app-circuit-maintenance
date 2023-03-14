@@ -25,7 +25,7 @@ secondary = true
 
 [tool.poetry.dependencies]
 python = "^3.7"
-nautobot = "^1.2.0"
+nautobot = "^1.4.0"
 nautobot-capacity-metrics = {version = "*", optional = true }
 bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"

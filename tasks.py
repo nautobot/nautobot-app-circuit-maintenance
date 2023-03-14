@@ -42,7 +42,7 @@ namespace.configure(
         "nautobot_circuit_maintenance": {
             "nautobot_ver": "latest",
             "project_name": "nautobot_circuit_maintenance",
-            "python_ver": "3.7",
+            "python_ver": "3.8",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": ["docker-compose.redis.yml", "docker-compose.base.yml", "docker-compose.dev.yml"],
