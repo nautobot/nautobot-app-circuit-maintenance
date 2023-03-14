@@ -37,10 +37,9 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
 # -------------------------------------------------------------------------------------
 # --> Start safe to modify section
 
-# Uncomment the lines below if you are apt-installing any package.
-# RUN apt-get -y update && apt-get -y install \
-#     libldap2-dev \
-#     && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && apt-get -y install \
+    libgeos-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # --> Stop safe to modify section
 # -------------------------------------------------------------------------------------
