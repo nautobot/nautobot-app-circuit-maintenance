@@ -3979,4 +3979,4 @@ metrics = ["nautobot-capacity-metrics"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "ad2a186fa0984fabed9c7959524a2d6937ff45b32a97d0aedb38672431da58a0"
+content-hash = "751d62ab0253c4c6564e53258bb63f598614d6c5226cd46be34be20d18927ef5"
