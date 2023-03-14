@@ -39,6 +39,11 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_get_object_notes(self):
         pass
 
+    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
+    def test_queryset_to_csv(self):
+        """Disabled test"""
+        pass
+
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
@@ -186,6 +191,10 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     @skip("Not Implemented")
     def test_get_object_notes(self):
+        pass
+
+    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
+    def test_queryset_to_csv(self):
         pass
 
     @classmethod
