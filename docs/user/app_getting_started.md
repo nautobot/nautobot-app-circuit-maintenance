@@ -16,6 +16,10 @@ After installation of the App, it's time to create some Circuit Maintenances and
 
 In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance plugin, we **must** configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance plugin** field.
 
+These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
+
+Also, by default, the Provider **slug** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
+
 ### Configure Notification Sources in `nautobot_config.py`
 
 In `nautobot_config.py`, in the `PLUGINS_CONFIG`, under the `nautobot_circuit_maintenance` key, we should define the Notification Sources that will be able later in the UI, where you will be able to **validate** if the authentication credentials provided are working fine or not.
@@ -25,10 +29,16 @@ There are two mandatory attributes (other keys are dependent on the integration 
 - `name`: Name to identify the Source and will be available in the UI.
 - `url`: URL to reach the Notification Source (i.e. `imap://imap.gmail.com:993`)
 
+There is also one optional attribute:
+
+- `attach_all_providers`: Flag that enables auto linking of newly created `Providers` to this Notification Source.
+
+!!! note
+    Currently, only IMAP and HTTPS (accounts.google.com) integrations are supported as a URL scheme
+
 #### Run `nautobot-server post_upgrade` command
 
 The [`nautobot-server post_upgrade`](https://docs.nautobot.com/projects/core/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
-
 
 #### Add `Providers` to the Notification Sources
 
@@ -73,9 +83,7 @@ Attributes:
 
 ![Circuit Maintenance Job](../images/circuit_maintenance.png)
 
-
-
 ## What are the next steps?
 
-!!! warning "Developer Note - Remove Me!"
-    After taking the first steps, what else could the users look at doing.
+- Continue adding new providers referenced in the `NotificationSources` that will bring new maintenances into Nautobot circuits.
+- If you find some notification that can't be parsed successfully, open an issue in the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser).
