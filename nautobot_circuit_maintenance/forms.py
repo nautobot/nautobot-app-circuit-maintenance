@@ -141,7 +141,8 @@ class NoteCSVForm(CustomFieldModelCSVForm):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = Note
-        fields = Note.csv_headers
+        # Omit the `last_updated` field from the CSV form, as it can't be set by the user.
+        fields = Note.csv_headers[:-1]
 
 
 class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldFilterForm):

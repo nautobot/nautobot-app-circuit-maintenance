@@ -39,6 +39,10 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def test_get_object_notes(self):
         pass
 
+    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
+    def test_queryset_to_csv(self):
+        pass
+
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
@@ -47,6 +51,9 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
         )
         CircuitMaintenance.objects.create(
             name="UT-TEST-2", start_time="2020-10-05T10:00:00", end_time="2020-10-05 12:00:00"
+        )
+        CircuitMaintenance.objects.create(
+            name="UT-TEST-3", start_time="2020-10-06 10:00:00", end_time="2020-10-06 12:00:00"
         )
 
         cls.form_data = {
@@ -183,6 +190,10 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     @skip("Not Implemented")
     def test_get_object_notes(self):
+        pass
+
+    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
+    def test_queryset_to_csv(self):
         pass
 
     @classmethod
