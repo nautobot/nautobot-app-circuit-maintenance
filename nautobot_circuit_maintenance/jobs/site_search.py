@@ -15,7 +15,7 @@ CIRCUIT_MAINTENANCE_TAG_COLOR = "Purple"
 name = "Circuit Maintenance"  # pylint: disable=invalid-name
 
 
-def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance):
+def check_for_overlap(record1: CircuitMaintenance, record2: CircuitMaintenance) -> bool:
     """Checks for the overlap of two circuit maintenance records.
 
     Args:
@@ -49,7 +49,7 @@ def get_sites_from_circuit(circuit: Circuit) -> set:
     return site_set
 
 
-def build_sites_to_maintenance_mapper(maintenance_queryset):
+def build_sites_to_maintenance_mapper(maintenance_queryset) -> dict:
     """Build a site to circuit maintenance mapper so the data can be quickly accessed of what possible overlaps.
 
     Leverages defaultdict to provide the default value of an empty set to each key that will be added. Then adds each
@@ -94,9 +94,6 @@ class FindSitesWithMaintenanceOverlap(Job):
 
     Future iterations may include the ability to search for multiple circuit overlaps that would allow for just a single
     circuit to be available.
-
-    Args:
-        Job (Nautobot Job): Nautobot Job parent class
     """
 
     job_debug = BooleanVar(description="Enable for more verbose debug logging")
