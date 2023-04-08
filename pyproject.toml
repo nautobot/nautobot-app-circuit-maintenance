@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.6.2"
+version = "1.0.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
@@ -24,7 +24,7 @@ url = "https://pypi.org/simple/"
 secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 nautobot = "^1.4.0"
 nautobot-capacity-metrics = {version = "*", optional = true }
 bs4 = "^0.0.1"
@@ -127,3 +127,18 @@ testpaths = [
     "tests"
 ]
 adopts = "-vv"
+
+[tool.towncrier]
+package = "nautobot_chatops"
+directory = "changes"
+filename = "docs/admin/release_notes/version_1.11.md"
+template = "development/towncrier_template.j2"
+start_string = "<!-- towncrier release notes start -->"
+issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-/issues/{issue})"
+
+[tool.towncrier.fragment.added]
+[tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.deprecated]
+[tool.towncrier.fragment.fixed]
+[tool.towncrier.fragment.removed]
+[tool.towncrier.fragment.security]
