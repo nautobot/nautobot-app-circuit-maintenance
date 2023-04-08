@@ -4,7 +4,7 @@ import os
 import sys
 
 from django.core.exceptions import ImproperlyConfigured
-from nautobot.core.settings import *  # noqa: F403
+from nautobot.core.settings import *  # noqa: F403,F401
 from nautobot.core.settings_funcs import is_truthy, parse_redis_connection
 
 
