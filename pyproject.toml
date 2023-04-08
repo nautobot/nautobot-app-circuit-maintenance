@@ -96,6 +96,9 @@ load-plugins="pylint_django"
 # Don't cache data for later comparisons
 persistent="no"
 
+# Ignore migrations and tests
+ignore = ".*/tests/*,.*/migrations/*"
+
 # Don't raise alarms if args/kwargs has an issue, as may be required, just as a decorator
 ignored-argument-names="args|kwargs"
 
@@ -111,7 +114,9 @@ disable = """,
     too-few-public-methods,
     duplicate-code,
     too-many-ancestors,
+    useless-option-value,
     """
+
 
 [tool.pylint.miscellaneous]
 # Don't flag TODO as a failure, let us commit with things that still need to be done in the code
