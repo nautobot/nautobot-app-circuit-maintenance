@@ -63,6 +63,9 @@ mkdocstrings-python = "0.7.1"
 [tool.poetry.extras]
 metrics = ["nautobot-capacity-metrics"]
 
+[tool.poetry.group.dev.dependencies]
+towncrier = "^22.12.0"
+
 [tool.black]
 line-length = 120
 target-version = ['py37']
