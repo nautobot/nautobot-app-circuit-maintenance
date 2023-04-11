@@ -248,27 +248,11 @@ PLUGINS_CONFIG = {
         "notification_sources": [
             {
                 "name": "my imap source",
-                "account": os.environ.get("CM_NS_1_ACCOUNT", "demo.nanog86.noc@gmail.com"),
-                "secret": os.environ.get("CM_NS_1_SECRET", "swxxwmvvyqzxmfon"),
-                "url": os.environ.get("CM_NS_1_URL", "imap://imap.gmail.com"),
+                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
+                "secret": os.environ.get("CM_NS_1_SECRET", ""),
+                "url": os.environ.get("CM_NS_1_URL", ""),
                 # "attach_all_providers": True,
             },
-            # {
-            #     "name": "Gmail NANOG86 Demo",
-            #     "url": os.environ.get("CM_NS_2_URL", ""),
-            #     "account": os.environ.get("CM_NS_2_ACCOUNT", ""),
-            #     "credentials_file": os.environ.get("CM_NS_2_CREDENTIALS_FILE", ""),
-            #     # "attach_all_providers": True,
-            #     "source_header": "X-Original-Sender",
-            # },
-            # {
-            #     "name": "my gmail oauth api source",
-            #     "url": os.environ.get("CM_NS_3_URL", ""),
-            #     "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
-            #     "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
-            #     # "attach_all_providers": True,
-            # },
-        ],
         "metrics": {
             "enable": True,
             "labels_attached": {
@@ -343,7 +327,7 @@ EXTRA_INSTALLED_APPS = os.environ["EXTRA_INSTALLED_APPS"].split(",") if os.envir
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}
 
-# if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
-#     INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
-# if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:  # noqa: F405
-#     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
+    INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
+if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:  # noqa: F405
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
