@@ -253,6 +253,7 @@ PLUGINS_CONFIG = {
                 "url": os.environ.get("CM_NS_1_URL", ""),
                 # "attach_all_providers": True,
             },
+        ],
         "metrics": {
             "enable": True,
             "labels_attached": {
