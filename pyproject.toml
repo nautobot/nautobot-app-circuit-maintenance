@@ -58,13 +58,11 @@ mkdocs-version-annotations = "1.0.0"
 # Automatic documentation from sources, for MkDocs
 mkdocstrings = "0.19"
 mkdocstrings-python = "0.7.1"
+towncrier = "^22.12.0"
 
 
 [tool.poetry.extras]
 metrics = ["nautobot-capacity-metrics"]
-
-[tool.poetry.group.dev.dependencies]
-towncrier = "^22.12.0"
 
 [tool.black]
 line-length = 120
