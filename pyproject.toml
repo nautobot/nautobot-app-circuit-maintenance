@@ -24,7 +24,7 @@ url = "https://pypi.org/simple/"
 secondary = true
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 nautobot = "^1.4.0"
 nautobot-capacity-metrics = {version = "*", optional = true }
 bs4 = "^0.0.1"
