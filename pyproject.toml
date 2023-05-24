@@ -58,6 +58,7 @@ mkdocs-version-annotations = "1.0.0"
 # Automatic documentation from sources, for MkDocs
 mkdocstrings = "0.19"
 mkdocstrings-python = "0.7.1"
+towncrier = "^22.12.0"
 
 
 [tool.poetry.extras]
@@ -93,6 +94,9 @@ load-plugins="pylint_django"
 # Don't cache data for later comparisons
 persistent="no"
 
+# Ignore migrations and tests
+ignore = ".*/tests/*,.*/migrations/*"
+
 # Don't raise alarms if args/kwargs has an issue, as may be required, just as a decorator
 ignored-argument-names="args|kwargs"
 
@@ -108,7 +112,9 @@ disable = """,
     too-few-public-methods,
     duplicate-code,
     too-many-ancestors,
+    useless-option-value,
     """
+
 
 [tool.pylint.miscellaneous]
 # Don't flag TODO as a failure, let us commit with things that still need to be done in the code
@@ -128,12 +134,12 @@ testpaths = [
 adopts = "-vv"
 
 [tool.towncrier]
-package = "nautobot_chatops"
+package = "nautobot_circuit_maintenance"
 directory = "changes"
-filename = "docs/admin/release_notes/version_1.11.md"
+filename = "docs/admin/release_notes/version_1.0.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
-issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-/issues/{issue})"
+issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
 
 [tool.towncrier.fragment.added]
 [tool.towncrier.fragment.changed]
