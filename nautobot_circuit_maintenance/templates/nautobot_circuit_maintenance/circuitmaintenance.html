@@ -1,100 +1,56 @@
-{% extends 'base.html' %}
-{% load buttons %}
-{% load custom_links %}
+{% extends 'generic/object_detail.html' %}
 {% load helpers %}
-{% load plugins %}
 
-{% block title %}{{ object }}{% endblock %}
+{% block masthead %}
+    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock %}</h1>
+{% endblock masthead %}
 
-{% block header %}
-
-    <div class="row noprint">
-        <div class="col-sm-8 col-md-9">
-            <ol class="breadcrumb">
-                <li><a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance_list' %}">Circuit Maintenances</a></li>
-                <li><a>{{ object.name }}</a></li>
-            </ol>
+{% block content_left_page %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Info</strong>
         </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Name</td>
+                <td>
+                    <span class="">{{ object.name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Description</td>
+                <td>{{ object.description }}</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>{{ object.status }}</td>
+            </tr>
+            <tr>
+                <td>Start Time</td>
+                <td>{{ object.start_time }}</td>
+            </tr>
+            <tr>
+                <td>End Time</td>
+                <td>{{ object.end_time }}</td>
+            </tr>
+            <tr>
+                <td>Acknowledged</td>
+                <td>{{ object.ack }}</td>
+            </tr>
+            <tr>
+                <td>Notifying Provider</td>
+                {% with object.parsednotification_set.first.raw_notification.provider as provider %}
+                    {% if provider %}
+                        <td><a href="{{ provider.get_absolute_url }}">{{ provider }}</a></td>
+                    {% else %}
+                        <td>{{ provider | placeholder }}</td>
+                    {% endif %}
+                {% endwith %}
+        </table>
     </div>
-
-    <div class="pull-right noprint">
-        {% plugin_buttons object %}
-        {% if perms.nautobot_circuit_maintenance.edit_circuitmaintenance %}
-            {% edit_button object %}
-        {% endif %}
-        {% if perms.nautobot_circuit_maintenance.delete_circuitmaintenance %}
-            {% delete_button object %}
-        {% endif %}
-    </div>
-
-    <h1>Maintenance ID: {{ object }}</h1>
-    {% include 'inc/created_updated.html' %}
-    <div class="pull-right noprint">
-        {% custom_links object %}
-    </div>
-    <ul class="nav nav-tabs">
-        <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
-            <a href="{{ object.get_absolute_url }}">Circuit Maintenance</a>
-        </li>
-        {% if perms.extras.view_objectchange %}
-            <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
-                <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitmaintenance_changelog' pk=object.pk %}">Change Log</a>
-            </li>
-        {% endif %}
-    </ul>
-
 {% endblock %}
 
-{% block content %}
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <strong>Info</strong>
-                </div>
-                <table class="table table-hover panel-body attr-table">
-                    <tr>
-                        <td>Name</td>
-                        <td>
-                            <span class="">{{ object.name }}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Description</td>
-                        <td>{{ object.description }}</td>
-                    </tr>
-                    <tr>
-                        <td>Status</td>
-                        <td>{{ object.status }}</td>
-                    </tr>
-                    <tr>
-                        <td>Start Time</td>
-                        <td>{{ object.start_time }}</td>
-                    </tr>
-                    <tr>
-                        <td>End Time</td>
-                        <td>{{ object.end_time }}</td>
-                    </tr>
-                    <tr>
-                        <td>Acknowledged</td>
-                        <td>{{ object.ack }}</td>
-                    </tr>
-                    <tr>
-                        <td>Notifying Provider</td>
-                        {% with object.parsednotification_set.first.raw_notification.provider as provider %}
-                            {% if provider %}
-                                <td><a href="{{ provider.get_absolute_url }}">{{ provider }}</a></td>
-                            {% else %}
-                                <td>{{ provider | placeholder }}</td>
-                            {% endif %}
-                        {% endwith %}
-                </table>
-            </div>
-        </div>
-    </div>
-
-
+{% block content_full_width_page %}
     <div class="panel panel-default">
         <div class="panel-heading">
             <strong>Circuits</strong>
@@ -170,8 +126,6 @@
         {% endif %}
     </div>
 
-
-
     <div class="panel panel-default">
         <div class="panel-heading">
             <strong>Notes</strong>
@@ -230,7 +184,6 @@
         {% endif %}
     </div>
 
-
     <div class="panel panel-default">
         <div class="panel-heading">
             <strong>Notifications</strong>
@@ -265,8 +218,4 @@
         </table>
         {% endif %}
     </div>
-    {% include 'inc/custom_fields_panel.html' %}
-    {% include 'inc/relationships_panel.html' %}
-    {% include 'extras/inc/tags_panel.html' with tags=object.tags.all url='nautobot_circuit_maintenance:circuitmaintenance_list' %}
-
 {% endblock %}

@@ -1,10 +1,5 @@
-{% extends 'base.html' %}
-{% load buttons %}
+{% extends 'generic/object_detail.html' %}
 {% load custom_links %}
-{% load helpers %}
-{% load plugins %}
-
-{% block title %}{{ object }}{% endblock%}
 
 {% block header %}
 
@@ -23,35 +18,28 @@
 
 {% endblock %}
 
-{% block content %}
-
-<div class="row">
-  <div class="col-md-6">
+{% block content_left_page %}
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <strong>Info</strong>
-      </div>
-      <table class="table table-hover panel-body attr-table">
-        <tr>
-          <td>Maintenance</td>
-          <td><a href="{{ object.maintenance.get_absolute_url }}">{{ object.maintenance.name }}</a></td>
-        </tr>
-        <tr>
-          <td>Raw Notification</td>
-          <td><a href="{{ object.raw_notification.get_absolute_url }}">{{ object.raw_notification }}</a></td>
-        </tr>
-        <tr>
-          <td>Last Updated</td>
-          <td>{{ object.last_updated }}</td>
-        </tr>
-        <tr>
-          <td>JSON</td>
-          <td>{{ object.json|linebreaks }}</td>
-        </tr>
-      </table>
+        <div class="panel-heading">
+            <strong>Info</strong>
+        </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Maintenance</td>
+                <td><a href="{{ object.maintenance.get_absolute_url }}">{{ object.maintenance.name }}</a></td>
+            </tr>
+            <tr>
+                <td>Raw Notification</td>
+                <td><a href="{{ object.raw_notification.get_absolute_url }}">{{ object.raw_notification }}</a></td>
+            </tr>
+            <tr>
+                <td>Last Updated</td>
+                <td>{{ object.last_updated }}</td>
+            </tr>
+            <tr>
+                <td>JSON</td>
+                <td>{{ object.json|linebreaks }}</td>
+            </tr>
+        </table>
     </div>
-  </div>
-</div>
-{% include 'inc/custom_fields_panel.html' %}
-{% include 'inc/relationships_panel.html' %}
 {% endblock %}

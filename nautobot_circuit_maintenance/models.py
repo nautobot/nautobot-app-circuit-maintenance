@@ -156,7 +156,7 @@ class Note(OrganizationalModel):
     )
     comment = models.TextField()
 
-    csv_headers = ["maintenance", "title", "level", "comment"]
+    csv_headers = ["maintenance", "title", "level", "comment", "last_updated"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["last_updated"]

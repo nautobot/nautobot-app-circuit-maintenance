@@ -77,13 +77,13 @@ class CircuitMaintenanceConfig(PluginConfig):
     """Plugin configuration for the Circuit Maintenance plugin."""
 
     name = "nautobot_circuit_maintenance"
-    verbose_name = "Circuit Maintenance"
+    verbose_name = "Circuit Maintenance Management"
     version = __version__
     author = "Network to Code, LLC"
     author_email = "opensource@networktocode.com"
-    description = "Automatically handle network circuit maintenance notifications."
+    description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
-    min_version = "1.0.0-beta.4"
+    min_version = "1.4"
     max_version = "1.999"
     required_settings = []
     default_settings = {

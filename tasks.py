@@ -42,7 +42,7 @@ namespace.configure(
         "nautobot_circuit_maintenance": {
             "nautobot_ver": "latest",
             "project_name": "nautobot_circuit_maintenance",
-            "python_ver": "3.7",
+            "python_ver": "3.8",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": ["docker-compose.redis.yml", "docker-compose.base.yml", "docker-compose.dev.yml"],
@@ -257,6 +257,21 @@ def post_upgrade(context):
     command = "nautobot-server post_upgrade"
 
     run_command(context, command)
+
+
+# ------------------------------------------------------------------------------
+# DOCS
+# ------------------------------------------------------------------------------
+@task
+def docs(context):
+    """Build and serve docs locally for development."""
+    command = "mkdocs serve -v"
+
+    if is_truthy(context.nautobot_circuit_maintenance.local):
+        print("Serving Documentation...")
+        run_command(context, command)
+    else:
+        print("Only used when developing locally (i.e. context.nautobot_circuit_maintenance.local=True)!")
 
 
 # ------------------------------------------------------------------------------

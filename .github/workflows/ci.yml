@@ -21,7 +21,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Linting: black"
         run: "poetry run invoke black"
   bandit:
@@ -32,7 +32,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Linting: bandit"
         run: "poetry run invoke bandit"
     needs:
@@ -45,7 +45,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Linting: pydocstyle"
         run: "poetry run invoke pydocstyle"
     needs:
@@ -58,7 +58,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Linting: flake8"
         run: "poetry run invoke flake8"
     needs:
@@ -71,7 +71,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Linting: yamllint"
         run: "poetry run invoke yamllint"
     needs:
@@ -82,7 +82,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
@@ -98,7 +98,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
@@ -111,13 +111,13 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.7", "3.8", "3.9"]
-        nautobot-version: ["1.3.8"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        nautobot-version: ["stable"]
         db-backend: ["postegresql"]
         include:
           - python-version: "3.9"
             db-backend: "postgresql"
-            nautobot-version: "1.2.11"
+            nautobot-version: "1.4.0"
     runs-on: "ubuntu-20.04"
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
@@ -126,7 +126,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
@@ -139,11 +139,11 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.7", "3.8", "3.9"]
-        nautobot-version: ["1.3.8"]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        nautobot-version: ["stable"]
         include:
           - python-version: "3.9"
-            nautobot-version: "1.2.11"
+            nautobot-version: "1.4.0"
     runs-on: "ubuntu-20.04"
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
@@ -155,7 +155,7 @@ jobs:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
       - name: "Setup environment"
-        uses: "networktocode/gh-action-setup-poetry-environment@v2"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Build Container"
@@ -255,3 +255,17 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: "${{ secrets.SLACK_WEBHOOK_URL }}"
           SLACK_WEBHOOK_TYPE: "INCOMING_WEBHOOK"
+  changelog:
+    if: github.base_ref == 'develop' || github.base_ref == 'next'
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: "Check out repository code"
+        uses: "actions/checkout@v2"
+        with:
+          fetch-depth: "0"
+      - name: "Setup environment"
+        uses: "networktocode/gh-action-setup-poetry-environment@v5"
+      - name: "Check for changelog entry"
+        run: |
+          git fetch --no-tags origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+          poetry run towncrier check --compare-with origin/${{ github.base_ref }}

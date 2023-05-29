@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.6.2"
+version = "1.0.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 
@@ -25,7 +25,7 @@ secondary = true
 
 [tool.poetry.dependencies]
 python = "^3.7"
-nautobot = "*"
+nautobot = "^1.4.0"
 nautobot-capacity-metrics = {version = "*", optional = true }
 bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
@@ -38,7 +38,8 @@ markdown = "!=3.3.5"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"
-black = "*"
+# Black 23.x.x configuration changes and migration files are taken into account
+black = "^22.6.0"
 django-debug-toolbar = "*"
 yamllint = "*"
 bandit = "*"
@@ -48,6 +49,16 @@ pydocstyle = "*"
 flake8 = "*"
 parameterized = "*"
 mysqlclient = "*"
+# Rendering docs to HTML
+mkdocs = "1.3.1"
+# Material for MkDocs theme
+mkdocs-material = "8.4.2"
+# Render custom markdown for version added/changed/remove notes
+mkdocs-version-annotations = "1.0.0"
+# Automatic documentation from sources, for MkDocs
+mkdocstrings = "0.19"
+mkdocstrings-python = "0.7.1"
+towncrier = "^22.12.0"
 
 
 [tool.poetry.extras]
@@ -83,6 +94,9 @@ load-plugins="pylint_django"
 # Don't cache data for later comparisons
 persistent="no"
 
+# Ignore migrations and tests
+ignore = ".*/tests/*,.*/migrations/*"
+
 # Don't raise alarms if args/kwargs has an issue, as may be required, just as a decorator
 ignored-argument-names="args|kwargs"
 
@@ -95,11 +109,12 @@ no-docstring-rgx="^(_|test_|Meta$)"
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
 disable = """,
     line-too-long,
-    bad-continuation,
     too-few-public-methods,
     duplicate-code,
     too-many-ancestors,
+    useless-option-value,
     """
+
 
 [tool.pylint.miscellaneous]
 # Don't flag TODO as a failure, let us commit with things that still need to be done in the code
@@ -117,3 +132,18 @@ testpaths = [
     "tests"
 ]
 adopts = "-vv"
+
+[tool.towncrier]
+package = "nautobot_circuit_maintenance"
+directory = "changes"
+filename = "docs/admin/release_notes/version_1.0.md"
+template = "development/towncrier_template.j2"
+start_string = "<!-- towncrier release notes start -->"
+issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
+
+[tool.towncrier.fragment.added]
+[tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.deprecated]
+[tool.towncrier.fragment.fixed]
+[tool.towncrier.fragment.removed]
+[tool.towncrier.fragment.security]

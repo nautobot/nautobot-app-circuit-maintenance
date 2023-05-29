@@ -1,96 +1,68 @@
-{% extends 'base.html' %}
-{% load buttons %}
-{% load custom_links %}
-{% load helpers %}
-{% load plugins %}
+{% extends 'generic/object_detail.html' %}
 
-{% block title %}{{ object }}{% endblock%}
-{% block header %}
+{% block buttons %}{% endblock %}
 
-<div class="row noprint">
-    <div class="col-sm-8 col-md-9">
-        <ol class="breadcrumb">
-            <li><a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_list' %}">Notification Sources</a></li>
-            <li><a>{{ object.name }}</a></li>
-        </ol>
-    </div>
-</div>
+{% block content_left_page %}
 
-<h1>{{ object.name }}</h1>
-
-{% include 'inc/created_updated.html' with obj=object %}
-
-<div class="pull-right noprint">{% custom_links object %}</div>
-
-{% endblock %} {% block content %}
-
-<div class="row">
-  <div class="col-md-6">
     <div class="panel panel-default">
-      <div class="panel-heading">
-        <strong>Info</strong>
-      </div>
-      <table class="table table-hover panel-body attr-table">
-      <tr>
-        <td>Name</td>
-        <td>
-          <span class="">{{ object.name }}</span>
-        </td>
-      </tr>
-      <tr>
-      <td>Slug</td>
-      <td>{{ object.slug }}</td>
-      </tr>
-      <tr>
-      <td>Type</td>
-      <td>{{ source_type }}</td>
-      </tr>
-      <tr>
-      <td>Account ID</td>
-      <td>{{ account }}</td>
-      </tr>
-      <tr>
-      <td>Providers</td>
-      <td>
-          <ul>
-              {% for provider in providers %}
-                  <li><a href="{{ provider.get_absolute_url }}">{{ provider.name }}</a></li>
-              {% endfor %}
-          </ul>
-      </td>
-      </tr>
-      <td>Attach all providers</td>
-      <td>
-        {% if object.attach_all_providers %}
-            <span class="text-success"><i class="mdi mdi-check-bold"></i></span>
-        {% else %}
-            <span class="text-danger"><i class="mdi mdi-close"></i></span>
-        {% endif %}
-      </td>
-      </tr>
-      {% if authentication_message %}
-      <tr>
-      <td>Authentication Status</td>
-      <td>{{ authentication_message }}</td>
-      </tr>
-      {% endif %}
-
-      </table>
+        <div class="panel-heading">
+            <strong>Info</strong>
+        </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Name</td>
+                <td>
+                    <span class="">{{ object.name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Slug</td>
+                <td>{{ object.slug }}</td>
+            </tr>
+            <tr>
+                <td>Type</td>
+                <td>{{ source_type }}</td>
+            </tr>
+            <tr>
+                <td>Account ID</td>
+                <td>{{ account }}</td>
+            </tr>
+            <tr>
+                <td>Providers</td>
+                <td>
+                    <ul>
+                        {% for provider in providers %}
+                            <li><a href="{{ provider.get_absolute_url }}">{{ provider.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>Attach all providers</td>
+                <td>
+                {% if object.attach_all_providers %}
+                    <span class="text-success"><i class="mdi mdi-check-bold"></i></span>
+                {% else %}
+                    <span class="text-danger"><i class="mdi mdi-close"></i></span>
+                {% endif %}
+                </td>
+            </tr>
+            {% if authentication_message %}
+            <tr>
+                <td>Authentication Status</td>
+                <td>{{ authentication_message }}</td>
+            </tr>
+            {% endif %}
+        </table>
     </div>
     <div class="btn-group">
-      <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
-        <button type="submit" name="_validate" class="btn btn-primary">Validate Authentication</button>
-      </a>
-      {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-      <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
-        <button type="submit" name="_validate" class="btn btn-primary btn-warning">Edit</button>
-      </a>
-      {% endif %}
-  </div>
-  </div>
-</div>
-{% include 'inc/custom_fields_panel.html' %}
-{% include 'inc/relationships_panel.html' %}
-
-
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+            <button type="submit" name="_validate" class="btn btn-primary">Validate Authentication</button>
+        </a>
+        {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+            <button type="submit" name="_validate" class="btn btn-primary btn-warning">Edit</button>
+        </a>
+        {% endif %}
+    </div>
 {% endblock %}
