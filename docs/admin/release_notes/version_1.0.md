@@ -6,4 +6,3 @@
 
 - Added Towncrier
 - Release 1.0
-- Dropped support for Python3.7
