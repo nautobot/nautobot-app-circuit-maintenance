@@ -22,7 +22,7 @@ circuit-maintenance-parser = "^2.0.0"
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
-google-oauth = { version = "^1.0.0", source = "pypi-legacy" }
+google-oauth = "^1.0.0"
 importlib-metadata = "4.13.0"  # Required for Python 3.7 for now. See: https://stackoverflow.com/a/73932581/194311
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 nautobot = { version = "^1.4.0", optional = true }  # Used for local development
@@ -46,6 +46,7 @@ mkdocs-material = "9.1.15"
 mkdocs-version-annotations = "1.0.0"
 mkdocstrings = "0.22.0"         # Last version with python 3.7 support
 mkdocstrings-python = "1.1.2"   # Last version with python 3.7 support
+parameterized = "*"
 pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"

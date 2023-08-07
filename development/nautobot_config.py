@@ -9,12 +9,11 @@ from nautobot.core.settings_funcs import parse_redis_connection, is_truthy
 
 # Enforce required configuration parameters
 for key in [
-    "ALLOWED_HOSTS",
+    "NAUTOBOT_ALLOWED_HOSTS",
+    "NAUTOBOT_SECRET_KEY",
     "POSTGRES_DB",
-    "POSTGRES_USER",
-    "POSTGRES_HOST",
     "POSTGRES_PASSWORD",
-    "SECRET_KEY",
+    "POSTGRES_USER",
 ]:
     if not os.environ.get(key):
         raise ImproperlyConfigured(f"Required environment variable {key} is missing.")
@@ -188,4 +187,3 @@ PLUGINS_CONFIG = {
 
 if PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
     PLUGINS.append("nautobot_capacity_metrics")
-
