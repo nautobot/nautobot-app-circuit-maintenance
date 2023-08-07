@@ -47,13 +47,22 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def setUpTestData(cls):
         """Setup environment for testing."""
         CircuitMaintenance.objects.create(
-            name="UT-TEST-1", start_time="2020-10-04T10:00:00", end_time="2020-10-04 12:00:00"
+            name="UT-TEST-1",
+            start_time="2020-10-04T10:00:00",
+            end_time="2020-10-04 12:00:00",
+            status="TENTATIVE",
         )
         CircuitMaintenance.objects.create(
-            name="UT-TEST-2", start_time="2020-10-05T10:00:00", end_time="2020-10-05 12:00:00"
+            name="UT-TEST-2",
+            start_time="2020-10-05T10:00:00",
+            end_time="2020-10-05 12:00:00",
+            status="TENTATIVE",
         )
         CircuitMaintenance.objects.create(
-            name="UT-TEST-3", start_time="2020-10-06 10:00:00", end_time="2020-10-06 12:00:00"
+            name="UT-TEST-3",
+            start_time="2020-10-06 10:00:00",
+            end_time="2020-10-06 12:00:00",
+            status="TENTATIVE",
         )
 
         cls.form_data = {
@@ -61,13 +70,14 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
             "start_time": "2020-10-06 10:00:00",
             "end_time": "2020-10-06 12:00:00",
             "description": "TEST 0 descr",
+            "status": "TENTATIVE",
         }
 
         cls.csv_data = (
-            "name,start_time,end_time,description",
-            "UT-TEST-20, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 20 descr",
-            "UT-TEST-21, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 21 descr",
-            "UT-TEST-22, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 22 descr",
+            "name,start_time,end_time,description,status",
+            "UT-TEST-20, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 20 descr, TENTATIVE",
+            "UT-TEST-21, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 21 descr, TENTATIVE",
+            "UT-TEST-22, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 22 descr, TENTATIVE",
         )
 
         cls.bulk_edit_data = {
