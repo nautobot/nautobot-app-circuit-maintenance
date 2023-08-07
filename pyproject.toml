@@ -51,7 +51,6 @@ pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
 pylint-nautobot = "*"
-pytest = "*"
 python-dotenv = "^0.21.1"
 toml = "*"
 towncrier = "~22.8.0"
@@ -140,7 +139,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.towncrier]
 package = "nautobot_circuit_maintenance"
 directory = "changes"
-filename = "docs/admin/release_notes/version_2.0.md"
+filename = "docs/admin/release_notes/version_1.0.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
@@ -151,9 +150,3 @@ issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-m
 [tool.towncrier.fragment.fixed]
 [tool.towncrier.fragment.removed]
 [tool.towncrier.fragment.security]
-
-[tool.pytest.ini_options]
-testpaths = [
-    "tests"
-]
-addopts = "-vv --doctest-modules"
