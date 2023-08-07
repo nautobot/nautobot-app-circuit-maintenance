@@ -1,1 +1,1 @@
-"""REST API module for circuit maintenance plugin."""
+"""REST API module for nautobot_circuit_maintenance plugin."""

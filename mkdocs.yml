@@ -1,6 +1,6 @@
 ---
 dev_addr: "127.0.0.1:8001"
-edit_uri: "edit/develop/docs"
+edit_uri: "blob/develop/docs"
 site_dir: "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs"
 site_name: "Circuit Maintenance Documentation"
 site_url: "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
@@ -17,10 +17,14 @@ theme:
     - "navigation.tracking"
     - "navigation.tabs"
     - "navigation.tabs.sticky"
+    - "navigation.footer"
     - "search.suggest"
     - "search.highlight"
     - "search.share"
     - "navigation.indexes"
+    - "content.action.edit"
+    - "content.action.view"
+    - "content.code.copy"
   favicon: "assets/favicon.ico"
   logo: "assets/nautobot_logo.svg"
   palette:
@@ -96,8 +100,8 @@ nav:
   - Overview: "index.md"
   - User Guide:
       - App Overview: "user/app_overview.md"
-      - Using the App: "user/app_use_cases.md"
       - Getting Started: "user/app_getting_started.md"
+      - Using the App: "user/app_use_cases.md"
       - Frequently Asked Questions: "user/faq.md"
       - External Interactions: "user/external_interactions.md"
   - Administrator Guide:
@@ -107,12 +111,7 @@ nav:
       - Compatibility Matrix: "admin/compatibility_matrix.md"
       - Release Notes:
           - "admin/release_notes/index.md"
-          - v0.6: "admin/release_notes/version_0.6.md"
-          - v0.5: "admin/release_notes/version_0.5.md"
-          - v0.4: "admin/release_notes/version_0.4.md"
-          - v0.3: "admin/release_notes/version_0.3.md"
-          - v0.2: "admin/release_notes/version_0.2.md"
-          - v0.1: "admin/release_notes/version_0.1.md"
+          - v1.0: "admin/release_notes/version_1.0.md"
   - Developer Guide:
       - Extending the App: "dev/extending.md"
       - Contributing to the App: "dev/contributing.md"
@@ -120,8 +119,6 @@ nav:
       - Architecture Decision Records: "dev/arch_decision.md"
       - Code Reference:
           - "dev/code_reference/index.md"
-          - Jobs: "dev/code_reference/jobs.md"
-          - Handle Notifications: "dev/code_reference/handle_notifications.md"
           - Package: "dev/code_reference/package.md"
           - API: "dev/code_reference/api.md"
   - Nautobot Docs Home ↗︎: "https://docs.nautobot.com"

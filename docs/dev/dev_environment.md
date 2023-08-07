@@ -75,7 +75,7 @@ nautobot-server migrate
 !!! note
     If you want to develop on the latest develop branch of Nautobot, run the following command: `poetry add --optional git+https://github.com/nautobot/nautobot@develop`. After the `@` symbol must match either a branch or a tag.
 
-You can now run `nautobot-server` commands as you would from the [Nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/) for example to start the development server:
+You can now run `nautobot-server` commands as you would from the [Nautobot documentation](https://nautobot.readthedocs.io/en/latest/) for example to start the development server:
 
 ```shell
 nautobot-server runserver 0.0.0.0:8080 --insecure
@@ -100,9 +100,6 @@ The project features a CLI helper based on [Invoke](https://www.pyinvoke.org/) t
 - `testing`
 
 Each command can be executed with `invoke <command>`. All commands support the arguments `--nautobot-ver` and `--python-ver` if you want to manually define the version of Python and Nautobot to use. Each command also has its own help `invoke <command> --help`
-
-!!! note
-    To run the mysql (mariadb) development environment, set the environment variable as such `export NAUTOBOT_USE_MYSQL=1`.
 
 #### Local Development Environment
 
@@ -401,7 +398,7 @@ namespace.configure(
 )
 ```
 
-Or set the `INVOKE_NAUTOBOT_GOLDEN_CONFIG_PYTHON_VER` variable.
+Or set the `INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER` variable.
 
 ### Updating Nautobot Version
 
@@ -413,7 +410,7 @@ namespace.configure(
     {
         "nautobot_circuit_maintenance": {
             ...
-            "nautobot_ver": "1.0.2",
+            "nautobot_ver": "1.4.0",
 	    ...
         }
     }

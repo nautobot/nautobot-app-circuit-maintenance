@@ -2,23 +2,26 @@
 
 Here you will find detailed instructions on how to **install** and **configure** the App within your Nautobot environment.
 
+!!! warning "Developer Note - Remove Me!"
+    Detailed instructions on installing the App. You will need to update this section based on any additional dependencies or prerequisites.
+
 ## Prerequisites
 
-- The plugin is compatible with Nautobot 1.2.0 and higher.
+- The plugin is compatible with Nautobot 1.4.0 and higher.
 - Databases supported: PostgreSQL, MySQL
-
 
 !!! note
     Please check the [dedicated page](compatibility_matrix.md) for a full compatibility matrix and the deprecation policy.
 
 ### Access Requirements
 
-You will need access to an email account that receives provider maintenance notifications.
+!!! warning "Developer Note - Remove Me!"
+    What external systems (if any) it needs access to in order to work.
 
 ## Install Guide
 
 !!! note
-    Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
+    Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://nautobot.readthedocs.io/en/latest/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
 
 The plugin is available as a Python package via PyPI and can be installed with `pip`:
 
@@ -41,19 +44,11 @@ Once installed, the plugin needs to be enabled in your Nautobot configuration. T
 # In your nautobot_config.py
 PLUGINS = ["nautobot_circuit_maintenance"]
 
-PLUGINS_CONFIG = {
-    "nautobot_circuit_maintenance": {
-        "raw_notification_initial_days_since": 100,
-        "raw_notification_size": 16384,
-        "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
-        "overlap_job_exclude_no_impact": False, # Exclude in job warnings the impact of `No-Impact`
-        "notification_sources": [
-            {
-              ...
-            }
-        ]
-    }
-}
+# PLUGINS_CONFIG = {
+#   "nautobot_circuit_maintenance": {
+#     ADD YOUR SETTINGS HERE
+#   }
+# }
 ```
 
 Once the Nautobot configuration is updated, run the Post Upgrade command (`nautobot-server post_upgrade`) to run migrations and clear any cache:
@@ -74,9 +69,13 @@ sudo systemctl restart nautobot nautobot-worker nautobot-scheduler
 
 ## App Configuration
 
+!!! warning "Developer Note - Remove Me!"
+    Any configuration required to get the App set up. Edit the table below as per the examples provided.
+
 The plugin behavior can be controlled with the following list of settings:
 
-- `raw_notification_initial_days_since`: define how many days back the plugin will check for `RawNotification`s for each `NotificationSource`, in order to limit the number of notifications to be processed on the first run of the plugin. In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to **7 days**.
-- `raw_notification_size`: define how many bytes from a notification will be stored in the database to not store too big objects (maximum allowed is **16384** bytes). If not defined, it defaults to **8192** bytes.
-
-The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [General Usage](../user/app_use_cases.md#general-usage) section.
+| Key     | Example | Default | Description                          |
+| ------- | ------ | -------- | ------------------------------------- |
+| `enable_backup` | `True` | `True` | A boolean to represent whether or not to run backup configurations within the plugin. |
+| `platform_slug_map` | `{"cisco_wlc": "cisco_aireos"}` | `None` | A dictionary in which the key is the platform slug and the value is what netutils uses in any "network_os" parameter. |
+| `per_feature_bar_width` | `0.15` | `0.15` | The width of the table bar within the overview report |
