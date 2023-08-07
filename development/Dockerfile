@@ -6,8 +6,8 @@
 # -------------------------------------------------------------------------------------
 # !!! USE CAUTION WHEN MODIFYING LINES BELOW
 
-# Accepts a desired Nautobot version as build argument, default to 1.4.0
-ARG NAUTOBOT_VER="1.4.0"
+# Accepts a desired Nautobot version as build argument, default to 1.4.10
+ARG NAUTOBOT_VER="1.4.10"
 
 # Accepts a desired Python version as build argument, default to 3.8
 ARG PYTHON_VER="3.8"
@@ -37,10 +37,9 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
 # -------------------------------------------------------------------------------------
 # --> Start safe to modify section
 
-# Uncomment the lines below if you are apt-installing any package.
-# RUN apt-get -y update && apt-get -y install \
-#     libldap2-dev \
-#     && rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && apt-get -y install \
+    libgeos-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # --> Stop safe to modify section
 # -------------------------------------------------------------------------------------
@@ -68,7 +67,7 @@ RUN sort poetry_freeze_base.txt poetry_freeze_all.txt | uniq -u > poetry_freeze_
 
 # Install all local project as editable, constrained on Nautobot version, to get any additional
 #   direct dependencies of the app
-RUN pip install -c constraints.txt -e .
+RUN pip install -c constraints.txt -e .[metrics]
 
 # Install any dev dependencies frozen from Poetry
 # Can be improved in Poetry 1.2 which allows `poetry install --only dev`

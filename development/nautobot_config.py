@@ -1,11 +1,23 @@
 """Nautobot development configuration file."""
-# pylint: disable=invalid-envvar-default
 import os
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
 from nautobot.core.settings import *  # noqa: F403  # pylint: disable=wildcard-import,unused-wildcard-import
 from nautobot.core.settings_funcs import parse_redis_connection, is_truthy
 
+
+# Enforce required configuration parameters
+for key in [
+    "ALLOWED_HOSTS",
+    "POSTGRES_DB",
+    "POSTGRES_USER",
+    "POSTGRES_HOST",
+    "POSTGRES_PASSWORD",
+    "SECRET_KEY",
+]:
+    if not os.environ.get(key):
+        raise ImproperlyConfigured(f"Required environment variable {key} is missing.")
 
 #
 # Misc. settings
@@ -136,9 +148,44 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 
 # Plugins configuration settings. These settings are used by various plugins that the user may have installed.
 # Each key in the dictionary is the name of an installed plugin and its value is a dictionary of settings.
-# PLUGINS_CONFIG = {
-#     'nautobot_circuit_maintenance': {
-#         'foo': 'bar',
-#         'buzz': 'bazz'
-#     }
-# }
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "notification_sources": [
+            {
+                "name": "my imap source",
+                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
+                "secret": os.environ.get("CM_NS_1_SECRET", ""),
+                "url": os.environ.get("CM_NS_1_URL", ""),
+                # "attach_all_providers": True,
+            },
+            {
+                "name": "my gmail service account api source",
+                "url": os.environ.get("CM_NS_2_URL", ""),
+                "account": os.environ.get("CM_NS_2_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_2_CREDENTIALS_FILE", ""),
+                "attach_all_providers": True,
+                # "source_header": "X-Original-Sender",
+            },
+            {
+                "name": "my gmail oauth api source",
+                "url": os.environ.get("CM_NS_3_URL", ""),
+                "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
+                # "attach_all_providers": True,
+            },
+        ],
+        "metrics": {
+            "enable": True,
+            "labels_attached": {
+                "circuit": "circuit.cid",
+                "provider": "circuit.provider.name",
+                "circuit_type": "circuit.type.name",
+                "site": "site.name",
+            },
+        },
+    }
+}
+
+if PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
+    PLUGINS.append("nautobot_capacity_metrics")
+
