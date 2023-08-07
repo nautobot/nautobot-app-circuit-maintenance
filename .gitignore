@@ -308,3 +308,5 @@ docs/CHANGELOG.md
 public
 /compose.yaml
 /dump.sql
+
+/nautobot_circuit_maintenance/static/
