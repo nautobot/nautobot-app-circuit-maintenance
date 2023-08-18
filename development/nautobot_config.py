@@ -181,8 +181,7 @@ PLUGINS_CONFIG = {
             },
         ],
         "metrics": {
-            # TBD: Enable after updating nautobot_capacity_metrics to Nautobot next
-            "enable": False,
+            "enable": True,
             "labels_attached": {
                 "circuit": "circuit.cid",
                 "provider": "circuit.provider.name",

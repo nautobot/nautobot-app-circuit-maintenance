@@ -2234,17 +2234,17 @@ sso = ["social-auth-core[openidconnect,saml] (>=4.4.1,<4.5.0)"]
 
 [[package]]
 name = "nautobot-capacity-metrics"
-version = "1.0.1"
+version = "3.0.0b1"
 description = "Plugin to improve the instrumentation of Nautobot and expose additional metrics (Application Metrics, RQ Worker)."
 optional = true
-python-versions = ">=3.6,<4.0"
+python-versions = ">=3.8,<3.11"
 files = [
-    {file = "nautobot-capacity-metrics-1.0.1.tar.gz", hash = "sha256:f6bdde11aedc63c233ad1468b7263a9bc5694938d0f197873fa0abc6a22c2ce5"},
-    {file = "nautobot_capacity_metrics-1.0.1-py3-none-any.whl", hash = "sha256:11a5d3686fafa34ddce1d643f54dbd4d205d3c76cb643617b774ff4beb0d3189"},
+    {file = "nautobot_capacity_metrics-3.0.0b1-py3-none-any.whl", hash = "sha256:be7dfd7892f85e10539d49a932143240cca5a4ce8d07e40bd3884340182affc1"},
+    {file = "nautobot_capacity_metrics-3.0.0b1.tar.gz", hash = "sha256:e04c6e5b634bfa373dea53a793ea666aaab3b097720ff6657c8c81e9b8b3e5d8"},
 ]
 
 [package.dependencies]
-nautobot = "*"
+nautobot = "2.0.0-beta2"
 
 [[package]]
 name = "netaddr"
@@ -3861,4 +3861,4 @@ nautobot = ["nautobot"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "e3968ff9238b495dcb77610007fa4de042a9465036751509e68fef59ca04b5ce"
+content-hash = "53095110e7327b555870bfa059cdc2a07de5bc006d7683e99a8057ba475be917"

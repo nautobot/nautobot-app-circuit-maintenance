@@ -26,8 +26,10 @@ google-auth-oauthlib = "^0.5.0"
 google-oauth = "^1.0.0"
 importlib-metadata = "4.13.0"  # Required for Python 3.7 for now. See: https://stackoverflow.com/a/73932581/194311
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
+# TBD: Update to production version
 nautobot = { version = "2.0.0b2", optional = true }  # Used for local development
-nautobot-capacity-metrics = {version = "*", optional = true }
+# TBD: Update to production version
+nautobot-capacity-metrics = {version = "3.0.0b1", optional = true }
 python = ">=3.8, <3.11"
 
 [tool.poetry.dev-dependencies]

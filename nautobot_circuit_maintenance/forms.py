@@ -1,4 +1,5 @@
-# TBD: Remove
+# TBD: Remove after releasing pylint-nautobot v0.3.0
+# https://github.com/nautobot/pylint-nautobot/commit/48efc016fffa0b9df02f61bdaa9c4a0933351d29
 # pylint: disable=nb-incorrect-base-class
 
 """Forms for Circuit Maintenance."""
