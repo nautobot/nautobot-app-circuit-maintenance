@@ -19,7 +19,7 @@
                 <thead>
                     <tr>
                         <th>Circuit ID</th>
-                        <th>Sites</th>
+                        <th>Location</th>
                         <th>Circuit Status</th>
                         <th>Maintenance Start</th>
                     </tr>
@@ -32,12 +32,12 @@
                                     <a href="{{ circuit.get_absolute_url }}">{{ circuit.cid }}</a>
                                 </td>
                                 <td>
-                                    {% if circuit.termination_a.connected_endpoint %}
-                                        {% with circuit_term_a_site=circuit.termination_a.connected_endpoint.parent.site %}
+                                    {% if circuit.circuit_termination_a.connected_endpoint %}
+                                        {% with circuit_term_a_location=circuit.circuit_termination_a.connected_endpoint.parent.location %}
                                         {% comment %}Fix up this line after if move to Jinja templating. Unable to shrink due to whitespace {% endcomment %}
-                                            <a href="{{ circuit_term_a_site.get_absolute_url }}">{{ circuit_term_a_site.name }}</a>
-                                            {% if circuit.termination_z.connected_endpoint and circuit_term_a_site != circuit.termination_z.connected_endpoint.parent.site %}
-                                            | <a href="{{ circuit.termination_z.connected_endpoint.parent.site.get_absolute_url }}">{{ circuit.termination_z.connected_endpoint.parent.site.name}}</a>
+                                            <a href="{{ circuit_term_a_location.get_absolute_url }}">{{ circuit_term_a_location.name }}</a>
+                                            {% if circuit.circuit_termination_z.connected_endpoint and circuit_term_a_location != circuit.circuit_termination_z.connected_endpoint.parent.location %}
+                                            | <a href="{{ circuit.circuit_termination_z.connected_endpoint.parent.location.get_absolute_url }}">{{ circuit.circuit_termination_z.connected_endpoint.parent.location.name}}</a>
                                             {% endif %}
                                         {% endwith %}
                                     {% endif %}
@@ -68,10 +68,10 @@
                     <tbody>
                         {% for maintenance in upcoming_maintenances %}
                             {% for circuit in maintenance.circuits %}
-                                {% if circuit.termination_a.connected_endpoint %}
+                                {% if circuit.circuit_termination_a.connected_endpoint %}
                                     <tr>
                                         <td>
-                                            {% with device_obj=circuit.termination_a.connected_endpoint.parent %}
+                                            {% with device_obj=circuit.circuit_termination_a.connected_endpoint.parent %}
                                             <a href="{{ device_obj.get_absolute_url }}">{{ device_obj.name }}</a> 
                                             {% endwith %}
                                         </td>
@@ -80,10 +80,10 @@
                                         </td>
                                     </tr>
                                 {% endif %}
-                                {% if circuit.termination_z.connected_endpoint %}
+                                {% if circuit.circuit_termination_z.connected_endpoint %}
                                     <tr>
                                         <td>
-                                            {% with device_obj=circuit.termination_z.connected_endpoint.parent %}
+                                            {% with device_obj=circuit.circuit_termination_z.connected_endpoint.parent %}
                                             <a href="{{ device_obj.get_absolute_url }}">{{ device_obj.name }}</a>
                                             {% endwith %}
                                         </td>

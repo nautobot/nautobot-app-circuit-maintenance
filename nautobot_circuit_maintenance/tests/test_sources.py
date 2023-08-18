@@ -1,34 +1,30 @@
 """Test sources utils."""
 # import base64
-from email.message import EmailMessage
+import datetime
 import json
 import os
-from unittest.mock import Mock, patch
-import uuid
-import datetime
+from email.message import EmailMessage
+from unittest.mock import ANY
+from unittest.mock import patch
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
+from nautobot.circuits.models import Provider
 from parameterized import parameterized
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 
-from nautobot.circuits.models import Provider
-from nautobot.extras.jobs import Job
-from nautobot.extras.models import JobResult, Job as JobModel
-
+from nautobot_circuit_maintenance.handle_notifications.sources import IMAP
+from nautobot_circuit_maintenance.handle_notifications.sources import EmailSource
+from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPI
+from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIOauth
+from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIServiceAccount
+from nautobot_circuit_maintenance.handle_notifications.sources import Source
+from nautobot_circuit_maintenance.handle_notifications.sources import get_notifications
 from nautobot_circuit_maintenance.models import NotificationSource
-from nautobot_circuit_maintenance.handle_notifications.sources import (
-    GmailAPIOauth,
-    GmailAPI,
-    Source,
-    IMAP,
-    get_notifications,
-    GmailAPIServiceAccount,
-    EmailSource,
-)
-from .test_handler import get_base_notification_data, generate_email_notification
 
+from .test_handler import generate_email_notification
+from .test_handler import get_base_notification_data
+from .utils import MockedJob
 
 SOURCE_IMAP = {
     "name": "source imap",
@@ -116,7 +112,7 @@ class TestEmailSource(TestCase):
 
     def test_process_email_success(self):
         """Test successful processing of a single email into a MaintenanceNotification."""
-        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider = Provider.objects.create(name="zayo")
         provider.cf["emails_circuit_maintenances"] = "user@example.com"
         provider.save()
 
@@ -124,11 +120,7 @@ class TestEmailSource(TestCase):
             name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
         )
 
-        job = Job()
-        job.debug = True
-        job.job_result = JobResult.objects.create(
-            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
-        )
+        job = MockedJob()
 
         email_message = EmailMessage()
         email_message["From"] = "User <user@example.com>"
@@ -148,7 +140,7 @@ class TestEmailSource(TestCase):
 
     def test_process_email_success_alternate_source_header(self):
         """Test successful processing of a single email with a non-standard source header."""
-        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider = Provider.objects.create(name="zayo")
         provider.cf["emails_circuit_maintenances"] = "user@example.com"
         provider.save()
 
@@ -161,11 +153,7 @@ class TestEmailSource(TestCase):
             source_header="X-Original-Sender",
         )
 
-        job = Job()
-        job.debug = True
-        job.job_result = JobResult.objects.create(
-            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
-        )
+        job = MockedJob()
 
         email_message = EmailMessage()
         email_message["From"] = "Mailing List <mailing-list@example.com>"
@@ -185,7 +173,7 @@ class TestEmailSource(TestCase):
         self.assertEqual(notification.raw_payload, email_message.as_bytes())
 
     def test_get_provider_type_from_email(self):
-        provider = Provider.objects.create(name="abc d", slug="abc-d")
+        provider = Provider.objects.create(name="abc d")
         provider.cf["emails_circuit_maintenances"] = "user@example.com"
         provider.save()
         source = IMAP(
@@ -193,7 +181,7 @@ class TestEmailSource(TestCase):
         )
 
         provider_type = source.get_provider_type_from_email("user@example.com")
-        self.assertEqual(provider_type, "abc-d")
+        self.assertEqual(provider_type, "abc d")
         provider_type = source.get_provider_type_from_email("unknown")
         self.assertIsNone(provider_type)
 
@@ -202,10 +190,6 @@ class TestIMAPSource(TestCase):
     """Test case for IMAP Source."""
 
     fixtures = ["source_imap.yaml"]
-
-    logger = Mock()
-    logger.log_info = Mock()
-    logger.log_warning = Mock()
 
     def setUp(self):
         """Prepare data for tests."""
@@ -243,11 +227,12 @@ class TestIMAPSource(TestCase):
         notification_source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
         notification_source.providers.set([])
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        job = MockedJob()
+        res = get_notifications(job, NotificationSource.objects.all(), 0)
         self.assertEqual([], res)
         source_name = SOURCE_IMAP["name"]
-        self.logger.log_warning.assert_called_with(
-            message=f"Skipping source '{source_name}' because no providers were defined."
+        job.logger.warning.assert_called_with(
+            f"Skipping source '{source_name}' because no providers were defined.", extra=ANY
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -255,29 +240,35 @@ class TestIMAPSource(TestCase):
         """Test get_notifications with provider without email in one of the provider and without notifications."""
         mock_receive_notifications.return_value = []
         original_provider = Provider.objects.all().first()
-        new_provider = Provider.objects.create(name="something", slug="something")
+        new_provider = Provider.objects.create(name="something")
         notification_source = NotificationSource.objects.all().first()
         notification_source.providers.add(original_provider)
         notification_source.providers.add(new_provider)
 
         since = 0
-        res = get_notifications(self.logger, NotificationSource.objects.all(), since)
+        job = MockedJob()
+        res = get_notifications(job, NotificationSource.objects.all(), since)
         self.assertEqual([], res)
 
-        self.logger.log_warning.assert_called_with(
-            message=f"Skipping {new_provider.name} because these providers have no email configured."
+        job.logger.warning.assert_called_with(
+            f"Skipping {new_provider.name} because these providers have no email configured.", extra=ANY
         )
-        self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}"
+        job.logger.info.assert_called_with(
+            f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}",
+            extra=ANY,
         )
 
+    # pylint: disable-next=no-self-use
     def test_get_notifications_no_imap_account(self):
         """Test get_notifications without IMAP account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
-        get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        job = MockedJob()
+        get_notifications(job, NotificationSource.objects.all(), 0)
 
-        self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
+        job.logger.warning.assert_called_with(
+            f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)",
+            extra=ANY,
+            exc_info=True,
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -288,10 +279,11 @@ class TestIMAPSource(TestCase):
 
         mock_receive_notifications.return_value = [notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        job = MockedJob()
+        res = get_notifications(job, NotificationSource.objects.all(), 0)
 
         self.assertEqual(1, len(res))
-        self.logger.log_warning.assert_not_called()
+        job.logger.warning.assert_not_called()
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
@@ -301,10 +293,11 @@ class TestIMAPSource(TestCase):
 
         mock_receive_notifications.return_value = [notification, notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        job = MockedJob()
+        res = get_notifications(job, NotificationSource.objects.all(), 0)
 
         self.assertEqual(2, len(res))
-        self.logger.log_warning.assert_not_called()
+        job.logger.warning.assert_not_called()
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.close_session")
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.open_session")
@@ -414,10 +407,6 @@ class TestGmailAPISource(TestCase):
 
     fixtures = ["source_gmail_api.yaml"]
 
-    logger = Mock()
-    logger.log_info = Mock()
-    logger.log_warning = Mock()
-
     def setUp(self):
         """Prepare data for tests."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"] = [
@@ -435,6 +424,7 @@ class TestGmailAPISource(TestCase):
             json.dump({"web": {}}, credentials_file)
 
         self.source = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+        self.job = MockedJob()
 
     def tearDown(self):
         """Clean up data from tests."""
@@ -482,11 +472,11 @@ class TestGmailAPISource(TestCase):
         notification_source = NotificationSource.objects.get(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         notification_source.providers.set([])
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        res = get_notifications(self.job, NotificationSource.objects.all(), 0)
         self.assertEqual([], res)
         source_name = SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"]
-        self.logger.log_warning.assert_called_with(
-            message=f"Skipping source '{source_name}' because no providers were defined."
+        self.job.logger.warning.assert_called_with(
+            f"Skipping source '{source_name}' because no providers were defined.", extra=ANY
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPIServiceAccount.receive_notifications")
@@ -494,29 +484,32 @@ class TestGmailAPISource(TestCase):
         """Test get_notifications with provider without email in one of the provider and without notifications."""
         mock_receive_notifications.return_value = []
         original_provider = Provider.objects.all().first()
-        new_provider = Provider.objects.create(name="something", slug="something")
+        new_provider = Provider.objects.create(name="something")
         notification_source = NotificationSource.objects.all().first()
         notification_source.providers.add(original_provider)
         notification_source.providers.add(new_provider)
 
         since = 0
-        res = get_notifications(self.logger, NotificationSource.objects.all(), since)
+        res = get_notifications(self.job, NotificationSource.objects.all(), since)
         self.assertEqual([], res)
 
-        self.logger.log_warning.assert_called_with(
-            message=f"Skipping {new_provider.name} because these providers have no email configured."
+        self.job.logger.warning.assert_called_with(
+            f"Skipping {new_provider.name} because these providers have no email configured.", extra=ANY
         )
-        self.logger.log_info.assert_called_with(
-            message=f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}"
+        self.job.logger.info.assert_called_with(
+            f"No notifications received for {original_provider}, {new_provider} since {datetime.datetime.fromtimestamp(since).strftime('%d-%b-%Y')} from {notification_source.name}",
+            extra=ANY,
         )
 
     def test_get_notifications_no_account(self):
         """Test get_notifications without account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
-        get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        get_notifications(self.job, NotificationSource.objects.all(), 0)
 
-        self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
+        self.job.logger.warning.assert_called_with(
+            f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)",
+            extra=ANY,
+            exc_info=True,
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
@@ -527,10 +520,10 @@ class TestGmailAPISource(TestCase):
 
         mock_receive_notifications.return_value = [notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        res = get_notifications(self.job, NotificationSource.objects.all(), 0)
 
         self.assertEqual(1, len(res))
-        self.logger.log_warning.assert_not_called()
+        self.job.logger.warning.assert_not_called()
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
@@ -540,10 +533,10 @@ class TestGmailAPISource(TestCase):
 
         mock_receive_notifications.return_value = [notification, notification]
 
-        res = get_notifications(self.logger, NotificationSource.objects.all(), 0)
+        res = get_notifications(self.job, NotificationSource.objects.all(), 0)
 
         self.assertEqual(2, len(res))
-        self.logger.log_warning.assert_not_called()
+        self.job.logger.warning.assert_not_called()
 
     @parameterized.expand(
         [
@@ -599,15 +592,11 @@ class TestGmailAPISource(TestCase):
     @staticmethod
     def email_setup():
         """Helper method for several test cases below."""
-        provider = Provider.objects.create(name="zayo", slug="zayo")
+        provider = Provider.objects.create(name="zayo")
         provider.cf["emails_circuit_maintenances"] = "user@example.com"
         provider.save()
 
-        job = Job()
-        job.debug = True
-        job.job_result = JobResult.objects.create(
-            name="dummy", obj_type=ContentType.objects.get_for_model(JobModel), user=None, job_id=uuid.uuid4()
-        )
+        job = MockedJob()
 
         source = GmailAPI(
             name="whatever",
@@ -628,7 +617,7 @@ class TestGmailAPISource(TestCase):
                 " {from:email1@example.com from:email2@example.com}",
             ],
             [
-                datetime.datetime(2021, 9, 20, 17, 49, 50, 0),
+                datetime.datetime(2021, 9, 20, 17, 49, 50, 0, tzinfo=datetime.timezone.utc),
                 "From",
                 ["email1@example.com", "email2@example.com"],
                 [],
@@ -643,7 +632,7 @@ class TestGmailAPISource(TestCase):
                 " {from:mailinglist1@example.com from:mailinglist2@example.com}",
             ],
             [
-                datetime.datetime(2021, 9, 20, 17, 49, 50, 0),
+                datetime.datetime(2021, 9, 20, 17, 49, 50, 0, tzinfo=datetime.timezone.utc),
                 "X-Original-Sender",
                 ["email1@example.com", "email2@example.com"],
                 ["mailinglist1@example.com", "mailinglist2@example.com"],

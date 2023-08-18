@@ -1,21 +1,23 @@
+# TBD: Remove
+# pylint: disable=nb-incorrect-base-class
+
 """Forms for Circuit Maintenance."""
 from django import forms
 from django_filters.widgets import BooleanWidget
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.utilities.forms import (
+from nautobot.core.forms import (
     BootstrapMixin,
     DateTimePicker,
     DynamicModelMultipleChoiceField,
     StaticSelect2,
     StaticSelect2Multiple,
 )
-from nautobot.utilities.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
+from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import (
     AddRemoveTagsForm,
     CustomFieldBulkEditForm,
     CustomFieldFilterForm,
     CustomFieldModelForm,
-    CustomFieldModelCSVForm,
     RelationshipModelForm,
 )
 from .choices import CircuitMaintenanceStatusChoices
@@ -40,14 +42,6 @@ class CircuitImpactForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelF
         model = CircuitImpact
         fields = ["maintenance", "circuit", "impact"]
         widgets = {"maintenance": forms.HiddenInput()}
-
-
-class CircuitImpactCSVForm(CustomFieldModelCSVForm):
-    """Form for creating bulk Circuit Impact."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = CircuitImpact
-        fields = CircuitImpact.csv_headers
 
 
 class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
@@ -82,7 +76,7 @@ class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldFilterForm):
     )
     provider = DynamicModelMultipleChoiceField(
         queryset=Provider.objects.all(),
-        to_field_name="slug",
+        to_field_name="pk",
         required=False,
     )
     circuit = DynamicModelMultipleChoiceField(
@@ -91,14 +85,6 @@ class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldFilterForm):
     )
     start_time = forms.DateTimeField(label="Start time after", required=False, widget=DateTimePicker())
     end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
-
-
-class CircuitMaintenanceCSVForm(CustomFieldModelCSVForm):
-    """Form for creating bulk Circuit Maintenances."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = CircuitMaintenance
-        fields = CircuitMaintenance.csv_headers
 
 
 class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
@@ -136,25 +122,16 @@ class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
         nullable_fields = ["level"]
 
 
-class NoteCSVForm(CustomFieldModelCSVForm):
-    """Form for creating bulk Notes."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = Note
-        # Omit the `last_updated` field from the CSV form, as it can't be set by the user.
-        fields = Note.csv_headers[:-1]
-
-
 class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldFilterForm):
     """Form for filtering Raw Notification instances."""
 
     model = RawNotification
 
     q = forms.CharField(required=False, label="Search")
-    provider = DynamicModelMultipleChoiceField(queryset=Provider.objects.all(), to_field_name="slug", required=False)
+    provider = DynamicModelMultipleChoiceField(queryset=Provider.objects.all(), to_field_name="pk", required=False)
     sender = forms.CharField(required=False)
     source = DynamicModelMultipleChoiceField(
-        queryset=NotificationSource.objects.all(), to_field_name="slug", required=False
+        queryset=NotificationSource.objects.all(), to_field_name="pk", required=False
     )
     parsed = forms.NullBooleanField(required=False, widget=StaticSelect2(choices=BOOLEAN_WITH_BLANK_CHOICES))
     since = forms.DateTimeField(required=False, widget=DateTimePicker())
@@ -168,14 +145,6 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
 
         model = NotificationSource
         fields = ["providers"]
-
-
-class NotificationSourceCSVForm(CustomFieldModelCSVForm):
-    """Form for creating bulk NotificationSource."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        model = NotificationSource
-        fields = NotificationSource.csv_headers
 
 
 class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):

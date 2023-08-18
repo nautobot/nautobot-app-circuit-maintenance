@@ -12,11 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from distutils.util import strtobool
-from invoke import Collection, task as invoke_task
 import os
+from distutils.util import strtobool
 
 from dotenv import load_dotenv
+from invoke import Collection
+from invoke import task as invoke_task
 
 
 def _load_dotenv():
@@ -45,9 +46,9 @@ namespace = Collection("nautobot_circuit_maintenance")
 namespace.configure(
     {
         "nautobot_circuit_maintenance": {
-            "nautobot_ver": "latest",
+            "nautobot_ver": "2.0.0-beta.2",
             "project_name": "nautobot_circuit_maintenance",
-            "python_ver": "3.8",
+            "python_ver": "3.10",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": [
@@ -342,12 +343,14 @@ def post_upgrade(context):
         "service": "Docker compose service name to run command in (default: nautobot).",
         "command": "Command to run (default: bash).",
         "file": "File to run command with (default: empty)",
+        "root": "Run command as root (default: False)",
     },
 )
-def exec(context, service="nautobot", command="bash", file=""):
+def exec(context, service="nautobot", command="bash", file="", root=False):
     """Launch a command inside the running container (defaults to bash shell inside nautobot container)."""
     command = [
         "exec",
+        "--user root" if root else "",
         "--",
         service,
         command,
@@ -358,12 +361,13 @@ def exec(context, service="nautobot", command="bash", file=""):
 
 @task(
     help={
+        "database": "Database to connect to e.g.: 'test_nautobot' (default: autodetect from environment)",
         "query": "SQL command to execute and quit (default: empty)",
         "input": "SQL file to execute and quit (default: empty)",
         "output": "Ouput file, overwrite if exists (default: empty)",
     }
 )
-def dbshell(context, query="", input="", output=""):
+def dbshell(context, database="", query="", input="", output=""):
     """Start database CLI inside the running `db` container.
 
     Doesn't use `nautobot-server dbshell`, using started `db` service container only.
@@ -387,7 +391,7 @@ def dbshell(context, query="", input="", output=""):
             service,
             "mysql",
             f"--user='{os.getenv('MYSQL_USER')}'",
-            f"--database='{os.getenv('MYSQL_DATABASE')}'",
+            f"--database='{database or os.getenv('MYSQL_DATABASE')}'",
         ]
         if query:
             command += [f"--execute='{query}'"]
@@ -397,7 +401,7 @@ def dbshell(context, query="", input="", output=""):
             service,
             "psql",
             f"--username='{os.getenv('POSTGRES_USER')}'",
-            f"--dbname='{os.getenv('POSTGRES_DB')}'",
+            f"--dbname='{database or os.getenv('POSTGRES_DB')}'",
         ]
         if query:
             command += [f"--command='{query}'"]
@@ -630,9 +634,18 @@ def check_migrations(context):
         "failfast": "fail as soon as a single test fails don't run the entire test suite",
         "buffer": "Discard output from passing tests",
         "pattern": "Run specific test methods, classes, or modules instead of all tests",
+        "verbose": "Verbose output of test results",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_circuit_maintenance", failfast=False, buffer=True, pattern=""):
+def unittest(
+    context,
+    keepdb=False,
+    label="nautobot_circuit_maintenance",
+    failfast=False,
+    buffer=True,
+    pattern="",
+    verbose=False,
+):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -644,6 +657,8 @@ def unittest(context, keepdb=False, label="nautobot_circuit_maintenance", failfa
         command += " --buffer"
     if pattern:
         command += f" -k='{pattern}'"
+    if verbose:
+        command += " --verbosity 3"
     run_command(context, command)
 
 

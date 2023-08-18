@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 from django.test import TestCase
 
-from nautobot_circuit_maintenance.jobs.site_search import check_for_overlap
+from nautobot_circuit_maintenance.jobs.location_search import check_for_overlap
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 

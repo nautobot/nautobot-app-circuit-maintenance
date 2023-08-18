@@ -1,22 +1,28 @@
+# TBD: Review skipped tests
 # pylint: disable=duplicate-code,too-many-public-methods
 """Test for Circuit Maintenace Views."""
+from datetime import datetime
+from datetime import timezone
 from unittest import skip
 from unittest.mock import patch
-from datetime import datetime, timezone
+
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import CircuitType
+from nautobot.circuits.models import Provider
+from nautobot.core.testing import ModelViewTestCase
+from nautobot.core.testing import ViewTestCases
+from nautobot.extras.models import Status
 from nautobot.users.models import ObjectPermission
 
-from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot.utilities.testing import ViewTestCases, ModelViewTestCase
-from nautobot_circuit_maintenance.models import (
-    CircuitMaintenance,
-    CircuitImpact,
-    Note,
-    NotificationSource,
-    ParsedNotification,
-    RawNotification,
-)
+from nautobot_circuit_maintenance.models import CircuitImpact
+from nautobot_circuit_maintenance.models import CircuitMaintenance
+from nautobot_circuit_maintenance.models import Note
+from nautobot_circuit_maintenance.models import NotificationSource
+from nautobot_circuit_maintenance.models import ParsedNotification
+from nautobot_circuit_maintenance.models import RawNotification
 from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
 
 
@@ -48,36 +54,36 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
         """Setup environment for testing."""
         CircuitMaintenance.objects.create(
             name="UT-TEST-1",
-            start_time="2020-10-04T10:00:00",
-            end_time="2020-10-04 12:00:00",
+            start_time="2020-10-04T10:00:00Z",
+            end_time="2020-10-04 12:00:00Z",
             status="TENTATIVE",
         )
         CircuitMaintenance.objects.create(
             name="UT-TEST-2",
-            start_time="2020-10-05T10:00:00",
-            end_time="2020-10-05 12:00:00",
+            start_time="2020-10-05T10:00:00Z",
+            end_time="2020-10-05 12:00:00Z",
             status="TENTATIVE",
         )
         CircuitMaintenance.objects.create(
             name="UT-TEST-3",
-            start_time="2020-10-06 10:00:00",
-            end_time="2020-10-06 12:00:00",
+            start_time="2020-10-06 10:00:00Z",
+            end_time="2020-10-06 12:00:00Z",
             status="TENTATIVE",
         )
 
         cls.form_data = {
             "name": "UT-TEST-10",
-            "start_time": "2020-10-06 10:00:00",
-            "end_time": "2020-10-06 12:00:00",
+            "start_time": "2020-10-06 10:00:00Z",
+            "end_time": "2020-10-06 12:00:00Z",
             "description": "TEST 0 descr",
             "status": "TENTATIVE",
         }
 
         cls.csv_data = (
             "name,start_time,end_time,description,status",
-            "UT-TEST-20, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 20 descr, TENTATIVE",
-            "UT-TEST-21, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 21 descr, TENTATIVE",
-            "UT-TEST-22, 2020-10-06T10:00:00, 2020-10-06T12:00:00, TEST 22 descr, TENTATIVE",
+            "UT-TEST-20,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 20 descr,TENTATIVE",
+            "UT-TEST-21,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 21 descr,TENTATIVE",
+            "UT-TEST-22,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 22 descr,TENTATIVE",
         )
 
         cls.bulk_edit_data = {
@@ -115,52 +121,61 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
-        providers = (
-            Provider(name="Provider 3", slug="provider-3"),
-            Provider(name="Provider 4", slug="provider-4"),
+        providers = Provider.objects.bulk_create(
+            (
+                Provider(name="Provider 3"),
+                Provider(name="Provider 4"),
+            )
         )
-        Provider.objects.bulk_create(providers)
 
-        circuit_types = (
-            CircuitType(name="Circuit Type 3", slug="circuit-type-3"),
-            CircuitType(name="Circuit Type 4", slug="circuit-type-4"),
+        circuit_types = CircuitType.objects.bulk_create(
+            (
+                CircuitType(name="Circuit Type 3"),
+                CircuitType(name="Circuit Type 4"),
+            )
         )
-        CircuitType.objects.bulk_create(circuit_types)
 
-        circuits = (
-            Circuit(cid="Circuit 4", provider=providers[0], type=circuit_types[0]),
-            Circuit(cid="Circuit 5", provider=providers[1], type=circuit_types[1]),
-            Circuit(cid="Circuit 6", provider=providers[1], type=circuit_types[0]),
-            Circuit(cid="Circuit 7", provider=providers[1], type=circuit_types[0]),
-            Circuit(cid="Circuit 8", provider=providers[1], type=circuit_types[0]),
+        status = Status.objects.get(name="Active")
+
+        circuits = Circuit.objects.bulk_create(
+            (
+                Circuit(cid="Circuit 4", provider=providers[0], circuit_type=circuit_types[0], status=status),
+                Circuit(cid="Circuit 5", provider=providers[1], circuit_type=circuit_types[1], status=status),
+                Circuit(cid="Circuit 6", provider=providers[1], circuit_type=circuit_types[0], status=status),
+                Circuit(cid="Circuit 7", provider=providers[1], circuit_type=circuit_types[0], status=status),
+                Circuit(cid="Circuit 8", provider=providers[1], circuit_type=circuit_types[0], status=status),
+            )
         )
-        Circuit.objects.bulk_create(circuits)
 
-        existing_maintenance = [
-            CircuitMaintenance(name="UT-TEST-3", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"),
-            CircuitMaintenance(name="UT-TEST-4", start_time="2020-10-05 10:00:00", end_time="2020-10-05 12:00:00"),
-        ]
-        CircuitMaintenance.objects.bulk_create(existing_maintenance)
+        maintenances = CircuitMaintenance.objects.bulk_create(
+            (
+                CircuitMaintenance(
+                    name="UT-TEST-3", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
+                ),
+                CircuitMaintenance(
+                    name="UT-TEST-4", start_time="2020-10-05 10:00:00Z", end_time="2020-10-05 12:00:00Z"
+                ),
+            )
+        )
 
-        circuit_impacts = [
-            CircuitImpact(
-                maintenance=existing_maintenance[0],
-                circuit=circuits[0],
-            ),
-            CircuitImpact(
-                maintenance=existing_maintenance[1],
-                circuit=circuits[0],
-            ),
-        ]
-        CircuitImpact.objects.bulk_create(circuit_impacts)
+        CircuitImpact.objects.bulk_create(
+            (
+                CircuitImpact(maintenance=maintenances[0], circuit=circuits[0]),
+                CircuitImpact(maintenance=maintenances[1], circuit=circuits[0]),
+            )
+        )
 
-        cls.form_data = {"maintenance": existing_maintenance[0], "circuit": circuits[1], "impact": "NO-IMPACT"}
+        cls.form_data = {
+            "maintenance": maintenances[0],
+            "circuit": circuits[1],
+            "impact": "NO-IMPACT",
+        }
 
         cls.csv_data = (
             "maintenance,circuit,impact",
-            f"{existing_maintenance[0].pk}, {circuits[2].pk}, NO-IMPACT",
-            f"{existing_maintenance[0].pk}, {circuits[3].pk}, OUTAGE",
-            f"{existing_maintenance[0].pk}, {circuits[4].pk}, DEGRADED",
+            f"{maintenances[0].name},{circuits[2].composite_key},NO-IMPACT",
+            f"{maintenances[0].name},{circuits[3].composite_key},OUTAGE",
+            f"{maintenances[0].name},{circuits[4].composite_key},DEGRADED",
         )
 
         cls.bulk_edit_data = {
@@ -211,7 +226,7 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
         """Setup environment for testing."""
 
         maintenance = CircuitMaintenance.objects.create(
-            name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
+            name="UT-TEST-1", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
         )
 
         Note.objects.create(maintenance=maintenance, title="Note 1", comment="comment 1")
@@ -221,8 +236,8 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
         cls.csv_data = (
             "maintenance,title,level,comment",
-            f"{maintenance.pk}, Note 4, INFO, comment 4",
-            f"{maintenance.pk}, Note 5, INFO, comment 5",
+            f"{maintenance.name},Note 4,INFO,comment 4",
+            f"{maintenance.name},Note 5,INFO,comment 5",
         )
 
         cls.bulk_edit_data = {"level": "WARNING"}
@@ -262,28 +277,28 @@ class NotificationSourceTest(
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
-        providers = (
-            Provider(name="Provider 3", slug="provider-3"),
-            Provider(name="Provider 4", slug="provider-4"),
+        providers = Provider.objects.bulk_create(
+            (
+                Provider(name="Provider 3"),
+                Provider(name="Provider 4"),
+            )
         )
-        Provider.objects.bulk_create(providers)
 
-        notificationsource_1 = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
-        notificationsource_2 = NotificationSource.objects.create(name="whatever 2", slug="whatever-2")
+        notificationsource_1 = NotificationSource.objects.create(name="whatever 1")
+        notificationsource_2 = NotificationSource.objects.create(name="whatever 2")
 
         notificationsource_1.providers.set(providers)
         notificationsource_2.providers.set(providers)
 
         cls.form_data = {
             "name": "whatever 3",
-            "slug": "whatever-3",
             "providers": providers,
         }
 
         cls.csv_data = (
-            "name,slug",
-            "whatever 4,whatever-4",
-            "whatever 5,whatever-5",
+            "name",
+            "whatever 4",
+            "whatever 5",
         )
 
         cls.SOURCE_1 = {
@@ -293,7 +308,7 @@ class NotificationSourceTest(
             "url": "imap://example.com",
         }
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [cls.SOURCE_1.copy()]}}
-        NotificationSource.objects.create(name=cls.SOURCE_1["name"], slug=cls.SOURCE_1["name"])
+        NotificationSource.objects.create(name=cls.SOURCE_1["name"])
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
     def test_validate_view_ok(self, mock_test_authentication):
@@ -307,7 +322,10 @@ class NotificationSourceTest(
         obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
 
         response = self.client.get(
-            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+            reverse(
+                "plugins:nautobot_circuit_maintenance:notificationsource_validate",
+                kwargs={"name": self.SOURCE_1["name"]},
+            )
         )
         self.assertContains(response, "SUCCESS: Test OK", status_code=200)
 
@@ -323,7 +341,10 @@ class NotificationSourceTest(
         obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
 
         response = self.client.get(
-            self._get_queryset().get(name=self.SOURCE_1["name"]).get_absolute_url() + "validate/"
+            reverse(
+                "plugins:nautobot_circuit_maintenance:notificationsource_validate",
+                kwargs={"name": self.SOURCE_1["name"]},
+            )
         )
         self.assertContains(response, "FAILED: Some error", status_code=200)
 
@@ -355,12 +376,12 @@ class RawNotificationTest(
     def setUpTestData(cls):
         """Setup environment for testing."""
         providers = (
-            Provider(name="Provider 3", slug="provider-3"),
-            Provider(name="Provider 4", slug="provider-4"),
+            Provider(name="Provider 3"),
+            Provider(name="Provider 4"),
         )
         Provider.objects.bulk_create(providers)
 
-        source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+        source = NotificationSource.objects.create(name="whatever 1")
 
         RawNotification.objects.create(
             subject="whatever",
@@ -414,13 +435,14 @@ class ParsedNotificationTest(
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""
-        providers = (
-            Provider(name="Provider 3", slug="provider-3"),
-            Provider(name="Provider 4", slug="provider-4"),
+        providers = Provider.objects.bulk_create(
+            (
+                Provider(name="Provider 3"),
+                Provider(name="Provider 4"),
+            )
         )
-        Provider.objects.bulk_create(providers)
 
-        source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+        source = NotificationSource.objects.create(name="whatever 1")
 
         raw_notification = RawNotification.objects.create(
             subject="whatever subject 1",
@@ -431,7 +453,7 @@ class ParsedNotificationTest(
             stamp=datetime.now(timezone.utc),
         )
         circuit_maintenance = CircuitMaintenance.objects.create(
-            name="UT-TEST-1", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
+            name="UT-TEST-1", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
         )
         ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
 
@@ -444,7 +466,7 @@ class ParsedNotificationTest(
             stamp=datetime.now(timezone.utc),
         )
         circuit_maintenance_2 = CircuitMaintenance.objects.create(
-            name="UT-TEST-2", start_time="2020-10-04 10:00:00", end_time="2020-10-04 12:00:00"
+            name="UT-TEST-2", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
         )
         ParsedNotification.objects.create(
             maintenance=circuit_maintenance_2, raw_notification=raw_notification_2, json="{}"
@@ -482,32 +504,32 @@ class DashboardTest(ModelViewTestCase):
         circuit_maintenances_create_list = [
             {
                 "name": "UT-TEST-1",
-                "start_time": "2022-08-24 10:00:00",
-                "end_time": "2022-08-24 12:00:00",
+                "start_time": "2022-08-24 10:00:00Z",
+                "end_time": "2022-08-24 12:00:00Z",
                 "lists": ["maintenances_before", "7_days"],
             },
             {
                 "name": "UT-TEST-4",
-                "start_time": "2022-08-16 10:00:00",
-                "end_time": "2022-08-16 12:00:00",
+                "start_time": "2022-08-16 10:00:00Z",
+                "end_time": "2022-08-16 12:00:00Z",
                 "lists": ["maintenances_before", "30_days"],
             },
             {
                 "name": "UT-TEST-2",
-                "start_time": "2022-08-26 10:00:00",
-                "end_time": "2022-08-26 12:00:00",
+                "start_time": "2022-08-26 10:00:00Z",
+                "end_time": "2022-08-26 12:00:00Z",
                 "lists": ["maintenances_after"],
             },
             {
                 "name": "UT-TEST-3",
-                "start_time": "2022-08-27 10:00:00",
-                "end_time": "2022-08-27 12:00:00",
+                "start_time": "2022-08-27 10:00:00Z",
+                "end_time": "2022-08-27 12:00:00Z",
                 "lists": ["maintenances_after"],
             },
             {
                 "name": "UT-TEST-5",
-                "start_time": "2022-03-27 10:00:00",
-                "end_time": "2022-03-27 12:00:00",
+                "start_time": "2022-03-27 10:00:00Z",
+                "end_time": "2022-03-27 12:00:00Z",
                 "lists": ["maintenances_before", "365_days"],
             },
         ]

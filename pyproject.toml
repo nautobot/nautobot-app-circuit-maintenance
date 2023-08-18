@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "1.0.0"
+version = "2.0.0b1"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -19,15 +19,16 @@ packages = [
 [tool.poetry.dependencies]
 bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
+django-cryptography = "^1.1"
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
 google-oauth = "^1.0.0"
 importlib-metadata = "4.13.0"  # Required for Python 3.7 for now. See: https://stackoverflow.com/a/73932581/194311
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
-nautobot = { version = "^1.4.0", optional = true }  # Used for local development
+nautobot = { version = "2.0.0b2", optional = true }  # Used for local development
 nautobot-capacity-metrics = {version = "*", optional = true }
-python = "^3.7"
+python = ">=3.8, <3.11"
 
 [tool.poetry.dev-dependencies]
 Markdown = "*"
@@ -117,7 +118,7 @@ notes = """,
 
 [tool.pylint-nautobot]
 supported_nautobot_versions = [
-    "1.4.0"
+    "2",  # Supporting 2.x.y
 ]
 
 [tool.pydocstyle]

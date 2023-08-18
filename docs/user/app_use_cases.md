@@ -8,7 +8,7 @@ This app is generally used for integrating Circuit Maintenace notifcations from 
 
 Once setup, Notifcations from your provider will get parsed, and notifiation objects will be created. These notification objects show both a visual cue on circuits in Nautobot as well as dashboards and other places to consume the information. 
 
-When notifications are created, there is also a Job that may be run to determine if any Circuit Maintenance activities overlap on specific site, which may affect redundancy for the site. 
+When notifications are created, there is also a Job that may be run to determine if any Circuit Maintenance activities overlap on specific location, which may affect redundancy for the location. 
 
 ## General Usage
 
@@ -148,13 +148,13 @@ Current exposed metric is the `circuit operational status` which shows the opera
 ```
 # HELP circuit_maintenance_status Circuit operational status
 # TYPE circuit_maintenance_status gauge
-circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
-circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona"} 1.0
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",location="Barcelona"} 2.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",location="Girona"} 1.0
 ```
 
 Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict. (Of course you must also install the `nautobot_capacity_metrics` plugin and ensure that it is included in `PLUGINS` as a prerequisite to enabling this feature.)
 
-By default, each circuit has attached some labels and values (cid, provider, type and site), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object.
+By default, each circuit has attached some labels and values (cid, provider, type and location), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object.
 
 !!! note
     In case of a value that can be multiple values, such as `terminations`, the first defined one will be used)
@@ -168,8 +168,8 @@ PLUGINS_CONFIG = {
             "labels_attached": {
                 "circuit": "circuit.cid",
                 "provider": "circuit.provider.name",
-                "circuit_type": "circuit.type.name",
-                "site": "site.name",
+                "circuit_type": "circuit.circuit_type.name",
+                "location": "location.name",
             }
         },
     }
@@ -214,6 +214,6 @@ Attributes:
 
 ### Circuit Overlap Job
 
-The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a site. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job.
+The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a location. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job.
 
 Use the Job regularly to search for overlapping maintenance and review any log message that has a Warning level that will indicate that there is a possible overlapping maintenance.
