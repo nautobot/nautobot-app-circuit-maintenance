@@ -3,3 +3,9 @@
 # W503: Black disagrees with this rule, as does PEP 8; Black wins
 # E701: Colon multi-line indicator, but is just used for model definition. Unable to fix in file.
 ignore = E501, W503, E701
+exclude = 
+  migrations,
+  __pycache__,
+  manage.py,
+  settings.py,
+  .venv

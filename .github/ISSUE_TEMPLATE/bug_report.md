@@ -1,13 +1,13 @@
 ---
 name: 🐛 Bug Report
-about: Report a reproducible bug in the current release of circuit-maintenance
+about: Report a reproducible bug in the current release of nautobot-circuit-maintenance
 ---
 
 ### Environment
 
-- Python version: <!-- Example: 3.8.7 -->
-- Nautobot version: <!-- Example: 1.5.14 -->
-- nautobot-circuit-maintenance version: <!-- Example: 1.0.1 -->
+* Python version:  <!-- Example: 3.7.7 -->
+* Nautobot version:  <!-- Example: 1.4.0 -->
+* nautobot-circuit-maintenance version:  <!-- Example: 1.0.0 -->
 
 <!-- What did you expect to happen? -->
 

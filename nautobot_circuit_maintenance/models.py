@@ -42,16 +42,14 @@ class CircuitMaintenance(PrimaryModel):
     name = models.CharField(max_length=MAX_MAINTENANCE_NAME_LENGTH, default="", unique=True, blank=False)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(default="", blank=True)
     # TODO: Status could use the new general Status model
     status = models.CharField(
         default=CircuitMaintenanceStatusChoices.TENTATIVE,
         max_length=50,
         choices=CircuitMaintenanceStatusChoices,
-        null=True,
-        blank=True,
     )
-    ack = models.BooleanField(default=False, null=True, blank=True)
+    ack = models.BooleanField(default=False)
 
     csv_headers = ["name", "start_time", "end_time", "description", "status", "ack"]
 
@@ -110,8 +108,6 @@ class CircuitImpact(OrganizationalModel):
         default=CircuitImpactChoices.OUTAGE,
         max_length=50,
         choices=CircuitImpactChoices,
-        null=True,
-        blank=True,
     )
 
     csv_headers = ["maintenance", "circuit", "impact"]
@@ -151,8 +147,6 @@ class Note(OrganizationalModel):
         default=NoteLevelChoices.INFO,
         max_length=50,
         choices=NoteLevelChoices,
-        null=True,
-        blank=True,
     )
     comment = models.TextField()
 
@@ -256,9 +250,9 @@ class RawNotification(OrganizationalModel):
     raw = models.BinaryField(max_length=MAX_NOTIFICATION_TOTAL_LENGTH)
     subject = models.CharField(max_length=MAX_NOTIFICATION_SUBJECT_LENGTH)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
-    sender = models.CharField(max_length=MAX_NOTIFICATION_SENDER_LENGTH, default="", null=True, blank=True)
+    sender = models.CharField(max_length=MAX_NOTIFICATION_SENDER_LENGTH, default="", blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
-    parsed = models.BooleanField(default=False, null=True, blank=True)
+    parsed = models.BooleanField(default=False)
     # RawNotification.stamp is the date when the RawNotification was received by the Source
     stamp = models.DateTimeField()
 
