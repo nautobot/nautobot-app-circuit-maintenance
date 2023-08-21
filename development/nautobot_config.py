@@ -58,23 +58,13 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
 #
 
 DEBUG = is_truthy(os.getenv("NAUTOBOT_DEBUG", False))
-
 TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
-if DEBUG:
-    try:
-        # pylint: disable-next=import-outside-toplevel
-        import better_exceptions
-
-        better_exceptions.hook()
-        # How to hook better-exceptions into unittest / DJango's test runner?
-    except ImportError:
-        pass
-    if not TESTING:
-        if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
-            INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
-        if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:  # noqa: F405
-            MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+if DEBUG and not TESTING:
+    if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
+        INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
+    if "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE:  # noqa: F405
+        MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
 
 #
 # Logging

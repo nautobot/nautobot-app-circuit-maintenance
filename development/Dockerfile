@@ -70,9 +70,7 @@ RUN sort poetry_freeze_base.txt poetry_freeze_all.txt | uniq -u > poetry_freeze_
 # TBD: Verify following instruction
 # Install wheel to avoid deprecation warnings related to https://github.com/pypa/pip/issues/8559
 RUN --mount=type=cache,target=/root/.cache/pip pip install \
-  better-exceptions \
   wheel==0.41.1
-    
 
 # Install all local project as editable, constrained on Nautobot version, to get any additional
 #   direct dependencies of the app
