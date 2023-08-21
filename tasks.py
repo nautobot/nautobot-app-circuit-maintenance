@@ -461,11 +461,12 @@ def import_db(context, input="dump.sql"):
 
 @task(
     help={
+        "database": "Database to connect to e.g.: 'test_nautobot' (default: autodetect from environment)",
         "output": "Ouput file, overwrite if exists (default: `dump.sql`)",
         "readable": "Flag to dump database data in more readable format (default: `True`)",
     }
 )
-def backup_db(context, output="dump.sql", readable=True):
+def backup_db(context, database="", output="dump.sql", readable=True):
     """Dump database into `output` file from running `db` container."""
     _load_dotenv()
 
@@ -484,7 +485,7 @@ def backup_db(context, output="dump.sql", readable=True):
             "--add-drop-database",
             "--skip-extended-insert" if readable else "",
             "--databases",
-            os.getenv("MYSQL_DATABASE", ""),
+            database or os.getenv("MYSQL_DATABASE", ""),
         ]
     elif "docker-compose.postgres.yml" in context.nautobot_circuit_maintenance.compose_files:
         command += [
@@ -495,7 +496,7 @@ def backup_db(context, output="dump.sql", readable=True):
             "--create",
             "--if-exists",
             f"--username='{os.getenv('POSTGRES_USER')}'",
-            f"--dbname='{os.getenv('POSTGRES_DB')}'",
+            f"--dbname='{database or os.getenv('POSTGRES_DB')}'",
         ]
 
         if readable:
