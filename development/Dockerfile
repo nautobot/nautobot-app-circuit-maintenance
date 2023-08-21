@@ -83,4 +83,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -c constraints.txt -r poetry_freeze_dev.txt
 
 COPY development/nautobot_config.py ${NAUTOBOT_ROOT}/nautobot_config.py
+
+USER root
 # !!! USE CAUTION WHEN MODIFYING LINES ABOVE
