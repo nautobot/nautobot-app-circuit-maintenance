@@ -39,7 +39,7 @@ class ProviderParserValidator(PluginCustomValidator):
         provider_mapping = (
             self.context["object"]
             .get_custom_fields()
-            .get(CustomField.objects.get(label="provider_parser_circuit_maintenances"))
+            .get(CustomField.objects.get(key="provider_parser_circuit_maintenances"))
         )
 
         if provider_mapping and provider_mapping.lower() not in SUPPORTED_PROVIDER_NAMES:

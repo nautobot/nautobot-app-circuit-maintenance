@@ -36,7 +36,7 @@ def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: d
     ]:
         defaults = {**provider_cf_dict}
         name = defaults.pop("name")
-        field, _ = CustomField.objects.get_or_create(label=name, defaults=defaults)
+        field, _ = CustomField.objects.get_or_create(key=name, defaults=defaults)
         field.content_types.set([ContentType.objects.get_for_model(Provider)])
 
 
