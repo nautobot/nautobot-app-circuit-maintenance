@@ -15,6 +15,9 @@ ARG PYTHON_VER="3.10"
 # Retrieve published development image of Nautobot base which should include most CI dependencies
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
 
+# TBD: Remove after https://github.com/nautobot/nautobot/pull/4302 is merged
+USER root
+
 # Runtime argument and environment setup
 ARG NAUTOBOT_ROOT=/opt/nautobot
 
