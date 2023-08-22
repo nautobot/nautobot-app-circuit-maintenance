@@ -29,7 +29,7 @@ markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 # TBD: Update to production version
 nautobot = { version = "2.0.0rc1", optional = true }  # Used for local development
 # TBD: Update to production version
-nautobot-capacity-metrics = {version = "3.0.0b2", optional = true }
+# nautobot-capacity-metrics = {version = "3.0.0b2", optional = true }
 python = ">=3.8, <3.11"
 
 [tool.poetry.dev-dependencies]
