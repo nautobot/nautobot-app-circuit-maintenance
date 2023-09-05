@@ -16,10 +16,6 @@
                 </td>
             </tr>
             <tr>
-                <td>Slug</td>
-                <td>{{ object.slug }}</td>
-            </tr>
-            <tr>
                 <td>Type</td>
                 <td>{{ source_type }}</td>
             </tr>
@@ -56,11 +52,11 @@
         </table>
     </div>
     <div class="btn-group">
-        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' name=object.name %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
             <button type="submit" name="_validate" class="btn btn-primary">Validate Authentication</button>
         </a>
         {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' slug=object.slug %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' name=object.name %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
             <button type="submit" name="_validate" class="btn btn-primary btn-warning">Edit</button>
         </a>
         {% endif %}

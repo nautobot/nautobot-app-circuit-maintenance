@@ -4,7 +4,7 @@ Here you will find detailed instructions on how to **install** and **configure**
 
 ## Prerequisites
 
-- The plugin is compatible with Nautobot 1.4.0 and higher.
+- The plugin is compatible with Nautobot 2.0.0 and higher.
 - Databases supported: PostgreSQL, MySQL
 
 
@@ -44,7 +44,7 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "raw_notification_initial_days_since": 100,
-        "raw_notification_size": 16384,
+        "raw_notification_size":0 16384,
         "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
         "overlap_job_exclude_no_impact": False, # Exclude in job warnings the impact of `No-Impact`
         "notification_sources": [

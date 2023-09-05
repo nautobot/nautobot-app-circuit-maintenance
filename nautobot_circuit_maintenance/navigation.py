@@ -1,5 +1,5 @@
 """Navigation for Circuit Maintenance."""
-from nautobot.utilities.choices import ButtonColorChoices
+from nautobot.core.choices import ButtonColorChoices
 from nautobot.core.apps import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab, NavMenuButton
 
 # For Nautobot 1.5.8, once that becomes the minimum:

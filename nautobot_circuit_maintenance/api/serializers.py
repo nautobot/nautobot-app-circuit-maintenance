@@ -1,56 +1,70 @@
 """Serializer for Circuit Maintenance API."""
-from rest_framework import serializers
-from nautobot.circuits.api.nested_serializers import NestedProviderSerializer
-from nautobot.circuits.api.serializers import CircuitSerializer
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
+from nautobot.core.api.serializers import NautobotModelSerializer
+from nautobot_circuit_maintenance.models import (
+    CircuitImpact,
+    CircuitMaintenance,
+    Note,
+    NotificationSource,
+    ParsedNotification,
+    RawNotification,
+)
 
 
-class CircuitMaintenanceCircuitImpactSerializer(serializers.ModelSerializer):
+class CircuitMaintenanceSerializer(NautobotModelSerializer):
     """Serializer for API."""
-
-    circuit = CircuitSerializer
-
-    class Meta:
-        """Meta class for MaintenanceCircuitImpactSerializer."""
-
-        model = CircuitImpact
-        fields = ["id", "maintenance", "circuit", "impact"]
-
-
-class CircuitMaintenanceSerializer(serializers.ModelSerializer):
-    """Serializer for API."""
-
-    circuits = CircuitMaintenanceCircuitImpactSerializer
 
     class Meta:
         """Meta class for MaintenanceSerializer."""
 
         model = CircuitMaintenance
-        fields = ["id", "name", "start_time", "end_time", "description", "status", "ack"]
+        fields = "__all__"
 
 
-class NoteSerializer(serializers.ModelSerializer):
+class ParsedNotificationSerializer(NautobotModelSerializer):
     """Serializer for API."""
 
-    maintenance = CircuitMaintenanceSerializer
+    class Meta:
+        """Meta class for ParsedNotificationSerializer."""
+
+        model = ParsedNotification
+        fields = "__all__"
+
+
+class RawNotificationSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for RawNotificationSerializer."""
+
+        model = RawNotification
+        fields = "__all__"
+
+
+class NoteSerializer(NautobotModelSerializer):
+    """Serializer for API."""
 
     class Meta:
         """Meta class for MaintenanceNoteSerializer."""
 
         model = Note
-        fields = ["id", "maintenance", "title", "comment"]
+        fields = "__all__"
 
 
-class NotificationSourceSerializer(serializers.ModelSerializer):
+class NotificationSourceSerializer(NautobotModelSerializer):
     """Serializer for NotificationSource records."""
-
-    url = serializers.HyperlinkedIdentityField(
-        view_name="plugins-api:nautobot_circuit_maintenance-api:notificationsource-detail"
-    )
-    providers = NestedProviderSerializer(many=True)
 
     class Meta:
         """Meta class for NotificationSourceSerializer."""
 
         model = NotificationSource
-        fields = ["id", "url", "name", "slug", "providers", "attach_all_providers"]
+        fields = "__all__"
+
+
+class CircuitImpactSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for CircuitImpactSerializer."""
+
+        model = CircuitImpact
+        fields = "__all__"

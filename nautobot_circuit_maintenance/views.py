@@ -3,17 +3,23 @@ import datetime
 import logging
 
 import google_auth_oauthlib
-
 from django.conf import settings
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
+from django.shortcuts import render
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import Provider
 from nautobot.core.views import generic
-from nautobot.circuits.models import Circuit, Provider
-from nautobot_circuit_maintenance import filters, forms, models, tables
-from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
-from nautobot_circuit_maintenance.models import CircuitMaintenance
 
+from nautobot_circuit_maintenance import filters
+from nautobot_circuit_maintenance import forms
+from nautobot_circuit_maintenance import models
+from nautobot_circuit_maintenance import tables
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize
+from nautobot_circuit_maintenance.handle_notifications.sources import Source
+from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +242,6 @@ class CircuitMaintenanceBulkImportView(generic.BulkImportView):
     """View for bulk of circuit maintenances."""
 
     queryset = models.CircuitMaintenance.objects.all()
-    model_form = forms.CircuitMaintenanceCSVForm
     table = tables.CircuitMaintenanceTable
 
 
@@ -273,6 +278,7 @@ class CircuitImpactListView(generic.ObjectListView):
     """View for listing all circuit impact."""
 
     table = tables.CircuitImpactTable
+    filterset = filters.CircuitImpactFilterSet
     queryset = models.CircuitImpact.objects.all()
     action_buttons = ("add", "export")
 
@@ -300,7 +306,6 @@ class CircuitImpactBulkImportView(generic.BulkImportView):
     """View for bulk of circuit Impact."""
 
     queryset = models.CircuitImpact.objects.all()
-    model_form = forms.CircuitImpactCSVForm
     table = tables.CircuitImpactTable
 
 
@@ -324,6 +329,7 @@ class NoteListView(generic.ObjectListView):
 
     table = tables.NoteTable
     queryset = models.Note.objects.all()
+    filterset = filters.NoteFilterSet
     action_buttons = ("add", "export")
 
 
@@ -350,7 +356,6 @@ class NoteBulkImportView(generic.BulkImportView):
     """View for bulk of Notes."""
 
     queryset = models.Note.objects.all()
-    model_form = forms.NoteCSVForm
     table = tables.NoteTable
 
 
@@ -485,7 +490,7 @@ class NotificationSourceValidate(generic.ObjectView):
                     reverse(
                         f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
                         kwargs={
-                            "slug": exc.source_slug,
+                            "name": exc.source_name,
                         },
                     )
                 )
@@ -505,14 +510,14 @@ class NotificationSourceValidate(generic.ObjectView):
         )
 
 
-def google_authorize(request, slug):
+def google_authorize(request, name):
     """View to start the Google OAuth authorization flow."""
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
-    notification_source = models.NotificationSource.objects.get(slug=slug)
+    notification_source = models.NotificationSource.objects.get(name=name)
     source = Source.init(name=notification_source.name)
     request.session["CLIENT_SECRETS_FILE"] = source.credentials_file
     request.session["SCOPES"] = source.SCOPES + source.extra_scopes
-    request.session["SOURCE_SLUG"] = slug
+    request.session["SOURCE_NAME"] = name
 
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
@@ -570,18 +575,18 @@ def google_oauth2callback(request):
 
     # Store credentials in the session.
     credentials = flow.credentials
-    source_slug = request.session.get("SOURCE_SLUG")
+    source_name = request.session.get("SOURCE_NAME")
 
     try:
-        notification_source = models.NotificationSource.objects.get(slug=source_slug)
+        notification_source = models.NotificationSource.objects.get(name=source_name)
         notification_source.token = credentials
         notification_source.save()
     except models.NotificationSource.DoesNotExist:
-        logger.warning("Google OAuth callback for %s is not matching any existing NotificationSource", source_slug)
+        logger.warning("Google OAuth callback for %s is not matching any existing NotificationSource", source_name)
 
     return redirect(
         reverse(
             "plugins:nautobot_circuit_maintenance:notificationsource_validate",
-            kwargs={"slug": source_slug},
+            kwargs={"name": source_name},
         )
     )

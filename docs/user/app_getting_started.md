@@ -18,7 +18,7 @@ In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we w
 
 These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
 
-Also, by default, the Provider **slug** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
+Also, by default, the Provider **name** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
 
 ### Configure Notification Sources in `nautobot_config.py`
 

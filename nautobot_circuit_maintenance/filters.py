@@ -3,15 +3,22 @@ import logging
 
 import django_filters
 from django.db.models import Q
+from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import Provider
+from nautobot.core.filters import NaturalKeyOrPKMultipleChoiceFilter
+from nautobot.extras.filters import NautobotFilterSet
 
-from nautobot.circuits.models import Circuit, Provider
-from nautobot.utilities.filters import BaseFilterSet
-from .models import CircuitMaintenance, CircuitImpact, RawNotification, NotificationSource
+from .models import CircuitImpact
+from .models import CircuitMaintenance
+from .models import Note
+from .models import NotificationSource
+from .models import ParsedNotification
+from .models import RawNotification
 
 logger = logging.getLogger(__name__)
 
 
-class CircuitMaintenanceFilterSet(BaseFilterSet):
+class CircuitMaintenanceFilterSet(NautobotFilterSet):
     """Filter capabilities for CircuitMaintenance instances."""
 
     q = django_filters.CharFilter(
@@ -19,18 +26,17 @@ class CircuitMaintenanceFilterSet(BaseFilterSet):
         label="Search",
     )
 
-    provider = django_filters.ModelMultipleChoiceFilter(
-        field_name="provider__slug",
+    provider = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="provider",
         queryset=Provider.objects.all(),
-        to_field_name="slug",
-        label="Provider (slug)",
-        method="search_providers",
+        to_field_name="name",
+        label="Provider",
     )
 
-    circuit = django_filters.ModelMultipleChoiceFilter(
+    circuit = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="circuit",
         queryset=Circuit.objects.all(),
         label="Circuit",
-        method="search_circuits",
     )
 
     start_time = django_filters.DateTimeFilter(field_name="start_time", lookup_expr="gte")
@@ -49,30 +55,55 @@ class CircuitMaintenanceFilterSet(BaseFilterSet):
         qs_filter = Q(name__icontains=value)
         return queryset.filter(qs_filter)
 
-    def search_providers(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
-        """Perform the filtered search for Provider IDs."""
-        if not value:
-            return queryset
 
-        return queryset.filter(circuitimpact__circuit__provider__in=value)
+class CircuitImpactFilterSet(NautobotFilterSet):
+    """Filter capabilities for CircuitImpact instances."""
 
-    def search_circuits(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
-        """Perform the filtered search for Circuit IDs."""
-        if not value:
-            return queryset
+    maintenance = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="maintenance",
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="name",
+        label="CircuitMaintenance",
+    )
 
-        return queryset.filter(circuitimpact__circuit__in=value)
+    circuit = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="circuit",
+        queryset=Circuit.objects.all(),
+        label="Circuit",
+    )
 
+    class Meta:
+        """Meta class attributes for CircuitImpactFilterSet."""
 
-class CircuitImpactFilterSet(BaseFilterSet):
-    """Filter capabilities for Circuit Impact."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = CircuitImpact
         fields = ["id", "maintenance", "circuit", "impact"]
 
 
-class RawNotificationFilterSet(BaseFilterSet):
+class NoteFilterSet(NautobotFilterSet):
+    """Filter capabilities for Note instances."""
+
+    maintenance = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="maintenance",
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="name",
+        label="CircuitMaintenance",
+    )
+
+    class Meta:
+        """Meta class attributes for NoteFilterSet."""
+
+        model = Note
+        fields = ["id", "maintenance", "title"]
+
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+        """Perform the filtered search."""
+        if not value.strip():
+            return queryset
+        qs_filter = Q(title__icontains=value)
+        return queryset.filter(qs_filter)
+
+
+class RawNotificationFilterSet(NautobotFilterSet):
     """Filter capabilities for Raw Notification instances."""
 
     q = django_filters.CharFilter(
@@ -81,22 +112,31 @@ class RawNotificationFilterSet(BaseFilterSet):
     )
 
     since = django_filters.DateTimeFilter(field_name="stamp", lookup_expr="gte")
-    provider = django_filters.ModelMultipleChoiceFilter(
-        field_name="provider__slug",
+
+    provider = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="provider",
         queryset=Provider.objects.all(),
-        to_field_name="slug",
-        label="Provider (slug)",
+        to_field_name="name",
+        label="Provider",
     )
-    source = django_filters.ModelMultipleChoiceFilter(
-        field_name="source__slug",
+
+    source = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="source",
         queryset=NotificationSource.objects.all(),
-        to_field_name="slug",
-        label="Notification Source (slug)",
+        to_field_name="name",
+        label="Notification Source",
     )
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = ["sender", "parsed"]
+        fields = [
+            "subject",
+            "provider",
+            "sender",
+            "source",
+            "parsed",
+            "stamp",
+        ]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""
@@ -106,7 +146,36 @@ class RawNotificationFilterSet(BaseFilterSet):
         return queryset.filter(qs_filter)
 
 
-class NotificationSourceFilterSet(BaseFilterSet):
+class ParsedNotificationFilterSet(NautobotFilterSet):
+    """Filter capabilities for Notification Source."""
+
+    q = django_filters.CharFilter(
+        method="search",
+        label="Search",
+    )
+
+    maintenance = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="maintenance",
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="name",
+        label="CircuitMaintenance",
+    )
+
+    class Meta:
+        """Meta class attributes for ParsedNotificationFilterSet."""
+
+        model = ParsedNotification
+        fields = ["maintenance", "raw_notification", "json"]
+
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+        """Perform the filtered search."""
+        if not value.strip():
+            return queryset
+        qs_filter = Q(raw_notification__icontains=value)
+        return queryset.filter(qs_filter)
+
+
+class NotificationSourceFilterSet(NautobotFilterSet):
     """Filter capabilities for Notification Source."""
 
     q = django_filters.CharFilter(
@@ -118,7 +187,7 @@ class NotificationSourceFilterSet(BaseFilterSet):
         """Meta class attributes for NotificationSourceFilterSet."""
 
         model = NotificationSource
-        fields = ["name", "slug", "attach_all_providers"]
+        fields = ["name", "attach_all_providers"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""

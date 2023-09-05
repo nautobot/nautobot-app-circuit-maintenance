@@ -2,12 +2,11 @@
 - model: "circuits.provider"
   pk: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
   fields:
-    created: 2021-04-30
+    created: 2021-04-30 00:00:00Z
     last_updated: 2021-04-30 07:43:14.510402+00:00
     _custom_field_data:
       emails_circuit_maintenances: "sender@example.com"
     name: "ntt"
-    slug: "ntt"
     asn: null
     account: ""
     portal_url: ""
@@ -17,22 +16,21 @@
 - model: "circuits.circuittype"
   pk: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
   fields:
-    created: 2021-05-06
+    created: 2021-05-06 00:00:00Z
     last_updated: 2021-05-06 05:16:27.538979+00:00
     _custom_field_data: {}
     name: "Transit"
-    slug: "transit"
     description: ""
 - model: "circuits.circuit"
   pk: "3ef990ab-6ae0-4e26-bd76-8017f643ab74"
   fields:
-    created: 2021-04-30
+    created: 2021-04-30 00:00:00Z
     last_updated: 2021-04-30 07:43:34.845865+00:00
     _custom_field_data: {}
-    status: null
+    status: ["Active"]
     cid: "000001"
     provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
-    type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
+    circuit_type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
     install_date: null
     commit_rate: null
@@ -41,13 +39,13 @@
 - model: "circuits.circuit"
   pk: "fe87375e-a292-4a44-9bc9-830e0fb7a0ec"
   fields:
-    created: 2021-05-06
+    created: 2021-05-06 00:00:00Z
     last_updated: 2021-05-06 05:18:36.057186+00:00
     _custom_field_data: {}
-    status: null
+    status: ["Active"]
     cid: "000002"
     provider: "0ec89992-0de0-483f-8f53-bdcd179eaecd"
-    type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
+    circuit_type: "d1c2ed9d-9376-485b-b058-d26c29b5f22f"
     tenant: null
     install_date: null
     commit_rate: null
@@ -56,20 +54,18 @@
 - model: "nautobot_circuit_maintenance.notificationsource"
   pk: "eb82df7e-6df6-405a-a798-d12e16cc1a50"
   fields:
-    created: 2021-05-06
+    created: 2021-05-06 00:00:00Z
     last_updated: 2021-05-06 05:19:11.314056+00:00
     _custom_field_data: {}
     name: "source gmail api service account"
-    slug: "source-gmail-api-service-account"
     providers:
       - "0ec89992-0de0-483f-8f53-bdcd179eaecd"
 - model: "nautobot_circuit_maintenance.notificationsource"
   pk: "d08e7c43-f856-4ac9-a30e-11e263cc5954"
   fields:
-    created: 2021-05-06
+    created: 2021-05-06 00:00:00Z
     last_updated: 2021-05-06 05:19:11.314056+00:00
     _custom_field_data: {}
     name: "source gmail api oauth"
-    slug: "source-gmail-api-oauth"
     providers:
       - "0ec89992-0de0-483f-8f53-bdcd179eaecd"

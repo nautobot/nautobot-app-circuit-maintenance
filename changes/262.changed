@@ -1,0 +1,5 @@
+Added related ORM object to jobs logging messages.
+Renamed Job `nautobot_circuit_maintenance.jobs.site_search.FindSitesWithMaintenanceOverlap` => `nautobot_circuit_maintenance.jobs.location_search.FindLocationsWithMaintenanceOverlap`.
+Renamed `PLUGINS_CONFIG.nautobot_circuit_maintenance.metrics.labels_attached.site` => `PLUGINS_CONFIG.nautobot_circuit_maintenance.metrics.labels_attached.location`.
+Updated `nautobot-capacity-metrics` dependency to `>=3`.
+Updated `nautobot` dependency to `>=2`.
