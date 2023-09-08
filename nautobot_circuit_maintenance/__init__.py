@@ -2,13 +2,9 @@
 from django.apps import apps as global_apps
 from django.conf import settings
 from django.db.models.signals import post_migrate
-from nautobot.extras.plugins import PluginConfig
+from nautobot.apps import NautobotAppConfig
 
-try:
-    from importlib import metadata
-except ImportError:
-    # Python version < 3.8
-    import importlib_metadata as metadata
+from importlib import metadata
 
 __version__ = metadata.version(__name__)
 
@@ -71,7 +67,7 @@ def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylin
     NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
 
 
-class CircuitMaintenanceConfig(PluginConfig):
+class CircuitMaintenanceConfig(NautobotAppConfig):
     """Plugin configuration for the Circuit Maintenance plugin."""
 
     name = "nautobot_circuit_maintenance"

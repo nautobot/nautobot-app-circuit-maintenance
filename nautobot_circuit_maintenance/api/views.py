@@ -2,7 +2,7 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import viewsets
 
-from nautobot.extras.api.views import CustomFieldModelViewSet
+from nautobot.apps.api import CustomFieldModelViewSet
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
