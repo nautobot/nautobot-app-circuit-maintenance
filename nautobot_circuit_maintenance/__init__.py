@@ -1,14 +1,10 @@
 """Init for Circuit Maintenance plugin."""
+from importlib import metadata
+
 from django.apps import apps as global_apps
 from django.conf import settings
 from django.db.models.signals import post_migrate
-from nautobot.extras.plugins import PluginConfig
-
-try:
-    from importlib import metadata
-except ImportError:
-    # Python version < 3.8
-    import importlib_metadata as metadata
+from nautobot.apps import NautobotAppConfig
 
 __version__ = metadata.version(__name__)
 
@@ -71,7 +67,7 @@ def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylin
     NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
 
 
-class CircuitMaintenanceConfig(PluginConfig):
+class CircuitMaintenanceConfig(NautobotAppConfig):
     """Plugin configuration for the Circuit Maintenance plugin."""
 
     name = "nautobot_circuit_maintenance"
@@ -81,8 +77,8 @@ class CircuitMaintenanceConfig(PluginConfig):
     author_email = "opensource@networktocode.com"
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
-    min_version = "2.0.0b2"
-    max_version = "2.9999"
+    min_version = "2.0.0rc1"
+    max_version = "2.0.0rc98"
     required_settings = []
     default_settings = {
         "raw_notification_initial_days_since": 7,
