@@ -14,7 +14,6 @@ def gen_raw_md5(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("nautobot_circuit_maintenance", "0003_improve_rawnotification"),
     ]
