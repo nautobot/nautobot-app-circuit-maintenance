@@ -5,11 +5,7 @@ from django.db.models.signals import post_migrate
 from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
 
-try:
-    from importlib import metadata
-except ImportError:
-    # Python version < 3.8
-    import importlib_metadata as metadata
+from importlib import metadata
 
 __version__ = metadata.version(__name__)
 
