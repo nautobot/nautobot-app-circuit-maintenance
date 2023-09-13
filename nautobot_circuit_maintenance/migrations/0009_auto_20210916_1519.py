@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("circuits", "0002_initial_part_2"),
         ("nautobot_circuit_maintenance", "0008_raw_binary"),

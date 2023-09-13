@@ -5,7 +5,7 @@ from datetime import date
 
 from django.conf import settings
 
-from nautobot.extras.jobs import BooleanVar, Job
+from nautobot.extras.jobs import Job
 from nautobot.circuits.models import Circuit
 
 from nautobot_circuit_maintenance.models import CircuitMaintenance
@@ -97,9 +97,6 @@ class FindLocationsWithMaintenanceOverlap(Job):
     circuit to be available.
     """
 
-    # TBD: Really needed? Should be just "debug" to sync with HandleCircuitMaintenanceNotifications or completly removed.
-    job_debug = BooleanVar(description="Enable for more verbose debug logging")
-
     class Meta:
         """Meta definition for the Job."""
 
@@ -108,7 +105,7 @@ class FindLocationsWithMaintenanceOverlap(Job):
 
     # TBD: Check options to remove this pylint disable
     # pylint: disable-next=arguments-differ
-    def run(self, job_debug=False):
+    def run(self):
         """Executes the Job."""
         # Query for all of the circuits maintenances that are on going in the future
         today = date.today()
@@ -152,8 +149,8 @@ class FindLocationsWithMaintenanceOverlap(Job):
                         )
 
             # Log success for when there is not an overlapping maintenance at a location
-            if overlapping_maintenance is False and job_debug:
-                self.logger.info(
+            if overlapping_maintenance is False:
+                self.logger.debug(
                     "Checked maintenance for overlap, no overlap was found.",
                     extra={"object": circuit_maint},
                 )

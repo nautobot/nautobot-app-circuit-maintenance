@@ -17,11 +17,11 @@ class ProviderEmailValidator(PluginCustomValidator):
         for provider in Provider.objects.all():
             if self.context["object"] != provider:
                 for custom_field, value in provider.get_custom_fields().items():
-                    if custom_field.name == "emails_circuit_maintenances" and value:
+                    if custom_field.key == "emails_circuit_maintenances" and value:
                         used_emails.extend(value.split(","))
 
         for custom_field, value in self.context["object"].get_custom_fields().items():
-            if custom_field.name == "emails_circuit_maintenances" and value:
+            if custom_field.key == "emails_circuit_maintenances" and value:
                 for email in value.split(","):
                     if email in used_emails:
                         self.validation_error(

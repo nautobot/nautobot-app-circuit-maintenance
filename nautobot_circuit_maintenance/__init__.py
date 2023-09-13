@@ -20,19 +20,19 @@ def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: d
 
     for provider_cf_dict in [
         {
-            "name": "emails_circuit_maintenances",
+            "key": "emails_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
             "label": "Emails for Circuit Maintenance plugin.",
         },
         {
-            "name": "provider_parser_circuit_maintenances",
+            "key": "provider_parser_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
             "label": "Provider Parser for Circuit Maintenance plugin.",
         },
     ]:
         defaults = {**provider_cf_dict}
-        name = defaults.pop("name")
-        field, _ = CustomField.objects.get_or_create(key=name, defaults=defaults)
+        key = defaults.pop("key")
+        field, _ = CustomField.objects.get_or_create(key=key, defaults=defaults)
         field.content_types.set([ContentType.objects.get_for_model(Provider)])
 
 

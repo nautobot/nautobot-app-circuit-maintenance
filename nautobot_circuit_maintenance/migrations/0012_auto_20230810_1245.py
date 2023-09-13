@@ -5,7 +5,6 @@ import nautobot.core.models.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("extras", "0096_remove_slugs"),
         ("nautobot_circuit_maintenance", "0011_mysql"),

@@ -16,7 +16,6 @@ def migrate_source(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("nautobot_circuit_maintenance", "0002_notification_secrets_out_of_db"),
     ]

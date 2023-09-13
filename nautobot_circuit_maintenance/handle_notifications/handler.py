@@ -14,7 +14,6 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from nautobot.circuits.models import Circuit
 from nautobot.circuits.models import Provider
-from nautobot.extras.jobs import BooleanVar
 from nautobot.extras.jobs import Job
 
 from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
@@ -294,8 +293,7 @@ def create_raw_notification(
             stamp=parser.parse(notification.date),
         )
         # If the RawNotification was already created, we ignore it.
-        if job.debug:
-            job.logger.debug(f"Raw notification already existed with ID: {raw_entry.id}", extra={"object": raw_entry})
+        job.logger.debug(f"Raw notification already existed with ID: {raw_entry.id}", extra={"object": raw_entry})
         return None
     except ObjectDoesNotExist:
         try:
@@ -395,21 +393,19 @@ def get_since_reference(job: Job) -> int:
 class HandleCircuitMaintenanceNotifications(Job):
     """Job to handle external circuit maintenance notifications and turn them into Circuit Maintenances."""
 
-    # TBD: Really needed? Shouldn't we just use job.logger.debug?
-    debug = BooleanVar(default=False, description="Enable getting debug Job messages.")
-
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
 
         name = "Update Circuit Maintenances"
+        has_sensitive_variables = False
         description = "Fetch Circuit Maintenance Notifications from Sources and create or update Circuit Maintenances accordingly."
 
     # TBD: Check options to remove this pylint disable
     # pylint: disable-next=arguments-differ
     def run(self) -> List[uuid.UUID]:
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
-        if self.debug is True:
-            self.logger.debug("Starting Handle Notifications job.")
+        # TODO: add dryrun functionality (no longer default behavior)
+        self.logger.debug("Starting Handle Notifications job.")
 
         notification_sources = NotificationSource.objects.all()
         if not notification_sources:
@@ -448,7 +444,6 @@ class HandleCircuitMaintenanceNotifications(Job):
                 )
                 raise
 
-        if self.debug is True:
-            self.logger.debug(f"{len(raw_notification_ids)} notifications processed.")
+        self.logger.debug(f"{len(raw_notification_ids)} notifications processed.")
 
         return raw_notification_ids

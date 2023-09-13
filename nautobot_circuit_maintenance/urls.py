@@ -78,7 +78,7 @@ urlpatterns = [
     path("source/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
     path("source/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
     path("source/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
-    path("source/<str:name>/validate/", views.NotificationSourceValidate.as_view(), name="notificationsource_validate"),
+    path("source/<uuid:pk>/validate/", views.NotificationSourceValidate.as_view(), name="notificationsource_validate"),
     path(
         "source/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
