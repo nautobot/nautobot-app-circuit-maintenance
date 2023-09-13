@@ -1,11 +1,11 @@
 """Init for Circuit Maintenance plugin."""
+from importlib import metadata
+
 from django.apps import apps as global_apps
 from django.conf import settings
 from django.db.models.signals import post_migrate
 from django.utils.text import slugify
 from nautobot.extras.plugins import PluginConfig
-
-from importlib import metadata
 
 __version__ = metadata.version(__name__)
 
