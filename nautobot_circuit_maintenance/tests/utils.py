@@ -15,6 +15,7 @@ class MockedLogger:
     """Mocked logger for testing."""
 
     def __init__(self):
+        self.debug = _add("debug")
         self.info = _add("info")
         self.warning = _add("warning")
         self.error = _add("error")

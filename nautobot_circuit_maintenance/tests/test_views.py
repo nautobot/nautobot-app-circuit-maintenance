@@ -320,11 +320,11 @@ class NotificationSourceTest(
         obj_perm.save()
         obj_perm.users.add(self.user)
         obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
-
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
         response = self.client.get(
             reverse(
                 "plugins:nautobot_circuit_maintenance:notificationsource_validate",
-                kwargs={"name": self.SOURCE_1["name"]},
+                kwargs={"pk": source.pk},
             )
         )
         self.assertContains(response, "SUCCESS: Test OK", status_code=200)
@@ -339,11 +339,12 @@ class NotificationSourceTest(
         obj_perm.save()
         obj_perm.users.add(self.user)
         obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
 
         response = self.client.get(
             reverse(
                 "plugins:nautobot_circuit_maintenance:notificationsource_validate",
-                kwargs={"name": self.SOURCE_1["name"]},
+                kwargs={"pk": source.pk},
             )
         )
         self.assertContains(response, "FAILED: Some error", status_code=200)
