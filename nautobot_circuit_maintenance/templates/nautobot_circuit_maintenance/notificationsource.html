@@ -1,7 +1,5 @@
 {% extends 'generic/object_detail.html' %}
 
-{% block buttons %}{% endblock %}
-
 {% block content_left_page %}
 
     <div class="panel panel-default">
@@ -52,12 +50,12 @@
         </table>
     </div>
     <div class="btn-group">
-        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' name=object.name %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_validate' pk=object.pk %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
             <button type="submit" name="_validate" class="btn btn-primary">Validate Authentication</button>
         </a>
         {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' name=object.name %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
-            <button type="submit" name="_validate" class="btn btn-primary btn-warning">Edit</button>
+        <a href="{% url 'plugins:nautobot_circuit_maintenance:notificationsource_edit' pk=object.pk %}?return_url={{ object.get_absolute_url }}" class="btn  btn-xs">
+            <button type="submit" name="_edit" class="btn btn-primary btn-warning">Edit</button>
         </a>
         {% endif %}
     </div>

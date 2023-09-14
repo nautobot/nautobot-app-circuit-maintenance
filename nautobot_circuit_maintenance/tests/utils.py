@@ -24,8 +24,6 @@ class MockedLogger:
 class MockedJob:
     """Mocked job for testing."""
 
-    debug = True
-
     def __init__(self):
         self.job_result = Mock()
         self.logger = MockedLogger()

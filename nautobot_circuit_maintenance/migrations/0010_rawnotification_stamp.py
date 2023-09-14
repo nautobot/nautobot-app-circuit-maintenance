@@ -13,7 +13,6 @@ def copy_date_to_stamp(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("circuits", "0002_initial_part_2"),
         ("nautobot_circuit_maintenance", "0009_auto_20210916_1519"),

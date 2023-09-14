@@ -239,8 +239,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
                 extra={"object": notification_source},
             )
             return False
-        if job.debug is True:
-            job.logger.debug(f"Fetching emails from {self.emails_to_fetch}")
+        job.logger.debug(f"Fetching emails from {self.emails_to_fetch}")
         job.logger.info(
             (
                 f"Retrieving notifications from {notification_source.name} for "
@@ -390,20 +389,18 @@ class IMAP(EmailSource):
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
                 msg_ids.extend(messages.split())
-                if job.debug is True:
-                    job.logger.debug(
-                        f"Fetched {len(messages.split())} emails from {self.name}"
-                        f" source using search pattern: {search_criteria}."
-                    )
+                job.logger.debug(
+                    f"Fetched {len(messages.split())} emails from {self.name}"
+                    f" source using search pattern: {search_criteria}."
+                )
         else:
             search_criteria = f"({since_date})"
             messages = self.session.search(None, search_criteria)[1][0]
             msg_ids.extend(messages.split())
-            if job.debug is True:
-                job.logger.debug(
-                    f"Fetched {len(messages.split())} emails from {self.name} "
-                    f"source using search pattern: {search_criteria}."
-                )
+            job.logger.debug(
+                f"Fetched {len(messages.split())} emails from {self.name} "
+                f"source using search pattern: {search_criteria}."
+            )
 
         received_notifications = []
         for msg_id in msg_ids:
@@ -411,8 +408,7 @@ class IMAP(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        if job.debug:
-            job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
+        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
 
         self.close_session()
         return received_notifications
@@ -546,10 +542,9 @@ class GmailAPI(EmailSource):
             msg_ids.extend(msg["id"] for msg in response.get("messages", []))
             request = self.service.users().messages().list_next(request, response)  # pylint: disable=no-member
 
-        if job.debug is True:
-            job.logger.debug(
-                f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."
-            )
+        job.logger.debug(
+            f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."
+        )
 
         received_notifications = []
         for msg_id in msg_ids:
@@ -557,9 +552,8 @@ class GmailAPI(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        if job.debug is True:
-            job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
-            job.logger.debug(f"Raw notifications: {received_notifications}")
+        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
+        job.logger.debug(f"Raw notifications: {received_notifications}")
 
         self.close_service()
         return received_notifications

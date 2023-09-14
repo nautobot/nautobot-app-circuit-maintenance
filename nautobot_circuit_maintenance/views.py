@@ -4,9 +4,7 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
-from django.shortcuts import render
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from nautobot.circuits.models import Circuit
@@ -267,11 +265,14 @@ class CircuitMaintenanceJobView(generic.ObjectView):
 
     def get(self, request, *args, **kwargs):
         """Custom GET to run a the Job."""
-        class_path = (
-            "plugins/nautobot_circuit_maintenance.handle_notifications.handler/HandleCircuitMaintenanceNotifications"
+        return redirect(
+            reverse(
+                "extras:job_run_by_class_path",
+                kwargs={
+                    "class_path": "nautobot_circuit_maintenance.handle_notifications.handler.HandleCircuitMaintenanceNotifications"
+                },
+            )
         )
-
-        return redirect(reverse("extras:job", kwargs={"class_path": class_path}))
 
 
 class CircuitImpactListView(generic.ObjectListView):
@@ -453,7 +454,7 @@ class NotificationSourceView(generic.ObjectView):
 
 
 class NotificationSourceEditView(generic.ObjectEditView):
-    """View for editting NotificationSource."""
+    """View for editing NotificationSource."""
 
     model = models.NotificationSource
     queryset = models.NotificationSource.objects.all()
@@ -473,11 +474,11 @@ class NotificationSourceValidate(generic.ObjectView):
 
     queryset = models.NotificationSource.objects.all()
 
-    def get(self, request, *args, **kwargs):
-        """Custom GET to run a authentication validation."""
-        instance = get_object_or_404(self.queryset, **kwargs)
+    def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
+        """Extend content of detailed view for NotificationSource."""
+        source = Source.init(name=instance.name)
+
         try:
-            source = Source.init(name=instance.name)
             is_authenticated, mess_auth = source.test_authentication()
 
             message = "SUCCESS" if is_authenticated else "FAILED"
@@ -497,17 +498,13 @@ class NotificationSourceValidate(generic.ObjectView):
             except NoReverseMatch:
                 pass
 
-        return render(
-            request,
-            self.get_template_name(),
-            {
-                "object": instance,
-                "authentication_message": message,
-                "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
-                "account": source.get_account_id(),
-                "source_type": source.__class__.__name__,
-            },
-        )
+        return {
+            "authentication_message": message,
+            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
+            "account": source.get_account_id(),
+            "source_type": source.__class__.__name__,
+            "active_tab": "main",
+        }
 
 
 def google_authorize(request, name):
