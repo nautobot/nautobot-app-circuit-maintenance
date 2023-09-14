@@ -135,7 +135,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(2, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
             mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsed")
-            self.job.logger.debug.assert_called_with("1 notifications processed.")
+            self.job.logger.info.assert_called_with("1 notifications processed.")
 
     def test_run_nonexistent_circuit(self):
         """Test when a Notification contains a nonexistent circuit."""
@@ -162,7 +162,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertIn(fake_cid, Note.objects.all().first().title)
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "parsed")
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "unknown-cids")
-            self.job.logger.debug.assert_called_with("1 notifications processed.")
+            self.job.logger.info.assert_called_with("1 notifications processed.")
 
             # Do some checking of string representation length for potential change-logging issues
             # (ObjectChange.object_repr field has a limit of 200 characters)
@@ -217,11 +217,10 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
         ) as mock_tag_message:
             mock_get_notifications.return_value = [test_notification]
-            with self.assertRaises(ProviderError):
-                self.job.run()
+            self.job.run()
 
             mock_get_notifications.assert_called_once()
-            self.assertEqual(1, len(RawNotification.objects.all()))
+            self.assertEqual(0, len(RawNotification.objects.all()))
             self.assertEqual(0, len(ParsedNotification.objects.all()))
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))

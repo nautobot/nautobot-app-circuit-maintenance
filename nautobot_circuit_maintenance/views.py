@@ -10,7 +10,6 @@ from django.urls.exceptions import NoReverseMatch
 from nautobot.circuits.models import Circuit
 from nautobot.circuits.models import Provider
 from nautobot.core.views import generic
-from nautobot.extras.models import Job
 
 from nautobot_circuit_maintenance import filters
 from nautobot_circuit_maintenance import forms
@@ -266,12 +265,14 @@ class CircuitMaintenanceJobView(generic.ObjectView):
 
     def get(self, request, *args, **kwargs):
         """Custom GET to run a the Job."""
-        job = Job.objects.get(
-            module_name="nautobot_circuit_maintenance.handle_notifications.handler",
-            job_class_name="HandleCircuitMaintenanceNotifications",
+        return redirect(
+            reverse(
+                "extras:job_run_by_class_path",
+                kwargs={
+                    "class_path": "nautobot_circuit_maintenance.handle_notifications.handler.HandleCircuitMaintenanceNotifications"
+                },
+            )
         )
-
-        return redirect(reverse("extras:job", kwargs={"pk": job.pk}))
 
 
 class CircuitImpactListView(generic.ObjectListView):

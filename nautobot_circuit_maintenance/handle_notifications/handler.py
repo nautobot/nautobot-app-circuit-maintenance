@@ -12,9 +12,11 @@ from circuit_maintenance_parser import init_provider
 from dateutil import parser
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from nautobot.circuits.models import Circuit
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
+from nautobot.extras.jobs import DryRunVar
 
 from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
@@ -305,6 +307,7 @@ def create_raw_notification(
                 source=NotificationSource.objects.filter(name=notification.source.name).last(),
                 stamp=parser.parse(notification.date),
             )
+
             raw_entry.save()
             job.logger.info("Raw notification created.", extra={"object": raw_entry})
         except Exception:
@@ -325,10 +328,8 @@ def process_raw_notification(job: Job, notification: MaintenanceNotification) ->
     related objects. Finally returns the the UUID of the RawNotification modified.
     """
     try:
-        # How to get the provider from the notification.provider_type using natural keys?
-        provider = Provider.objects.get(name=notification.provider_type)
+        provider = Provider.objects.get_by_natural_key(notification.provider_type)
     except ObjectDoesNotExist:
-        # TBD: Really just warning? Shouldn't we fail?
         job.logger.warning(
             "Raw notification not created because is referencing to a provider not existent.",
             extra={"object": notification},
@@ -359,6 +360,7 @@ def process_raw_notification(job: Job, notification: MaintenanceNotification) ->
                 raw_notification=raw_entry,
                 json=parser_maintenance.to_json(),
             )
+            parsed_entry.save()
             job.logger.info(
                 f"Saved Parsed Notification for {circuit_maintenance_entry.name}.",
                 extra={"object": parsed_entry},
@@ -390,8 +392,14 @@ def get_since_reference(job: Job) -> int:
     return since_reference
 
 
+class DryRunTransactionSkip(Exception):
+    """Exception to handle dryrun mode."""
+
+
 class HandleCircuitMaintenanceNotifications(Job):
     """Job to handle external circuit maintenance notifications and turn them into Circuit Maintenances."""
+
+    dryrun = DryRunVar()
 
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
@@ -400,11 +408,8 @@ class HandleCircuitMaintenanceNotifications(Job):
         has_sensitive_variables = False
         description = "Fetch Circuit Maintenance Notifications from Sources and create or update Circuit Maintenances accordingly."
 
-    # TBD: Check options to remove this pylint disable
-    # pylint: disable-next=arguments-differ
-    def run(self) -> List[uuid.UUID]:
+    def run(self, dryrun=False) -> List[uuid.UUID]:
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
-        # TODO: add dryrun functionality (no longer default behavior)
         self.logger.debug("Starting Handle Notifications job.")
 
         notification_sources = NotificationSource.objects.all()
@@ -433,17 +438,21 @@ class HandleCircuitMaintenanceNotifications(Job):
         for notification in notifications:
             self.logger.info(f"Processing notification `{notification.subject}`.", extra={"object": notification})
             try:
-                raw_id = process_raw_notification(self, notification)
-                if raw_id:
-                    raw_notification_ids.append(raw_id)
+                with transaction.atomic():
+                    raw_id = process_raw_notification(self, notification)
+                    if raw_id:
+                        raw_notification_ids.append(raw_id)
+                    if dryrun:
+                        raise DryRunTransactionSkip()
+            except DryRunTransactionSkip:
+                self.logger.info("DRYRUN mode, nothing has been committed.")
             except Exception:
                 self.logger.error(
                     "Unexpected exception when parsing notifications",
                     extra={"object": notification},
                     exc_info=True,
                 )
-                raise
 
-        self.logger.debug(f"{len(raw_notification_ids)} notifications processed.")
+        self.logger.info(f"{len(raw_notification_ids)} notifications processed.")
 
         return raw_notification_ids
