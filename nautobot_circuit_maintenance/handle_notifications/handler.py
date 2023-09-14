@@ -408,6 +408,7 @@ class HandleCircuitMaintenanceNotifications(Job):
         has_sensitive_variables = False
         description = "Fetch Circuit Maintenance Notifications from Sources and create or update Circuit Maintenances accordingly."
 
+    # pylint: disable=arguments-differ
     def run(self, dryrun=False) -> List[uuid.UUID]:
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
         self.logger.debug("Starting Handle Notifications job.")
