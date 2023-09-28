@@ -372,7 +372,7 @@ class NoteBulkEditView(generic.BulkEditView):
 
 
 class NoteBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting Notea."""
+    """View for bulk deleting Notes."""
 
     queryset = models.Note.objects.all()
     filterset = filters.NoteFilterSet
