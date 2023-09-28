@@ -162,6 +162,7 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
             (
                 CircuitImpact(maintenance=maintenances[0], circuit=circuits[0]),
                 CircuitImpact(maintenance=maintenances[1], circuit=circuits[0]),
+                CircuitImpact(maintenance=maintenances[1], circuit=circuits[-1]),
             )
         )
 
@@ -229,6 +230,7 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
             name="UT-TEST-1", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
         )
 
+        Note.objects.create(maintenance=maintenance, title="Note 0", comment="comment 0")
         Note.objects.create(maintenance=maintenance, title="Note 1", comment="comment 1")
         Note.objects.create(maintenance=maintenance, title="Note 2", comment="comment 2")
 
@@ -390,6 +392,14 @@ class RawNotificationTest(
             sender="whatever",
             source=source,
             raw=b"whatever 1",
+            stamp=datetime.now(timezone.utc),
+        )
+
+        RawNotification.objects.create(
+            subject="whatever",
+            provider=providers[1],
+            source=source,
+            raw=b"whatever 2",
             stamp=datetime.now(timezone.utc),
         )
 
