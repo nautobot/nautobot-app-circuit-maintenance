@@ -46,7 +46,7 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitMaintenanceFilterSet."""
 
         model = CircuitMaintenance
-        fields = ["name", "status", "ack"]
+        fields = ["id", "name", "status", "ack"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
         """Perform the filtered search."""

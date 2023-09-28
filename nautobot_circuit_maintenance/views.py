@@ -247,6 +247,7 @@ class CircuitMaintenanceBulkEditView(generic.BulkEditView):
     """View for bulk editing circuitmaintenance features."""
 
     queryset = models.CircuitMaintenance.objects.all()
+    filterset = filters.CircuitMaintenanceFilterSet
     table = tables.CircuitMaintenanceTable
     form = forms.CircuitMaintenanceBulkEditForm
 
@@ -255,6 +256,7 @@ class CircuitMaintenanceBulkDeleteView(generic.BulkDeleteView):
     """View for bulk deleting circuitmaintenance features."""
 
     queryset = models.CircuitMaintenance.objects.all()
+    filterset = filters.CircuitMaintenanceFilterSet
     table = tables.CircuitMaintenanceTable
 
 
@@ -322,6 +324,7 @@ class CircuitImpactBulkDeleteView(generic.BulkDeleteView):
     """View for bulk deleting circuit impact features."""
 
     queryset = models.CircuitImpact.objects.all()
+    filterset = filters.CircuitImpactFilterSet
     table = tables.CircuitImpactTable
 
 
@@ -372,6 +375,7 @@ class NoteBulkDeleteView(generic.BulkDeleteView):
     """View for bulk deleting Notea."""
 
     queryset = models.Note.objects.all()
+    filterset = filters.NoteFilterSet
     table = tables.NoteTable
 
 
@@ -412,6 +416,7 @@ class RawNotificationBulkDeleteView(generic.BulkDeleteView):
     """View for bulk deleting Circuit Maintenance Notifications entries."""
 
     queryset = models.RawNotification.objects.all()
+    filterset = filters.RawNotificationFilterSet
     table = tables.RawNotificationTable
 
 
