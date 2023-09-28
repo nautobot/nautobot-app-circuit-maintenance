@@ -162,6 +162,7 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
             (
                 CircuitImpact(maintenance=maintenances[0], circuit=circuits[0]),
                 CircuitImpact(maintenance=maintenances[1], circuit=circuits[0]),
+                CircuitImpact(maintenance=maintenances[1], circuit=circuits[-1]),
             )
         )
 
