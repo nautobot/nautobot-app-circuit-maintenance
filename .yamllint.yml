@@ -1,6 +1,5 @@
 ---
 extends: "default"
-
 rules:
   comments: "enable"
   empty-values: "enable"
@@ -9,3 +8,6 @@ rules:
   line-length: "disable"
   quoted-strings:
     quote-type: "double"
+ignore: |
+  .venv/
+  compose.yaml

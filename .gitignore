@@ -255,9 +255,6 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-# Jetbrains IDE configs
-.idea/
-
 # Editor-based Rest Client
 .idea/httpRequests
 
@@ -299,12 +296,17 @@ fabric.properties
 *.code-workspace
 
 # Rando
-docker-compose.override.yml
-override.env
+creds.env
+development/*.txt
 
-### demo ###
-demo/
+# Invoke overrides
+invoke.yml
 
-# Secrets
-development/creds.env
-development/*_credentials.json
+# Docs
+docs/README.md
+docs/CHANGELOG.md
+public
+/compose.yaml
+/dump.sql
+
+/nautobot_circuit_maintenance/static/

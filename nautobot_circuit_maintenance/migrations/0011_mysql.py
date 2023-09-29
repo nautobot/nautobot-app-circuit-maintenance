@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("nautobot_circuit_maintenance", "0010_rawnotification_stamp"),
     ]
