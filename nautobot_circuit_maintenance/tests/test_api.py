@@ -1,9 +1,17 @@
 """Test for Circuit Maintenace API."""
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
 from django.urls import reverse
-from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot.utilities.testing import APIViewTestCases
-from nautobot_circuit_maintenance.models import CircuitMaintenance, CircuitImpact
+from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import CircuitType
+from nautobot.circuits.models import Provider
+from nautobot.core.testing import APIViewTestCases
+from nautobot.extras.models import Status
+
+from nautobot_circuit_maintenance.models import CircuitImpact
+from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 
 class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
@@ -37,6 +45,15 @@ class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
             }
         ]
 
+    # pylint: disable-next=no-self-use
+    def get_deletable_object(self):
+        """Return an object that can be deleted via the API."""
+        return CircuitMaintenance.objects.get_or_create(
+            name="DELETABLE",
+            start_time=datetime.now(timezone.utc) + timedelta(days=5),
+            end_time=datetime.now(timezone.utc) + timedelta(days=6),
+        )[0]
+
 
 class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
     """API tests for Circuit Impact."""
@@ -53,21 +70,22 @@ class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
     def setUpTestData(cls):
         """Setup enviornment for testing."""
         providers = (
-            Provider(name="Provider 1", slug="provider-1"),
-            Provider(name="Provider 2", slug="provider-2"),
+            Provider(name="Provider 1"),
+            Provider(name="Provider 2"),
         )
         Provider.objects.bulk_create(providers)
 
         circuit_types = (
-            CircuitType(name="Circuit Type 1", slug="circuit-type-1"),
-            CircuitType(name="Circuit Type 2", slug="circuit-type-2"),
+            CircuitType(name="Circuit Type 1"),
+            CircuitType(name="Circuit Type 2"),
         )
         CircuitType.objects.bulk_create(circuit_types)
 
+        active_status = Status.objects.get(name="Active")
         circuits = (
-            Circuit(cid="Circuit 1", provider=providers[0], type=circuit_types[0]),
-            Circuit(cid="Circuit 2", provider=providers[1], type=circuit_types[1]),
-            Circuit(cid="Circuit 3", provider=providers[1], type=circuit_types[0]),
+            Circuit(cid="Circuit 1", status=active_status, provider=providers[0], circuit_type=circuit_types[0]),
+            Circuit(cid="Circuit 2", status=active_status, provider=providers[1], circuit_type=circuit_types[1]),
+            Circuit(cid="Circuit 3", status=active_status, provider=providers[1], circuit_type=circuit_types[0]),
         )
         Circuit.objects.bulk_create(circuits)
 
@@ -95,3 +113,12 @@ class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
             },
             {"maintenance": maintenances[1].id, "circuit": circuits[1].id},
         ]
+
+    # pylint: disable-next=no-self-use
+    def get_deletable_object(self):
+        """Return an object that can be deleted via the API."""
+        return CircuitImpact.objects.get_or_create(
+            impact="NO-IMPACT",
+            maintenance=CircuitMaintenance.objects.first(),
+            circuit=Circuit.objects.first(),
+        )[0]

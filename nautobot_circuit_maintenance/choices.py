@@ -1,6 +1,6 @@
 """ChoiceSet classes for circuit maintenance."""
 
-from nautobot.utilities.choices import ChoiceSet
+from nautobot.core.choices import ChoiceSet
 
 # See: https://github.com/jda/maintnote-std/blob/master/standard.md
 

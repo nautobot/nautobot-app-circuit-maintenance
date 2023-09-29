@@ -6,14 +6,17 @@
 # -------------------------------------------------------------------------------------
 # !!! USE CAUTION WHEN MODIFYING LINES BELOW
 
-# Accepts a desired Nautobot version as build argument, default to 1.4.10
-ARG NAUTOBOT_VER="1.4.10"
+# Accepts a desired Nautobot version as build argument, default to `2.0.0`
+ARG NAUTOBOT_VER="2.0.0"
 
-# Accepts a desired Python version as build argument, default to 3.8
-ARG PYTHON_VER="3.8"
+# Accepts a desired Python version as build argument, default to 3.10
+ARG PYTHON_VER="3.10"
 
 # Retrieve published development image of Nautobot base which should include most CI dependencies
 FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
+
+# TBD: Remove after https://github.com/nautobot/nautobot/pull/4302 is merged
+USER root
 
 # Runtime argument and environment setup
 ARG NAUTOBOT_ROOT=/opt/nautobot
@@ -32,14 +35,16 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
 # !!! USE CAUTION WHEN MODIFYING LINES ABOVE
 # -------------------------------------------------------------------------------------
 # App-specifc system build/test dependencies.
-# 
+#
 # Example: LDAP requires `libldap2-dev` to be apt-installed before the Python package.
 # -------------------------------------------------------------------------------------
 # --> Start safe to modify section
 
-RUN apt-get -y update && apt-get -y install \
-    libgeos-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  apt-get -y update && \
+  apt-get -y install \
+  libgeos-dev
 
 # --> Stop safe to modify section
 # -------------------------------------------------------------------------------------
@@ -65,13 +70,22 @@ RUN poetry export -f requirements.txt --without-hashes --output poetry_freeze_ba
 RUN poetry export -f requirements.txt --with dev --without-hashes --output poetry_freeze_all.txt
 RUN sort poetry_freeze_base.txt poetry_freeze_all.txt | uniq -u > poetry_freeze_dev.txt
 
+# TBD: Verify following instruction
+# Install wheel to avoid deprecation warnings related to https://github.com/pypa/pip/issues/8559
+RUN --mount=type=cache,target=/root/.cache/pip pip install \
+  wheel==0.41.1
+
 # Install all local project as editable, constrained on Nautobot version, to get any additional
 #   direct dependencies of the app
-RUN pip install -c constraints.txt -e .[metrics]
+RUN --mount=type=cache,target=/root/.cache/pip \
+  pip install -c constraints.txt -e .[metrics]
 
 # Install any dev dependencies frozen from Poetry
 # Can be improved in Poetry 1.2 which allows `poetry install --only dev`
-RUN pip install -c constraints.txt -r poetry_freeze_dev.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+  pip install -c constraints.txt -r poetry_freeze_dev.txt
 
 COPY development/nautobot_config.py ${NAUTOBOT_ROOT}/nautobot_config.py
+
+USER root
 # !!! USE CAUTION WHEN MODIFYING LINES ABOVE

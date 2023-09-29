@@ -4,12 +4,11 @@ Here you will find detailed instructions on how to **install** and **configure**
 
 ## Prerequisites
 
-- The plugin is compatible with Nautobot 1.4.0 and higher.
+- The plugin is compatible with Nautobot 2.0.0 and higher.
 - Databases supported: PostgreSQL, MySQL
 
-
 !!! note
-    Please check the [dedicated page](compatibility_matrix.md) for a full compatibility matrix and the deprecation policy.
+Please check the [dedicated page](compatibility_matrix.md) for a full compatibility matrix and the deprecation policy.
 
 ### Access Requirements
 
@@ -18,7 +17,7 @@ You will need access to an email account that receives provider maintenance noti
 ## Install Guide
 
 !!! note
-    Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
+Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
 
 The plugin is available as a Python package via PyPI and can be installed with `pip`:
 

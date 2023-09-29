@@ -91,7 +91,7 @@
                         <a href="{{ circuit.circuit.provider.get_absolute_url }}">{{ circuit.circuit.provider }}</a>
                     </td>
                     <td>
-                        <a href="{{ circuit.circuit.type.get_absolute_url }}">{{ circuit.circuit.type }}</a>
+                        <a href="{{ circuit.circuit.circuit_type.get_absolute_url }}">{{ circuit.circuit.circuit_type }}</a>
                     </td>
                     <td>
                         {% if circuit.circuit.status %}
@@ -99,21 +99,21 @@
                         {% endif %}
                     </td>
                     <td>
-                    {% if circuit.circuit.termination_a.location %}
-                        <a href="{{ circuit.circuit.termination_a.location.get_absolute_url }}">{{ circuit.circuit.termination_a.location }}</a>
-                    {% elif circuit.circuit.termination_a.provider_network %}
-                        <a href="{{ circuit.circuit.termination_a.provider_network.get_absolute_url }}">{{ circuit.circuit.termination_a.provider_network }}</a>
+                    {% if circuit.circuit.circuit_termination_a.location %}
+                        <a href="{{ circuit.circuit.circuit_termination_a.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.location }}</a>
+                    {% elif circuit.circuit.circuit_termination_a.provider_network %}
+                        <a href="{{ circuit.circuit.circuit_termination_a.provider_network.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.provider_network }}</a>
                     {% else %}
-                        <a href="{{ circuit.circuit.termination_a.site.get_absolute_url }}">{{ circuit.circuit.termination_a.site }}</a>
+                        <a href="{{ circuit.circuit.circuit_termination_a.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.location }}</a>
                     {% endif %}
                     </td>
                     <td>
-                    {% if circuit.circuit.termination_z.location %}
-                        <a href="{{ circuit.circuit.termination_z.location.get_absolute_url }}">{{ circuit.circuit.termination_z.location }}</a>
-                    {% elif circuit.circuit.termination_z.provider_network %}
-                        <a href="{{ circuit.circuit.termination_z.provider_network.get_absolute_url }}">{{ circuit.circuit.termination_z.provider_network }}</a>
+                    {% if circuit.circuit.circuit_termination_z.location %}
+                        <a href="{{ circuit.circuit.circuit_termination_z.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.location }}</a>
+                    {% elif circuit.circuit.circuit_termination_z.provider_network %}
+                        <a href="{{ circuit.circuit.circuit_termination_z.provider_network.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.provider_network }}</a>
                     {% else %}
-                        <a href="{{ circuit.circuit.termination_z.site.get_absolute_url }}">{{ circuit.circuit.termination_z.site }}</a>
+                        <a href="{{ circuit.circuit.circuit_termination_z.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.location }}</a>
                     {% endif %}
                     </td>
                     <td>

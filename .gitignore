@@ -310,3 +310,7 @@ public
 /dump.sql
 
 /nautobot_circuit_maintenance/static/
+
+# Custom
+development/*.json
+demo/

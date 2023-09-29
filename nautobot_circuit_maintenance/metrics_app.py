@@ -28,8 +28,8 @@ PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}
 DEFAULT_LABELS = {
     "circuit": "circuit.cid",
     "provider": "circuit.provider.name",
-    "circuit_type": "circuit.type.name",
-    "site": "site.name",
+    "circuit_type": "circuit.circuit_type.name",
+    "location": "location.name",
 }
 
 
@@ -37,10 +37,10 @@ def metric_circuit_operational():
     """Expose the operational state of Circuits with a CircuitTermination when a Maintenance is ongoing.
 
     # Circuit operational
-    circuit_maintenance_status{"circuit": "XXXXX", provider="ntt", circuit_type="peering", site='XX"} 1.0
+    circuit_maintenance_status{"circuit": "XXXXX", provider="ntt", circuit_type="peering", location='XX"} 1.0
 
     # Circuit in maintenance mode
-    circuit_maintenance_status{"circuit": "YYYYYY", provider="ntt", circuit_type="peering", site='YY"} 2.0
+    circuit_maintenance_status{"circuit": "YYYYYY", provider="ntt", circuit_type="peering", location='YY"} 2.0
     """
     labels = OrderedDict(PLUGIN_SETTINGS.get("metrics", {}).get("labels_attached", DEFAULT_LABELS))
 
@@ -64,7 +64,7 @@ def metric_circuit_operational():
     )
 
     for termination in CircuitTermination.objects.all().select_related(
-        "circuit", "circuit__provider", "circuit__type", "site"
+        "circuit", "circuit__provider", "circuit__circuit_type", "location"
     ):
         status = 1
         if any(circuit_impact.circuit == termination.circuit for circuit_impact in active_circuit_impacts):

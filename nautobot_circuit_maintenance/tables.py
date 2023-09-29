@@ -1,7 +1,7 @@
 """Tables for Circuit Maintenance."""
 import django_tables2 as tables
 
-from nautobot.utilities.tables import BaseTable, ToggleColumn
+from nautobot.core.tables import BaseTable, ToggleColumn
 
 from .models import CircuitMaintenance, RawNotification, CircuitImpact, NotificationSource, Note
 
@@ -78,4 +78,4 @@ class NotificationSourceTable(BaseTable):
         """Meta for class NotificationSourceTable."""
 
         model = NotificationSource
-        fields = ("pk", "name", "slug", "attach_all_providers", "providers")
+        fields = ("pk", "name", "attach_all_providers", "providers")
