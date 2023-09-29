@@ -6,8 +6,8 @@
 # -------------------------------------------------------------------------------------
 # !!! USE CAUTION WHEN MODIFYING LINES BELOW
 
-# Accepts a desired Nautobot version as build argument, default to `2.0.0-rc.2`
-ARG NAUTOBOT_VER="2.0.0-rc.2"
+# Accepts a desired Nautobot version as build argument, default to `2.0.0`
+ARG NAUTOBOT_VER="2.0.0"
 
 # Accepts a desired Python version as build argument, default to 3.10
 ARG PYTHON_VER="3.10"
@@ -35,16 +35,16 @@ RUN curl -sSL https://install.python-poetry.org | python3 - && \
 # !!! USE CAUTION WHEN MODIFYING LINES ABOVE
 # -------------------------------------------------------------------------------------
 # App-specifc system build/test dependencies.
-# 
+#
 # Example: LDAP requires `libldap2-dev` to be apt-installed before the Python package.
 # -------------------------------------------------------------------------------------
 # --> Start safe to modify section
 
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
-    --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    apt-get -y update && \
-    apt-get -y install \
-    libgeos-dev
+  --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  apt-get -y update && \
+  apt-get -y install \
+  libgeos-dev
 
 # --> Stop safe to modify section
 # -------------------------------------------------------------------------------------
@@ -78,12 +78,12 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install \
 # Install all local project as editable, constrained on Nautobot version, to get any additional
 #   direct dependencies of the app
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -c constraints.txt -e .[metrics]
+  pip install -c constraints.txt -e .[metrics]
 
 # Install any dev dependencies frozen from Poetry
 # Can be improved in Poetry 1.2 which allows `poetry install --only dev`
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -c constraints.txt -r poetry_freeze_dev.txt
+  pip install -c constraints.txt -r poetry_freeze_dev.txt
 
 COPY development/nautobot_config.py ${NAUTOBOT_ROOT}/nautobot_config.py
 
