@@ -7,9 +7,8 @@ Here you will find detailed instructions on how to **install** and **configure**
 - The plugin is compatible with Nautobot 2.0.0 and higher.
 - Databases supported: PostgreSQL, MySQL
 
-
 !!! note
-    Please check the [dedicated page](compatibility_matrix.md) for a full compatibility matrix and the deprecation policy.
+Please check the [dedicated page](compatibility_matrix.md) for a full compatibility matrix and the deprecation policy.
 
 ### Access Requirements
 
@@ -18,7 +17,7 @@ You will need access to an email account that receives provider maintenance noti
 ## Install Guide
 
 !!! note
-    Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
+Plugins can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this plugin is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
 
 The plugin is available as a Python package via PyPI and can be installed with `pip`:
 
@@ -44,7 +43,7 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 PLUGINS_CONFIG = {
     "nautobot_circuit_maintenance": {
         "raw_notification_initial_days_since": 100,
-        "raw_notification_size":0 16384,
+        "raw_notification_size": 16384,
         "dashboard_n_days": 30,  # Defaults to 30 days in the configurations, change/override here
         "overlap_job_exclude_no_impact": False, # Exclude in job warnings the impact of `No-Impact`
         "notification_sources": [
