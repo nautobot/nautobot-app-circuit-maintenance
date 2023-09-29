@@ -121,9 +121,19 @@ jobs:
       fail-fast: true
       matrix:
         # TBD: Fix according to the upcoming CookieCutter NTC 1.2 release
-        python-version: ["3.10"]
+        python-version: ["3.8"]
         db-backend: ["postgresql", "mysql"]
         nautobot-version: ["2.0.0"]
+        include:
+          - python-version: "3.11"
+            db-backend: "postgresql"
+            nautobot-version: "2.0.0"
+          - python-version: "3.11"
+            db-backend: "postgresql"
+            nautobot-version: "stable"
+          - python-version: "3.11"
+            db-backend: "mysql"
+            nautobot-version: "stable"
     runs-on: "ubuntu-20.04"
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
