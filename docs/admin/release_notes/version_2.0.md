@@ -1,7 +1,9 @@
-<!-- markdownlint-disable MD024 -->
+## [v2.0.0 (2023-09-29)](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/releases/tag/v2.0.0)
 
-# v2.0 Release
+### Added
 
-<!-- towncrier release notes start -->
+- [#274](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/274) - Invoke task to generate towncrier release notes
 
-- Upgrade to Nautobot 2.0 major release
+### Changed
+
+- [#274](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/274) - Adopt Nautobot 2.0

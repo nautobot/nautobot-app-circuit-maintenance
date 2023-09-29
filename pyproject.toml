@@ -25,7 +25,7 @@ google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 # TBD: Update to production version
-nautobot = { version = ">=2.0.0rc1,<2.0.0rc99", optional = true }  # Used for local development
+nautobot = "2.0.0"  # Used for local development
 # TBD: Update to production version
 nautobot-capacity-metrics = {version = ">=3.0.0rc1", optional = true }
 python = ">=3.8, <3.12"
@@ -140,7 +140,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.towncrier]
 package = "nautobot_circuit_maintenance"
 directory = "changes"
-filename = "docs/admin/release_notes/version_1.0.md"
+filename = "docs/admin/release_notes/version_2.0.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
