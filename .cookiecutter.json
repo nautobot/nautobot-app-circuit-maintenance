@@ -10,7 +10,7 @@
     "project_slug": "nautobot-plugin-circuit-maintenance",
     "repo_url": "https://github.com/nautobot/nautobot-plugin-circuit-maintenance",
     "base_url": "circuit-maintenance",
-    "min_nautobot_version": "2.0.0b2",
+    "min_nautobot_version": "2.0.0",
     "max_nautobot_version": "2.9999",
     "nautobot_version": "latest",
     "camel_name": "NautobotCircuitMaintenance",
