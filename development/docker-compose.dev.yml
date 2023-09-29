@@ -10,6 +10,13 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      # # TBD: Remove following
+      # - "/opt/my:/opt/my"
+      # # TBD: Remove following
+      # - "/opt/ntc:/opt/ntc"
+      # # TBD: Remove following
+      # - "/opt/ntc/nautobot/nautobot/nautobot:/usr/local/lib/python3.10/site-packages/nautobot"
+
       - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
       - "../:/source"
     healthcheck:

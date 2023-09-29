@@ -8,6 +8,8 @@ router.register("maintenance", views.MaintenanceTaskView)
 router.register("note", views.MaintenanceNoteTaskView)
 router.register("circuitimpact", views.MaintenanceCircuitImpactTaskView)
 router.register("notificationsource", views.NotificationSourceTaskView)
+router.register("parsednotification", views.ParsedNotificationTaskView)
+router.register("rawnotification", views.RawNotificationTaskView)
 
 app_name = "nautobot_circuit_maintenance-api"  # pylint: disable=invalid-name
 urlpatterns = router.urls

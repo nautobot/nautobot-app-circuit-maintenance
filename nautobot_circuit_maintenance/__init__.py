@@ -4,8 +4,7 @@ from importlib import metadata
 from django.apps import apps as global_apps
 from django.conf import settings
 from django.db.models.signals import post_migrate
-from django.utils.text import slugify
-from nautobot.extras.plugins import PluginConfig
+from nautobot.apps import NautobotAppConfig
 
 __version__ = metadata.version(__name__)
 
@@ -21,17 +20,19 @@ def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: d
 
     for provider_cf_dict in [
         {
-            "name": "emails_circuit_maintenances",
+            "key": "emails_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
             "label": "Emails for Circuit Maintenance plugin.",
         },
         {
-            "name": "provider_parser_circuit_maintenances",
+            "key": "provider_parser_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
             "label": "Provider Parser for Circuit Maintenance plugin.",
         },
     ]:
-        field, _ = CustomField.objects.get_or_create(name=provider_cf_dict["name"], defaults=provider_cf_dict)
+        defaults = {**provider_cf_dict}
+        key = defaults.pop("key")
+        field, _ = CustomField.objects.get_or_create(key=key, defaults=defaults)
         field.content_types.set([ContentType.objects.get_for_model(Provider)])
 
 
@@ -51,9 +52,6 @@ def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylin
     ):
         instance, _ = NotificationSource.objects.update_or_create(
             name=notification_source["name"],
-            slug=slugify(
-                notification_source["name"],
-            ),
             defaults={
                 "attach_all_providers": notification_source.get("attach_all_providers", False),
             },
@@ -69,7 +67,7 @@ def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylin
     NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
 
 
-class CircuitMaintenanceConfig(PluginConfig):
+class CircuitMaintenanceConfig(NautobotAppConfig):
     """Plugin configuration for the Circuit Maintenance plugin."""
 
     name = "nautobot_circuit_maintenance"
@@ -79,8 +77,8 @@ class CircuitMaintenanceConfig(PluginConfig):
     author_email = "opensource@networktocode.com"
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
-    min_version = "1.4"
-    max_version = "1.999"
+    min_version = "2.0.0"
+    max_version = "2.99"
     required_settings = []
     default_settings = {
         "raw_notification_initial_days_since": 7,

@@ -1,11 +1,20 @@
 """Test cases for application metrics endpoint views."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
 from django.test import TestCase
-from nautobot.circuits.models import Circuit, CircuitType, Provider, CircuitTermination
-from nautobot.dcim.models import Site
+from nautobot.circuits.models import Circuit
+from nautobot.circuits.models import CircuitTermination
+from nautobot.circuits.models import CircuitType
+from nautobot.circuits.models import Provider
+from nautobot.dcim.models import Location
+from nautobot.dcim.models import LocationType
+from nautobot.extras.models import Status
 
 from nautobot_circuit_maintenance.metrics_app import metric_circuit_operational
-from nautobot_circuit_maintenance.models import CircuitMaintenance, CircuitImpact
+from nautobot_circuit_maintenance.models import CircuitImpact
+from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 
 class AppMetricTests(TestCase):
@@ -18,13 +27,13 @@ class AppMetricTests(TestCase):
             setattr(
                 self,
                 f"provider_{test_id}",
-                Provider.objects.create(name=f"Provider {test_id}", slug=f"provider-{test_id}"),
+                Provider.objects.create(name=f"Provider {test_id}"),
             )
             # Creating 5 CircuitTypes
             setattr(
                 self,
                 f"circuit_type_{test_id}",
-                CircuitType.objects.create(name=f"Circuit Type {test_id}", slug=f"circuit-type-{test_id}"),
+                CircuitType.objects.create(name=f"Circuit Type {test_id}"),
             )
             # Createing 5 Circuits
             setattr(
@@ -33,23 +42,29 @@ class AppMetricTests(TestCase):
                 Circuit.objects.create(
                     cid=f"Circuit {test_id}",
                     provider=getattr(self, f"provider_{test_id}"),
-                    type=getattr(self, f"circuit_type_{test_id}"),
+                    circuit_type=getattr(self, f"circuit_type_{test_id}"),
+                    status=Status.objects.get(name="Active"),
                 ),
             )
 
             if test_id < 4:
-                # Creating 4 Sites
+                location_type = LocationType.objects.get_or_create(name="Location Type")[0]
+                # Creating 4 Locations
                 setattr(
                     self,
-                    f"site_{test_id}",
-                    Site.objects.create(name=f"Site {test_id}", slug=f"site-{test_id}"),
+                    f"location_{test_id}",
+                    Location.objects.create(
+                        name=f"Location {test_id}",
+                        location_type=location_type,
+                        status=Status.objects.get(name="Active"),
+                    ),
                 )
                 # Creating 4 CircuitTerminations
                 term_side = "A" if (test_id % 2) == 0 else "Z"
                 CircuitTermination.objects.create(
                     circuit=getattr(self, f"circuit_{test_id}"),
                     term_side=term_side,
-                    site=getattr(self, f"site_{test_id}"),
+                    location=getattr(self, f"location_{test_id}"),
                 )
 
         self.circuit_maintenance_1 = CircuitMaintenance.objects.create(
@@ -84,7 +99,7 @@ class AppMetricTests(TestCase):
                 test_id = sample.labels["circuit"].split(" ")[-1]
                 self.assertEqual(sample.labels["provider"], getattr(self, f"provider_{test_id}").name)
                 self.assertEqual(sample.labels["circuit_type"], getattr(self, f"circuit_type_{test_id}").name)
-                self.assertEqual(sample.labels["site"], getattr(self, f"site_{test_id}").name)
+                self.assertEqual(sample.labels["location"], getattr(self, f"location_{test_id}").name)
                 if test_id == "1":
                     self.assertEqual(sample.value, 2)
                 else:

@@ -51,8 +51,6 @@ class CircuitMaintenance(PrimaryModel):
     )
     ack = models.BooleanField(default=False)
 
-    csv_headers = ["name", "start_time", "end_time", "description", "status", "ack"]
-
     @property
     def circuits(self):
         """Queryset of Circuit records associated with this CircuitMaintenance."""
@@ -70,7 +68,7 @@ class CircuitMaintenance(PrimaryModel):
         """String value for HTML rendering."""
         return f"{self.name}"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:circuitmaintenance", args=[self.pk])
 
@@ -84,10 +82,6 @@ class CircuitMaintenance(PrimaryModel):
 
         if self.end_time < self.start_time:
             raise ValidationError("End time should be greater than start time.")
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.name, self.start_time, self.end_time, self.description, self.status, self.ack)
 
 
 @extras_features(
@@ -110,8 +104,6 @@ class CircuitImpact(OrganizationalModel):
         choices=CircuitImpactChoices,
     )
 
-    csv_headers = ["maintenance", "circuit", "impact"]
-
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["maintenance", "impact"]
         unique_together = ["maintenance", "circuit"]
@@ -121,13 +113,9 @@ class CircuitImpact(OrganizationalModel):
         # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
         return f"Circuit {self.circuit} with impact {self.impact}"[:200]
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:circuitimpact", args=[self.pk])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.maintenance, self.circuit, self.impact)
 
 
 @extras_features(
@@ -150,8 +138,6 @@ class Note(OrganizationalModel):
     )
     comment = models.TextField()
 
-    csv_headers = ["maintenance", "title", "level", "comment", "last_updated"]
-
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["last_updated"]
         unique_together = ["maintenance", "title"]
@@ -161,13 +147,9 @@ class Note(OrganizationalModel):
         # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
         return f"{self.title}"[:200]
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:note", args=[self.pk])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.maintenance, self.title, self.level, self.comment, self.last_updated)
 
 
 @extras_features(
@@ -186,7 +168,6 @@ class NotificationSource(OrganizationalModel):
         unique=True,
         help_text="Notification Source Name as defined in configuration file.",
     )
-    slug = models.SlugField(max_length=100, unique=True)
     providers = models.ManyToManyField(
         Provider,
         help_text="The Provider(s) that this Notification Source applies to.",
@@ -200,8 +181,6 @@ class NotificationSource(OrganizationalModel):
         help_text="Attach all the Providers to this Notification Source",
     )
 
-    csv_headers = ["name", "slug", "providers"]
-
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["name"]
 
@@ -209,13 +188,9 @@ class NotificationSource(OrganizationalModel):
         """String value for HTML rendering."""
         return f"{self.name}"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.slug])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.name, self.slug, self.providers)
+        return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
 
     @property
     def token(self):
@@ -255,6 +230,7 @@ class RawNotification(OrganizationalModel):
     parsed = models.BooleanField(default=False)
     # RawNotification.stamp is the date when the RawNotification was received by the Source
     stamp = models.DateTimeField()
+    natural_key_field_names = ["stamp", "provider", "subject"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["stamp"]
@@ -271,13 +247,9 @@ class RawNotification(OrganizationalModel):
         """String value for HTML rendering."""
         return f"{self.subject}"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:rawnotification", args=[self.pk])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.subject, self.provider, self.sender, self.source, self.raw, self.stamp, self.parsed)
 
     def clean(self):
         """Add validation when creating a RawNotification."""
@@ -301,6 +273,7 @@ class ParsedNotification(OrganizationalModel):
     maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
     raw_notification = models.ForeignKey(RawNotification, on_delete=models.CASCADE, default=None)
     json = models.JSONField()
+    natural_key_field_names = ["maintenance", "raw_notification"]
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         ordering = ["last_updated"]
@@ -310,10 +283,6 @@ class ParsedNotification(OrganizationalModel):
         # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
         return f"Parsed notification for {self.raw_notification.subject}"[:200]
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:parsednotification", args=[self.pk])
-
-    def to_csv(self):
-        """Return fields for bulk view."""
-        return (self.maintenance, self.raw_notification, self.json, self.last_updated)
