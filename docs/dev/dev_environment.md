@@ -133,15 +133,14 @@ Each command can be executed with `invoke <command>`. All commands support the a
   unittest         Run Django unit tests for the plugin.
 ```
 
-
 ## Project Overview
 
-This project provides the ability to develop and manage the Nautobot server locally (with supporting services being *Dockerized*) or by using only Docker containers to manage Nautobot. The main difference between the two environments is the ability to debug and use **pdb** when developing locally. Debugging with **pdb** within the Docker container is more complicated, but can still be accomplished by either entering into the container (via `docker exec`) or attaching your IDE to the container and running the Nautobot service manually within the container.
+This project provides the ability to develop and manage the Nautobot server locally (with supporting services being _Dockerized_) or by using only Docker containers to manage Nautobot. The main difference between the two environments is the ability to debug and use **pdb** when developing locally. Debugging with **pdb** within the Docker container is more complicated, but can still be accomplished by either entering into the container (via `docker exec`) or attaching your IDE to the container and running the Nautobot service manually within the container.
 
 The upside to having the Nautobot service handled by Docker rather than locally is that you do not have to manage the Nautobot server. The [Docker logs](#docker-logs) provide the majority of the information you will need to help troubleshoot, while getting started quickly and not requiring you to perform several manual steps and remembering to have the Nautobot server running in a separate terminal while you develop.
 
 !!! note
-	The local environment still uses Docker containers for the supporting services (Postgres, Redis, and RQ Worker), but the Nautobot server is handled locally by you, the developer.
+    The local environment still uses Docker containers for the supporting services (Postgres, Redis, and RQ Worker), but the Nautobot server is handled locally by you, the developer.
 
 Follow the directions below for the specific development environment that you choose.
 
@@ -226,7 +225,7 @@ Once the containers are fully up, you should be able to open up a web browser, a
 - A live version of the documentation at [http://localhost:8001](http://localhost:8001)
 
 !!! note
-	Sometimes the containers take a minute to fully spin up. If the page doesn't load right away, wait a minute and try again.
+    Sometimes the containers take a minute to fully spin up. If the page doesn't load right away, wait a minute and try again.
 
 ### Invoke - Creating a Superuser
 
@@ -237,7 +236,7 @@ The Nautobot development image will automatically provision a super user when sp
 - `NAUTOBOT_SUPERUSER_PASSWORD=admin`
 
 !!! note
-	The default username is **admin**, but can be overridden by specifying **NAUTOBOT_SUPERUSER_USERNAME**.
+    The default username is **admin**, but can be overridden by specifying **NAUTOBOT_SUPERUSER_USERNAME**.
 
 If you need to create additional superusers, run the follow commands.
 
@@ -287,7 +286,7 @@ Removing network nautobot_circuit_maintenance_default
 This will safely shut down all of your running Docker containers for this project. When you are ready to spin containers back up, it is as simple as running `invoke start` again [as seen previously](#invoke-starting-the-development-environment).
 
 !!! warning
-	If you're wanting to reset the database and configuration settings, you can use the `invoke destroy` command, but **you will lose any data stored in those containers**, so make sure that is what you want to do.
+    If you're wanting to reset the database and configuration settings, you can use the `invoke destroy` command, but **you will lose any data stored in those containers**, so make sure that is what you want to do.
 
 ### Real-Time Updates? How Cool!
 
@@ -298,12 +297,12 @@ Now you can start developing your plugin in the project folder!
 The magic here is the root directory is mounted inside your Docker containers when built and ran, so **any** changes made to the files in here are directly updated to the Nautobot plugin code running in Docker. This means that as you modify the code in your plugin folder, the changes will be instantly updated in Nautobot.
 
 !!! warning
-	There are a few exceptions to this, as outlined in the section [To Rebuild or Not To Rebuild](#to-rebuild-or-not-to-rebuild).
+    There are a few exceptions to this, as outlined in the section [To Rebuild or Not To Rebuild](#to-rebuild-or-not-to-rebuild).
 
 The back-end Django process is setup to automatically reload itself (it only takes a couple of seconds) every time a file is updated (saved). So for example, if you were to update one of the files like `tables.py`, then save it, the changes will be visible right away in the web browser!
 
 !!! note
-	You may get connection refused while Django reloads, but it should be refreshed fairly quickly.
+    You may get connection refused while Django reloads, but it should be refreshed fairly quickly.
 
 ### Docker Logs
 
@@ -314,7 +313,7 @@ When trying to debug an issue, one helpful thing you can look at are the logs wi
 ```
 
 !!! note
-	The `-f` tag will keep the logs open, and output them in realtime as they are generated.
+    The `-f` tag will keep the logs open, and output them in realtime as they are generated.
 
 So for example, our plugin is named `nautobot-circuit-maintenance`, the command would most likely be `docker logs nautobot_circuit_maintenance_nautobot_1 -f`. You can find the name of all running containers via `docker ps`.
 
@@ -359,11 +358,11 @@ Once the dependencies are resolved, stop the existing containers, rebuild the Do
 
 ### Installing Additional Nautobot Plugins
 
-Let's say for example you want the new plugin you're creating to integrate into Slack. To do this, you will want to integrate into the existing Nautobot ChatOps Plugin.
+Let's say for example you want the new plugin you're creating to integrate into Slack. To do this, you will want to integrate into the existing Nautobot Circuit Maintenance Plugin.
 
 ```bash
 ➜ poetry shell
-➜ poetry add nautobot-chatops
+➜ poetry add nautobot-circuit-maintenance
 ```
 
 Once you activate the virtual environment via Poetry, you then tell Poetry to install the new plugin.
@@ -377,9 +376,6 @@ Before you continue, you'll need to update the file `development/nautobot_config
 ```
 
 Once the containers are up and running, you should now see the new plugin installed in your Nautobot instance.
-
-!!! note
-    You can even launch an `ngrok` service locally on your laptop, pointing to port 8080 (such as for chatops development), and it will point traffic directly to your Docker images.
 
 ### Updating Python Version
 
