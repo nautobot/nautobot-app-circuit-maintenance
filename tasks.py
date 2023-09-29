@@ -706,7 +706,7 @@ def tests(context, failfast=False):
 # ------------------------------------------------------------------------------
 # APP CUSTOM
 # ------------------------------------------------------------------------------
-@task
+@task(
     help={
         "version": "Version of Nautobot Circuit Maintenance to generate the release notes for.",
     }
