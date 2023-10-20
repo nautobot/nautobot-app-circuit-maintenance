@@ -1,7 +1,8 @@
 [flake8]
 ignore =
   E501,  # Line length is enforced by Black, so flake8 doesn't need to check it
-  W503   # Black disagrees with this rule, as does PEP 8; Black wins
+  W503,  # Black disagrees with this rule, as does PEP 8; Black wins
+  E701   # Colon multi-line indicator, but is just used for model definition. Unable to fix in file.
 exclude = 
   migrations,
   __pycache__,

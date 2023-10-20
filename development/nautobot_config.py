@@ -145,9 +145,43 @@ PLUGINS = ["nautobot_circuit_maintenance"]
 
 # Apps configuration settings. These settings are used by various Apps that the user may have installed.
 # Each key in the dictionary is the name of an installed App and its value is a dictionary of settings.
-# PLUGINS_CONFIG = {
-#     'nautobot_circuit_maintenance': {
-#         'foo': 'bar',
-#         'buzz': 'bazz'
-#     }
-# }
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "notification_sources": [
+            {
+                "name": "my imap source",
+                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
+                "secret": os.environ.get("CM_NS_1_SECRET", ""),
+                "url": os.environ.get("CM_NS_1_URL", ""),
+                # "attach_all_providers": True,
+            },
+            {
+                "name": "my gmail service account api source",
+                "url": os.environ.get("CM_NS_2_URL", ""),
+                "account": os.environ.get("CM_NS_2_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_2_CREDENTIALS_FILE", ""),
+                "attach_all_providers": True,
+                # "source_header": "X-Original-Sender",
+            },
+            {
+                "name": "my gmail oauth api source",
+                "url": os.environ.get("CM_NS_3_URL", ""),
+                "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
+                # "attach_all_providers": True,
+            },
+        ],
+        "metrics": {
+            "enable": True,
+            "labels_attached": {
+                "circuit": "circuit.cid",
+                "provider": "circuit.provider.name",
+                "circuit_type": "circuit.circuit_type.name",
+                "location": "location.name",
+            },
+        },
+    }
+}
+
+if PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
+    PLUGINS.append("nautobot_capacity_metrics")

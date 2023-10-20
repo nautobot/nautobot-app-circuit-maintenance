@@ -1,6 +1,10 @@
-"""Plugin declaration for nautobot_circuit_maintenance."""
-# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
+"""Init for Circuit Maintenance plugin."""
 from importlib import metadata
+
+from django.apps import apps as global_apps
+from django.conf import settings
+from django.db.models.signals import post_migrate
+from nautobot.apps import NautobotAppConfig
 
 __version__ = metadata.version(__name__)
 
@@ -76,9 +80,12 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     min_version = "2.0.0"
     max_version = "2.99"
     required_settings = []
-    min_version = "2.0.0"
-    max_version = "2.9999"
-    default_settings = {}
+    default_settings = {
+        "raw_notification_initial_days_since": 7,
+        "raw_notification_size": 8192,
+        "dashboard_n_days": 30,
+        "overlap_job_exclude_no_impact": False,
+    }
     caching_config = {}
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
 

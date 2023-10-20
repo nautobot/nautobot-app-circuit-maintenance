@@ -703,3 +703,19 @@ def tests(context, failfast=False, keepdb=False, lint_only=False):
         unittest(context, failfast=failfast, keepdb=keepdb)
         unittest_coverage(context)
     print("All tests have passed!")
+
+
+# ------------------------------------------------------------------------------
+# APP CUSTOM
+# ------------------------------------------------------------------------------
+@task(
+    help={
+        "version": "Version of Nautobot Circuit Maintenance to generate the release notes for.",
+    }
+)
+def generate_release_notes(context, version=""):
+    """Generate Release Notes using Towncrier."""
+    command = "env DJANGO_SETTINGS_MODULE=nautobot.core.settings towncrier build"
+    if version:
+        command += f" --version {version}"
+    run_command(context, command)

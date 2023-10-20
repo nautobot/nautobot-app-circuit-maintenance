@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.1.0"
+version = "2.0.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -26,11 +26,19 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
-# Used for local development
-nautobot = "^2.0.0"
+bs4 = "^0.0.1"
+circuit-maintenance-parser = "^2.0.0"
+django-cryptography = "^1.1"
+google-api-python-client = "^2.9.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.5.0"
+markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
+nautobot = "^2.0.0"  # Used for local development
+nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
+python = ">=3.8, <3.12"
 
 [tool.poetry.group.dev.dependencies]
+Markdown = "*"
 bandit = "*"
 black = "*"
 coverage = "*"
@@ -48,18 +56,9 @@ pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
 pylint-nautobot = "*"
-yamllint = "*"
 toml = "*"
-Markdown = "*"
-# Rendering docs to HTML
-mkdocs = "1.5.2"
-# Material for MkDocs theme
-mkdocs-material = "9.1.15"
-# Render custom markdown for version added/changed/remove notes
-mkdocs-version-annotations = "1.0.0"
-# Automatic documentation from sources, for MkDocs
-mkdocstrings = "0.22.0"
-mkdocstrings-python = "1.5.2"
+towncrier = "~22.8.0"
+yamllint = "*"
 
 [tool.black]
 line-length = 120
@@ -136,3 +135,18 @@ add_ignore = "D212"
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.towncrier]
+package = "nautobot_circuit_maintenance"
+directory = "changes"
+filename = "docs/admin/release_notes/version_2.0.md"
+template = "development/towncrier_template.j2"
+start_string = "<!-- towncrier release notes start -->"
+issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
+
+[tool.towncrier.fragment.added]
+[tool.towncrier.fragment.changed]
+[tool.towncrier.fragment.deprecated]
+[tool.towncrier.fragment.fixed]
+[tool.towncrier.fragment.removed]
+[tool.towncrier.fragment.security]
