@@ -1536,13 +1536,13 @@ six = ">=1.12"
 
 [[package]]
 name = "griffe"
-version = "0.30.1"
+version = "0.36.7"
 description = "Signatures for entire Python programs. Extract the structure, the frame, the skeleton of your project, to generate API documentation or find breaking changes in your API."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "griffe-0.30.1-py3-none-any.whl", hash = "sha256:b2f3df6952995a6bebe19f797189d67aba7c860755d3d21cc80f64d076d0154c"},
-    {file = "griffe-0.30.1.tar.gz", hash = "sha256:007cc11acd20becf1bb8f826419a52b9d403bbad9d8c8535699f5440ddc0a109"},
+    {file = "griffe-0.36.7-py3-none-any.whl", hash = "sha256:7a09f8e9b97c7ebe227f6529a298bf7e0e742a9837ee261cc8260d50b4aa039f"},
+    {file = "griffe-0.36.7.tar.gz", hash = "sha256:a6fe60b16720ca0cf63c9e667a4c05eea40dfe4abcf114741885f945b74c7071"},
 ]
 
 [package.dependencies]
@@ -2180,13 +2180,13 @@ files = [
 
 [[package]]
 name = "mkdocs"
-version = "1.4.3"
+version = "1.5.2"
 description = "Project documentation with Markdown."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "mkdocs-1.4.3-py3-none-any.whl", hash = "sha256:6ee46d309bda331aac915cd24aab882c179a933bd9e77b80ce7d2eaaa3f689dd"},
-    {file = "mkdocs-1.4.3.tar.gz", hash = "sha256:5955093bbd4dd2e9403c5afaf57324ad8b04f16886512a3ee6ef828956481c57"},
+    {file = "mkdocs-1.5.2-py3-none-any.whl", hash = "sha256:60a62538519c2e96fe8426654a67ee177350451616118a41596ae7c876bb7eac"},
+    {file = "mkdocs-1.5.2.tar.gz", hash = "sha256:70d0da09c26cff288852471be03c23f0f521fc15cf16ac89c7a3bfb9ae8d24f9"},
 ]
 
 [package.dependencies]
@@ -2195,16 +2195,19 @@ colorama = {version = ">=0.4", markers = "platform_system == \"Windows\""}
 ghp-import = ">=1.0"
 importlib-metadata = {version = ">=4.3", markers = "python_version < \"3.10\""}
 jinja2 = ">=2.11.1"
-markdown = ">=3.2.1,<3.4"
+markdown = ">=3.2.1"
+markupsafe = ">=2.0.1"
 mergedeep = ">=1.3.4"
 packaging = ">=20.5"
+pathspec = ">=0.11.1"
+platformdirs = ">=2.2.0"
 pyyaml = ">=5.1"
 pyyaml-env-tag = ">=0.1"
 watchdog = ">=2.0"
 
 [package.extras]
 i18n = ["babel (>=2.9.0)"]
-min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-import (==1.0)", "importlib-metadata (==4.3)", "jinja2 (==2.11.1)", "markdown (==3.2.1)", "markupsafe (==2.0.1)", "mergedeep (==1.3.4)", "packaging (==20.5)", "pyyaml (==5.1)", "pyyaml-env-tag (==0.1)", "typing-extensions (==3.10)", "watchdog (==2.0)"]
+min-versions = ["babel (==2.9.0)", "click (==7.0)", "colorama (==0.4)", "ghp-import (==1.0)", "importlib-metadata (==4.3)", "jinja2 (==2.11.1)", "markdown (==3.2.1)", "markupsafe (==2.0.1)", "mergedeep (==1.3.4)", "packaging (==20.5)", "pathspec (==0.11.1)", "platformdirs (==2.2.0)", "pyyaml (==5.1)", "pyyaml-env-tag (==0.1)", "typing-extensions (==3.10)", "watchdog (==2.0)"]
 
 [[package]]
 name = "mkdocs-autorefs"
@@ -2293,17 +2296,17 @@ python-legacy = ["mkdocstrings-python-legacy (>=0.2.1)"]
 
 [[package]]
 name = "mkdocstrings-python"
-version = "1.1.2"
+version = "1.5.2"
 description = "A Python handler for mkdocstrings."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "mkdocstrings_python-1.1.2-py3-none-any.whl", hash = "sha256:c2b652a850fec8e85034a9cdb3b45f8ad1a558686edc20ed1f40b4e17e62070f"},
-    {file = "mkdocstrings_python-1.1.2.tar.gz", hash = "sha256:f28bdcacb9bcdb44b6942a5642c1ea8b36870614d33e29e3c923e204a8d8ed61"},
+    {file = "mkdocstrings_python-1.5.2-py3-none-any.whl", hash = "sha256:ed37ca6d216986e2ac3530c19c3e7be381d1e3d09ea414e4ff467d6fd2cbd9c1"},
+    {file = "mkdocstrings_python-1.5.2.tar.gz", hash = "sha256:81eb4a93bc454a253daf247d1a11397c435d641c64fa165324c17c06170b1dfb"},
 ]
 
 [package.dependencies]
-griffe = ">=0.24"
+griffe = ">=0.35"
 mkdocstrings = ">=0.20"
 
 [[package]]
@@ -4116,4 +4119,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "e5e3d5857685707be75d82dad378b035617acaf2ac91a48e899b25d5575d46c2"
+content-hash = "8f317bbc8589ee125fc7e714da3d9c457ec9489c7f67520f5e3d58424fe836e5"
