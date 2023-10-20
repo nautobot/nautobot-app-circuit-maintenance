@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "2.0.0"
+version = "0.1.0"
 description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -8,6 +8,15 @@ readme = "README.md"
 homepage = "https://github.com/nautobot/nautobot-plugin-circuit-maintenance"
 repository = "https://github.com/nautobot/nautobot-plugin-circuit-maintenance"
 keywords = ["nautobot", "nautobot-plugin"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
 include = [
     "LICENSE",
     "README.md",
@@ -17,27 +26,16 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-bs4 = "^0.0.1"
-circuit-maintenance-parser = "^2.0.0"
-django-cryptography = "^1.1"
-google-api-python-client = "^2.9.0"
-google-auth-httplib2 = "^0.1.0"
-google-auth-oauthlib = "^0.5.0"
-markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
-nautobot = "^2.0.0"  # Used for local development
-nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
-python = ">=3.8, <3.12"
+python = ">=3.8,<3.12"
+# Used for local development
+nautobot = "^2.0.0"
 
-[tool.poetry.dev-dependencies]
-Markdown = "*"
+[tool.poetry.group.dev.dependencies]
 bandit = "*"
 black = "*"
 coverage = "*"
 django-debug-toolbar = "*"
-# we need to pin flake8 because of package dependencies that cause it to downgrade and
-# therefore cause issues with linting since older versions do not take .flake8 as config
-flake8 = "^3.9.2"
-griffe = "0.30.1"
+flake8 = "*"
 invoke = "*"
 ipython = "*"
 mkdocs = "1.4.3"
@@ -50,18 +48,22 @@ pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
 pylint-nautobot = "*"
-python-dotenv = "^0.21.1"
-toml = "*"
-towncrier = "~22.8.0"
 yamllint = "*"
-
-[tool.poetry.extras]
-metrics = ["nautobot-capacity-metrics"]
-nautobot = ["nautobot"]
+toml = "*"
+Markdown = "*"
+# Rendering docs to HTML
+mkdocs = "1.5.2"
+# Material for MkDocs theme
+mkdocs-material = "9.1.15"
+# Render custom markdown for version added/changed/remove notes
+mkdocs-version-annotations = "1.0.0"
+# Automatic documentation from sources, for MkDocs
+mkdocstrings = "0.22.0"
+mkdocstrings-python = "1.5.2"
 
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
 (
@@ -116,7 +118,7 @@ notes = """,
 
 [tool.pylint-nautobot]
 supported_nautobot_versions = [
-    "2",  # Supporting 2.x.y
+    "2.0.0"
 ]
 
 [tool.pydocstyle]
@@ -134,18 +136,3 @@ add_ignore = "D212"
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.towncrier]
-package = "nautobot_circuit_maintenance"
-directory = "changes"
-filename = "docs/admin/release_notes/version_2.0.md"
-template = "development/towncrier_template.j2"
-start_string = "<!-- towncrier release notes start -->"
-issue_format = "[#{issue}](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/{issue})"
-
-[tool.towncrier.fragment.added]
-[tool.towncrier.fragment.changed]
-[tool.towncrier.fragment.deprecated]
-[tool.towncrier.fragment.fixed]
-[tool.towncrier.fragment.removed]
-[tool.towncrier.fragment.security]
