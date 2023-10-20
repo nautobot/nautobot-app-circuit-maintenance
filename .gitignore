@@ -303,8 +303,7 @@ development/*.txt
 invoke.yml
 
 # Docs
-docs/README.md
-docs/CHANGELOG.md
 public
 /compose.yaml
 /dump.sql
+/nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs

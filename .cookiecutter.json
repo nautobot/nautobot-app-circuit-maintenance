@@ -1,32 +1,35 @@
 {
-  "cookiecutter": {
-    "codeowner_github_usernames": "@chadell @glennmatthews @pke11y @scetron",
-    "full_name": "Network to Code, LLC",
-    "email": "opensource@networktocode.com",
-    "github_org": "nautobot",
-    "plugin_name": "nautobot_circuit_maintenance",
-    "verbose_name": "Circuit Maintenance",
-    "plugin_slug": "nautobot-circuit-maintenance",
-    "project_slug": "nautobot-plugin-circuit-maintenance",
-    "repo_url": "https://github.com/nautobot/nautobot-plugin-circuit-maintenance",
-    "base_url": "circuit-maintenance",
-    "min_nautobot_version": "1.4.0",
-    "max_nautobot_version": "1.9999",
-    "nautobot_version": "latest",
-    "camel_name": "NautobotCircuitMaintenance",
-    "project_short_description": "Nautobot plugin to automatically handle Circuit Maintenances Notifications",
-    "version": "1.0.0",
-    "model_class_name": "None",
-    "open_source_license": "Apache-2.0",
-    "docs_base_url": "https://docs.nautobot.com",
-    "docs_app_url": "https://docs.nautobot.com/projects/circuit-maintenance/en/latest",
-    "_repo_dir": "/home/jsn/.cookiecutters/cookiecutter-ntc/nautobot-plugin",
-    "_drift_manager": {
-      "template": "https://github.com/networktocode-llc/cookiecutter-ntc",
-      "template_dir": "nautobot-plugin",
-      "template_ref": "u/snaselj-align-hooks",
-      "cookie_dir": "",
-      "branch_prefix": "drift-manager"
+    "cookiecutter": {
+        "codeowner_github_usernames": "@chadell @glennmatthews @pke11y @scetron",
+        "full_name": "Network to Code, LLC",
+        "email": "opensource@networktocode.com",
+        "github_org": "nautobot",
+        "plugin_name": "nautobot_circuit_maintenance",
+        "verbose_name": "Circuit Maintenance",
+        "plugin_slug": "nautobot-circuit-maintenance",
+        "project_slug": "nautobot-plugin-circuit-maintenance",
+        "repo_url": "https://github.com/nautobot/nautobot-plugin-circuit-maintenance",
+        "base_url": "circuit-maintenance",
+        "min_nautobot_version": "2.0.0",
+        "max_nautobot_version": "2.9999",
+        "camel_name": "NautobotCircuitMaintenance",
+        "project_short_description": "Nautobot plugin to automatically handle Circuit Maintenances Notifications",
+        "model_class_name": "None",
+        "open_source_license": "Apache-2.0",
+        "docs_base_url": "https://docs.nautobot.com",
+        "docs_app_url": "https://docs.nautobot.com/projects/circuit-maintenance/en/latest",
+        "_drift_manager": {
+            "template": "https://github.com/nautobot/cookiecutter-nautobot-app.git",
+            "template_dir": "nautobot-app",
+            "template_ref": "develop",
+            "cookie_dir": "",
+            "branch_prefix": "drift-manager",
+            "pull_request_strategy": "create",
+            "post_actions": [
+                "black"
+            ],
+            "draft": true,
+            "baked_commit_ref": ""
+        }
     }
-  }
 }
