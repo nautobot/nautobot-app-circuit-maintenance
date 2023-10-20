@@ -26,26 +26,17 @@ ALLOWED_HOSTS = os.getenv("NAUTOBOT_ALLOWED_HOSTS", "").split(" ")
 SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "")
 
 
-nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.postgresql")
-default_db_settings = {
-    "django.db.backends.postgresql": {
-        "NAUTOBOT_DB_PORT": "5432",
-    },
-    "django.db.backends.mysql": {
-        "NAUTOBOT_DB_PORT": "3306",
-    },
-}
+_DB_ENGINE = os.getenv("NAUTOBOT_DB_ENGINE", "postgres")
+
 DATABASES = {
     "default": {
         "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
         "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
         "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
         "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
-        "PORT": os.getenv(
-            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
-        ),  # Database port, default to postgres
-        "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
-        "ENGINE": nautobot_db_engine,
+        "PORT": os.getenv("NAUTOBOT_DB_PORT", "3306" if _DB_ENGINE == "mysql" else "5432"),  # Database port
+        "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),
+        "ENGINE": "django.db.backends.mysql" if _DB_ENGINE == "mysql" else "django.db.backends.postgresql",
     }
 }
 

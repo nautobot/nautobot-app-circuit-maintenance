@@ -1,0 +1,146 @@
+---
+services:
+  nautobot-base:
+    image: localhost/nautobot-circuit-maintenance/nautobot-dev:2.0.0-py3.10
+    build:
+      args:
+        NAUTOBOT_VER:
+        PYTHON_VER:
+    healthcheck:
+      test: ["CMD", "true"]  # Due to layering, disable: true won't work. Instead, change the test
+    tty: true
+    volumes:
+      - "./:/source"
+  docs:
+    extends:
+      service: "nautobot-base"
+    entrypoint:
+      - mkdocs
+      - serve
+      - -v
+      - -a
+      - 0.0.0.0:8080
+    ports:
+      - "8001:8080"
+  nautobot-core:
+    extends:
+      service: "nautobot-base"
+    volumes:
+      - "./development/nautobot_config.py:/opt/nautobot/nautobot_config.py"
+    environment:
+      CM_NS_1_ACCOUNT:
+      CM_NS_1_SECRET:
+      CM_NS_1_URL:
+      CM_NS_2_ACCOUNT:
+      CM_NS_2_CREDENTIALS_FILE:
+      CM_NS_2_URL:
+      NAUTOBOT_ALLOWED_HOSTS:
+      NAUTOBOT_BANNER_TOP:
+      NAUTOBOT_CHANGELOG_RETENTION:
+      NAUTOBOT_CREATE_SUPERUSER:
+      NAUTOBOT_DB_ENGINE:
+      NAUTOBOT_DB_HOST:
+      NAUTOBOT_DB_NAME:
+      NAUTOBOT_DB_PASSWORD:
+      NAUTOBOT_DB_TIMEOUT:
+      NAUTOBOT_DB_USER:
+      NAUTOBOT_DEBUG:
+      NAUTOBOT_DJANGO_EXTENSIONS_ENABLED:
+      NAUTOBOT_DJANGO_TOOLBAR_ENABLED:
+      NAUTOBOT_LOG_LEVEL:
+      NAUTOBOT_MAX_PAGE_SIZE:
+      NAUTOBOT_METRICS_ENABLED:
+      NAUTOBOT_NAPALM_PASSWORD:
+      NAUTOBOT_NAPALM_TIMEOUT:
+      NAUTOBOT_NAPALM_USERNAME:
+      NAUTOBOT_REDIS_HOST:
+      NAUTOBOT_REDIS_PASSWORD:
+      NAUTOBOT_REDIS_PORT:
+      NAUTOBOT_SECRET_KEY:
+      NAUTOBOT_SUPERUSER_API_TOKEN:
+      NAUTOBOT_SUPERUSER_EMAIL:
+      NAUTOBOT_SUPERUSER_NAME:
+      NAUTOBOT_SUPERUSER_PASSWORD:
+      OAUTHLIB_INSECURE_TRANSPORT:
+      POSTGRES_DB:
+      POSTGRES_PASSWORD:
+      POSTGRES_USER:
+  nautobot:
+    extends:
+      service: "nautobot-core"
+    depends_on:
+      redis:
+        condition: "service_started"
+      db:
+        condition: "service_healthy"
+    ports:
+      - "8080:8080"
+  beat:
+    extends:
+      service: "nautobot-core"
+    depends_on:
+      - "nautobot"
+    entrypoint:
+      - sh
+      - -c
+      - nautobot-server celery beat -l $NAUTOBOT_LOG_LEVEL
+  worker:
+    extends:
+      service: "nautobot-core"
+    depends_on:
+      - "nautobot"
+    entrypoint:
+      - sh
+      - -c
+      - watchmedo auto-restart --directory './' --pattern '*.py' --recursive -- nautobot-server celery worker -l $NAUTOBOT_LOG_LEVEL --events
+  redis:
+    image: redis:6-alpine
+    command:
+      - sh
+      - -c
+      - redis-server --appendonly yes --requirepass $NAUTOBOT_REDIS_PASSWORD
+  mysql:
+    image: "mysql:8"
+    command:
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--max_connections=1000"
+    volumes:
+      - "mysql_data:/var/lib/mysql"
+    environment:
+      MYSQL_USER:
+      MYSQL_DATABASE:
+      MYSQL_ROOT_HOST:
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_PASSWORD:
+    healthcheck:
+      test:
+        - "CMD"
+        - "mysqladmin"
+        - "ping"
+        - "-h"
+        - "localhost"
+      timeout: "20s"
+      retries: 10
+  postgres:
+    image: "postgres:13-alpine"
+    command:
+      - "-c"
+      - "max_connections=200"
+    environment:
+      PGPASSWORD:
+      POSTGRES_DB:
+      POSTGRES_PASSWORD:
+      POSTGRES_USER:
+    healthcheck:
+      test: "pg_isready --username=$POSTGRES_USER --dbname=$POSTGRES_DB"
+      timeout: 5s
+      interval: 10s
+      retries: 10
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+  db:
+    extends:
+      service: $NAUTOBOT_DB_ENGINE
+volumes:
+  postgres_data: {}
+  mysql_data: {}
