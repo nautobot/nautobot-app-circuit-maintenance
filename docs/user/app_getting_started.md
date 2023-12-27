@@ -14,11 +14,11 @@ After installation of the App, it's time to create some Circuit Maintenances and
 
 ### Define source emails per Provider
 
-In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance plugin, we **must** configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance plugin** field.
+In the Nautobot UI, under **Circuits -> Providers**, for each Provider that we would like to track via the Circuit Maintenance app, we **must** configure at least one email source address (or a comma-separated list of addresses) in the **`Custom Fields -> Emails for Circuit Maintenance app** field.
 
-These are the source email addresses that the plugin will detect and will use to classify each notification for each specific provider.
+These are the source email addresses that the app will detect and will use to classify each notification for each specific provider.
 
-Also, by default, the Provider **name** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance plugin** field.
+Also, by default, the Provider **name** is used to match the provider parser from the `circuit-maintenance-parser` library, but if a custom mapping is desired (i.e. CenturyLink to Lumen), you can define this custom mapping in the **`Custom Fields -> Provider Parser for Circuit Maintenance app** field.
 
 ### Configure Notification Sources in `nautobot_config.py`
 
@@ -38,11 +38,11 @@ There is also one optional attribute:
 
 #### Run `nautobot-server post_upgrade` command
 
-The [`nautobot-server post_upgrade`](https://docs.nautobot.com/projects/core/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a plugin, it should be run; additionally, for this plugin to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
+The [`nautobot-server post_upgrade`](https://docs.nautobot.com/projects/core/en/stable/administration/nautobot-server/#post_upgrade) command wraps multiple Django built-in management commands. Any time you install or upgrade a app, it should be run; additionally, for this app to operate properly, whenever you change the notification source configuration in `nautobot_config.py` it should be run again.
 
 #### Add `Providers` to the Notification Sources
 
-In the Circuit Maintenance plugin UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
+In the Circuit Maintenance app UI section, there is a **Notification Sources** button (yellow) where you can configure the Notification Sources to track new circuit maintenance notifications from specific providers.
 
 Because the Notification Sources are defined by the configuration, you can only view and edit `providers`, but not `add` or `delete` new Notification Sources via UI or API.
 

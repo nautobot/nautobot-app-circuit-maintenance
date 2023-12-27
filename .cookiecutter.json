@@ -4,16 +4,16 @@
         "full_name": "Network to Code, LLC",
         "email": "opensource@networktocode.com",
         "github_org": "nautobot",
-        "plugin_name": "nautobot_circuit_maintenance",
+        "app_name": "nautobot_circuit_maintenance",
         "verbose_name": "Circuit Maintenance",
-        "plugin_slug": "nautobot-circuit-maintenance",
-        "project_slug": "nautobot-plugin-circuit-maintenance",
-        "repo_url": "https://github.com/nautobot/nautobot-plugin-circuit-maintenance",
+        "app_slug": "nautobot-circuit-maintenance",
+        "project_slug": "nautobot-app-circuit-maintenance",
+        "repo_url": "https://github.com/nautobot/nautobot-app-circuit-maintenance",
         "base_url": "circuit-maintenance",
         "min_nautobot_version": "2.0.0",
         "max_nautobot_version": "2.9999",
         "camel_name": "NautobotCircuitMaintenance",
-        "project_short_description": "Nautobot plugin to automatically handle Circuit Maintenances Notifications",
+        "project_short_description": "Nautobot app to automatically handle Circuit Maintenances Notifications",
         "model_class_name": "None",
         "open_source_license": "Apache-2.0",
         "docs_base_url": "https://docs.nautobot.com",
@@ -33,3 +33,4 @@
         }
     }
 }
+

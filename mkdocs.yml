@@ -4,7 +4,7 @@ edit_uri: "edit/main/nautobot-plugin-circuit-maintenance/docs"
 site_dir: "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs"
 site_name: "Circuit Maintenance Documentation"
 site_url: "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
-repo_url: "https://github.com/nautobot/nautobot-plugin-circuit-maintenance"
+repo_url: "https://github.com/nautobot/nautobot-app-circuit-maintenance"
 copyright: "Copyright &copy; The Authors"
 theme:
   name: "material"

@@ -1,4 +1,4 @@
-"""Enumerations for use in nautobot-circuit-maintenance plugin."""
+"""Enumerations for use in nautobot-circuit-maintenance app."""
 
 from enum import Enum
 

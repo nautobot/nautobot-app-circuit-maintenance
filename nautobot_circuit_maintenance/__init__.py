@@ -1,4 +1,4 @@
-"""Init for Circuit Maintenance plugin."""
+"""Init for Circuit Maintenance app."""
 from importlib import metadata
 
 from django.apps import apps as global_apps
@@ -22,12 +22,12 @@ def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: d
         {
             "key": "emails_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
-            "label": "Emails for Circuit Maintenance plugin.",
+            "label": "Emails for Circuit Maintenance app.",
         },
         {
             "key": "provider_parser_circuit_maintenances",
             "type": CustomFieldTypeChoices.TYPE_TEXT,
-            "label": "Provider Parser for Circuit Maintenance plugin.",
+            "label": "Provider Parser for Circuit Maintenance app.",
         },
     ]:
         defaults = {**provider_cf_dict}
@@ -68,7 +68,7 @@ def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylin
 
 
 class CircuitMaintenanceConfig(NautobotAppConfig):
-    """Plugin configuration for the Circuit Maintenance plugin."""
+    """App configuration for the Circuit Maintenance app."""
 
     name = "nautobot_circuit_maintenance"
     verbose_name = "Circuit Maintenance Management"
