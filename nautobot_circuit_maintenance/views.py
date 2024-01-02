@@ -146,7 +146,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             }
         """
         # TODO: Move to a generic function set up, since this is something that should be exposed via the Capacity
-        #       Metrics plugin when enabled.
+        #       Metrics app when enabled.
         return_dict = {
             "past_7_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-7),
             "past_30_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-30),
