@@ -21,7 +21,11 @@ Author: @chadell
 
 Maintainers:
 
-- @chadell
-- @glennmatthews
-- @pke11y
-- @scetron
+!!! warning "Developer Note - Remove Me!"
+    What is shown today in the Installed Apps page in Nautobot. What parts of Nautobot does it interact with, what does it add etc. ?
+
+### Extras
+
+!!! warning "Developer Note - Remove Me!"
+    Custom Fields - things like which CFs are created by this app?
+    Jobs - are jobs, if so, which ones, installed by this app?

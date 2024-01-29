@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/icon-nautobot-circuit-maintenance.png" class="logo" height="200px">
   <br>
   <a href="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions"><img src="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest"><img src="https://readthedocs.org/projects/nautobot-plugin-circuit-maintenance/badge/"></a>
+  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest"><img src="https://readthedocs.org/projects/nautobot-app-circuit-maintenance/badge/"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/v/nautobot-circuit-maintenance"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/dm/nautobot-circuit-maintenance"></a>
   <br>
@@ -21,12 +21,11 @@ A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circ
 
 More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
 
-![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/dashboard.png)
+> Developer Note: Place the files in the `docs/images/` folder and link them using only full URLs from GitHub, for example: `![Overview](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/app-overview.png)`. This absolute static linking is required to ensure the README renders properly in GitHub, the docs site, and any other external sites like PyPI.
 
-![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_maintenance.png)
+More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
 
-![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_notifications.png)
-
+![](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/placeholder.png)
 
 ## Try it out!
 
