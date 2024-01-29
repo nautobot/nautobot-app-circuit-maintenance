@@ -1,20 +1,20 @@
-"""Plugin declaration for nautobot_circuit_maintenance."""
+"""App declaration for nautobot_circuit_maintenance."""
 # Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
 from importlib import metadata
 
-__version__ = metadata.version(__name__)
+from nautobot.apps import NautobotAppConfig
 
-from nautobot.extras.plugins import NautobotAppConfig
+__version__ = metadata.version(__name__)
 
 
 class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
-    """Plugin configuration for the nautobot_circuit_maintenance plugin."""
+    """App configuration for the nautobot_circuit_maintenance app."""
 
     name = "nautobot_circuit_maintenance"
     verbose_name = "Circuit Maintenance"
     version = __version__
     author = "Network to Code, LLC"
-    description = "Nautobot plugin to automatically handle Circuit Maintenances Notifications."
+    description = "Nautobot app to automatically handle Circuit Maintenances Notifications."
     base_url = "circuit-maintenance"
     required_settings = []
     min_version = "2.0.0"
