@@ -1,1 +1,1 @@
-"""Handle Notifications"""
+"""Handle Notifications."""

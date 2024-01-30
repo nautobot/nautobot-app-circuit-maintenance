@@ -75,10 +75,7 @@ sudo systemctl restart nautobot nautobot-worker nautobot-scheduler
 
 The app behavior can be controlled with the following list of settings:
 
-The app behavior can be controlled with the following list of settings:
+- `raw_notification_initial_days_since`: define how many days back the app will check for `RawNotification`s for each `NotificationSource`, in order to limit the number of notifications to be processed on the first run of the app. In subsequent runs, the last notification date will be used as the reference to limit. If not defined, it defaults to **7 days**.
+- `raw_notification_size`: define how many bytes from a notification will be stored in the database to not store too big objects (maximum allowed is **16384** bytes). If not defined, it defaults to **8192** bytes.
 
-| Key     | Example | Default | Description                          |
-| ------- | ------ | -------- | ------------------------------------- |
-| `enable_backup` | `True` | `True` | A boolean to represent whether or not to run backup configurations within the app. |
-| `platform_slug_map` | `{"cisco_wlc": "cisco_aireos"}` | `None` | A dictionary in which the key is the platform slug and the value is what netutils uses in any "network_os" parameter. |
-| `per_feature_bar_width` | `0.15` | `0.15` | The width of the table bar within the overview report |
+The `notification_sources` have custom definition depending on the `Source` type, and are defined in the [General Usage](../user/app_use_cases.md#general-usage) section.

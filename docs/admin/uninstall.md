@@ -10,9 +10,6 @@ Prior to removing the app from the `nautobot_config.py`, run the following comma
 nautobot-server migrate nautobot_circuit_maintenance zero
 ```
 
-!!! warning "Developer Note - Remove Me!"
-    Any other cleanup operations to ensure the database is clean after the app is removed. Is there anything else that needs cleaning up, such as CFs, relationships, etc. if they're no longer desired?
-
 ## Remove App configuration
 
 Remove the configuration you added in `nautobot_config.py` from `PLUGINS` & `PLUGINS_CONFIG`.

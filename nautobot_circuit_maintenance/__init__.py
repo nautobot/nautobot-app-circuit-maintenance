@@ -1,20 +1,81 @@
-"""App declaration for nautobot_circuit_maintenance."""
-# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
+"""Init for Circuit Maintenance app."""
 from importlib import metadata
 
+from django.apps import apps as global_apps
+from django.conf import settings
+from django.db.models.signals import post_migrate
 from nautobot.apps import NautobotAppConfig
 
 __version__ = metadata.version(__name__)
 
 
-class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
-    """App configuration for the nautobot_circuit_maintenance app."""
+def custom_fields_extension(sender, *, apps=global_apps, **kwargs):  # pylint: disable=unused-argument
+    """Add extended custom fields."""
+    # pylint: disable=invalid-name
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    Provider = apps.get_model("circuits", "Provider")
+    CustomField = apps.get_model("extras", "CustomField")
+    # pylint: disable=import-outside-toplevel
+    from nautobot.extras.choices import CustomFieldTypeChoices
+
+    for provider_cf_dict in [
+        {
+            "key": "emails_circuit_maintenances",
+            "type": CustomFieldTypeChoices.TYPE_TEXT,
+            "label": "Emails for Circuit Maintenance app.",
+        },
+        {
+            "key": "provider_parser_circuit_maintenances",
+            "type": CustomFieldTypeChoices.TYPE_TEXT,
+            "label": "Provider Parser for Circuit Maintenance app.",
+        },
+    ]:
+        defaults = {**provider_cf_dict}
+        key = defaults.pop("key")
+        field, _ = CustomField.objects.get_or_create(key=key, defaults=defaults)
+        field.content_types.set([ContentType.objects.get_for_model(Provider)])
+
+
+def import_notification_sources(sender, *, apps=global_apps, **kwargs):  # pylint: disable=unused-argument
+    """Import Notification Sources from Nautobot_configuration.py.
+
+    This is a temporary solution until a secrets backend is implemented.
+    For now, we create the Notification Sources in the DB but the secrets are fetched via ENV.
+    """
+    # pylint: disable=invalid-name
+    Provider = apps.get_model("circuits", "Provider")
+    NotificationSource = apps.get_model("nautobot_circuit_maintenance", "NotificationSource")
+
+    desired_notification_sources_names = []
+    for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
+        "notification_sources", []
+    ):
+        instance, _ = NotificationSource.objects.update_or_create(
+            name=notification_source["name"],
+            defaults={
+                "attach_all_providers": notification_source.get("attach_all_providers", False),
+            },
+        )
+
+        desired_notification_sources_names.append(notification_source["name"])
+
+        if instance.attach_all_providers:
+            for provider in Provider.objects.all():
+                instance.providers.add(provider)
+
+    # We remove old Notification Sources that could be in Nautobot but removed from configuration
+    NotificationSource.objects.exclude(name__in=desired_notification_sources_names).delete()
+
+
+class CircuitMaintenanceConfig(NautobotAppConfig):
+    """App configuration for the Circuit Maintenance app."""
 
     name = "nautobot_circuit_maintenance"
     verbose_name = "Circuit Maintenance Management"
     version = __version__
     author = "Network to Code, LLC"
-    description = "Nautobot app to automatically handle Circuit Maintenances Notifications."
+    author_email = "opensource@networktocode.com"
+    description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
     min_version = "2.0.0"
     max_version = "2.99"
@@ -29,6 +90,7 @@ class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
 
     def ready(self):
+        """Perform initialization tasks required once the app is ready."""
         super().ready()
         post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)

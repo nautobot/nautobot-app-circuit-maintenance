@@ -21,11 +21,12 @@ A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circ
 
 More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
 
-> Developer Note: Place the files in the `docs/images/` folder and link them using only full URLs from GitHub, for example: `![Overview](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/app-overview.png)`. This absolute static linking is required to ensure the README renders properly in GitHub, the docs site, and any other external sites like PyPI.
+![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/dashboard.png)
 
-More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
+![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_maintenance.png)
 
-![](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/placeholder.png)
+![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_notifications.png)
+
 
 ## Try it out!
 
