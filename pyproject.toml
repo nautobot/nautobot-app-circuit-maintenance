@@ -19,6 +19,7 @@ packages = [
 [tool.poetry.dependencies]
 bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
+exchangelib = "^5.1.0"
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"

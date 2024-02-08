@@ -1,4 +1,5 @@
 """Notification Source classes."""
+
 import logging
 import base64
 import os
@@ -12,6 +13,7 @@ from typing import Iterable, List, Optional, TypeVar, Type, Tuple, Dict, Union
 
 import imaplib
 
+import exchangelib
 from googleapiclient.discovery import build, Resource
 from googleapiclient.errors import HttpError
 from google.auth.exceptions import RefreshError
@@ -131,6 +133,17 @@ class Source(BaseModel):
                 imap_server=url_components.netloc.split(":")[0],
                 imap_port=url_components.port or 993,
                 source_header=config.get("source_header", "From"),
+            )
+        if scheme == "ews":
+            return ExchangeWebService(
+                name=name,
+                url=url,
+                account=config.get("account"),
+                authentication_user=config.get("authentication_user"),
+                password=config.get("secret"),
+                access_type=config.get("access_type", exchangelib.DELEGATE),
+                folder=config.get("folder"),
+                server=url_components.netloc.split(":")[0],
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
             creds_filename = config.get("credentials_file")
@@ -410,6 +423,109 @@ class IMAP(EmailSource):
 
         self.close_session()
         return received_notifications
+
+
+class ExchangeWebService(EmailSource):
+    """Microsoft EWS class, extending Source class."""
+
+    access_type: str
+    authentication_user: str
+    password: str
+    server: str
+    folder: Optional[str] = None
+    session: Optional[exchangelib.Account] = None
+
+    class Config:
+        """Pydantic BaseModel config."""
+
+        arbitrary_types_allowed = True
+
+    def open_session(self):
+        """Open session to EWS server."""
+        if not self.session:
+            credentials = exchangelib.Credentials(
+                username=self.authentication_user,
+                password=self.password,
+            )
+            config = exchangelib.Configuration(
+                server=self.server,
+                credentials=credentials,
+            )
+            self.session = exchangelib.Account(
+                primary_smtp_address=self.account,
+                config=config,
+                autodiscover=True,
+                access_type=self.access_type,
+            )
+
+    def close_session(self):
+        """Close session to EWS server."""
+        if self.session:
+            self.session.protocol.close()
+            self.session = None
+
+    def _authentication_logic(self):
+        """Inner method to run the custom class validation logic."""
+        self.open_session()
+        self.close_session()
+
+    def receive_notifications(
+        self, job_logger: Job, since_timestamp: datetime.datetime = None
+    ) -> Iterable[MaintenanceNotification]:
+        """Retrieve emails since an specific time, if provided."""
+        self.open_session()
+
+        mailbox = self.session.inbox
+        if self.folder:
+            mailbox = mailbox / self.folder
+
+        # Filter emails by sender.
+        mailbox = mailbox.filter(sender__in=self.emails_to_fetch)
+
+        # Filter emails by timestamp.
+        if since_timestamp:
+            epoch = int(since_timestamp.strftime("%s"))
+            since_time = exchangelib.EWSDateTime.fromtimestamp(epoch, tz=exchangelib.UTC)
+            mailbox = mailbox.filter(datetime_received__gte=since_time)
+
+        if job_logger.debug:
+            message = f"Fetched {mailbox.count()} emails from {self.name} source."
+            job_logger.log_debug(message=message)
+
+        received_notifications = [self.get_notification_from_item(job_logger, item) for item in mailbox]
+
+        if job_logger.debug:
+            message = f"Raw notifications created {len(received_notifications)} from {self.name}."
+            job_logger.log_debug(message=message)
+
+        self.close_session()
+        return received_notifications
+
+    def get_notification_from_item(
+        self,
+        job_logger: Job,
+        item: exchangelib.items.message.Message,
+    ) -> Optional[MaintenanceNotification]:
+        """Return a MaintenanceNotification derived from a give email item."""
+        msg_id = item.id
+        email_source = item.sender.email_address
+
+        provider_type = self.get_provider_type_from_email(email_source)
+        if not provider_type:
+            message = f"Not possible to determine the provider_type for {email_source}"
+            job_logger.log_warning(message=message)
+            self.tag_message(job_logger, msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
+            return None
+
+        return MaintenanceNotification(
+            source=self,
+            sender=email_source,
+            subject=item.subject,
+            provider_type=provider_type,
+            raw_payload=item.mime_content,
+            date=str(item.datetime_created),
+            msg_id=msg_id,
+        )
 
 
 class GmailAPI(EmailSource):
