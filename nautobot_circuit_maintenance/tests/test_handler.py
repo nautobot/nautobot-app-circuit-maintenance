@@ -1,6 +1,6 @@
 """Tests for Handle Notifications methods."""
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, ANY
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime
@@ -8,6 +8,7 @@ from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
 from circuit_maintenance_parser import init_provider, NotificationData
+from circuit_maintenance_parser.errors import ProviderError
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     create_circuit_maintenance,
@@ -30,6 +31,8 @@ from nautobot_circuit_maintenance.models import (
     ParsedNotification,
 )
 from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification, Source
+
+from .utils import MockedLogger
 
 
 def generate_email_notification(notification_data: dict, source: Source):
@@ -77,14 +80,14 @@ END:VCALENDAR
     )
 
 
-def get_base_notification_data(provider_slug="ntt") -> dict:
+def get_base_notification_data(provider_type="ntt") -> dict:
     """Provides a dictionary of notification data to build notifications."""
-    provider = Provider.objects.get(slug=provider_slug)
+    provider = Provider.objects.get(name=provider_type)
 
     notification_data = {
-        "provider": provider.slug,
-        "account": f"ACC-{provider.slug.upper()}",
-        "name": f"MNT-{provider.slug.upper()}",
+        "provider": provider.name,
+        "account": f"ACC-{provider.name.upper()}",
+        "name": f"MNT-{provider.name.upper()}",
         "status": "CONFIRMED",
         "circuitimpacts": [],
         "stamp": datetime(2021, 2, 1, 9, 33, 34, tzinfo=timezone.utc),
@@ -103,18 +106,13 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
     """Test case for all the related methods in Handle Notifications."""
 
     fixtures = ["handle_notifications_job.yaml"]
-    job = HandleCircuitMaintenanceNotifications()
-    job.debug = True
-    job._job_result = Mock()  # pylint: disable=protected-access
-    job.log_debug = Mock()
-    job.log_info = Mock()
-    job.log_warning = Mock()
-    job.log_failure = Mock()
-    job.log_success = Mock()
 
     def setUp(self):
-        self.notification_source = NotificationSource.objects.create(name="whatever 1", slug="whatever-1")
+        self.notification_source = NotificationSource.objects.create(name="whatever 1")
         self.source = Source(name=self.notification_source.name, url="http://example.com")
+        self.job = HandleCircuitMaintenanceNotifications()
+        self.job.logger = MockedLogger()
+        setattr(self.job, "debug", True)
 
     def test_run_simple(self):
         """Test the simple execution to create a Circuit Maintenance."""
@@ -127,7 +125,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
         ) as mock_tag_message:
             mock_get_notifications.return_value = [test_notification]
-            processed_notifications = self.job.run(commit=True)
+            processed_notifications = self.job.run()
 
             mock_get_notifications.assert_called_once()
             self.assertEqual(1, len(processed_notifications))
@@ -137,7 +135,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(2, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
             mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsed")
-            self.job.log_debug.assert_called_with("1 notifications processed.")
+            self.job.logger.info.assert_called_with("1 notifications processed.")
 
     def test_run_nonexistent_circuit(self):
         """Test when a Notification contains a nonexistent circuit."""
@@ -152,7 +150,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
         ) as mock_tag_message:
             mock_get_notifications.return_value = [test_notification]
-            processed_notifications = self.job.run(commit=True)
+            processed_notifications = self.job.run()
 
             mock_get_notifications.assert_called_once()
             self.assertEqual(1, len(processed_notifications))
@@ -164,7 +162,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertIn(fake_cid, Note.objects.all().first().title)
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "parsed")
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "unknown-cids")
-            self.job.log_debug.assert_called_with("1 notifications processed.")
+            self.job.logger.info.assert_called_with("1 notifications processed.")
 
             # Do some checking of string representation length for potential change-logging issues
             # (ObjectChange.object_repr field has a limit of 200 characters)
@@ -187,7 +185,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
         ) as mock_get_notifications:
             mock_get_notifications.return_value = []
-            processed_notifications = self.job.run(commit=True)
+            processed_notifications = self.job.run()
 
             mock_get_notifications.assert_called_once()
             self.assertEqual(0, len(processed_notifications))
@@ -196,17 +194,15 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
-            self.job.log_info.assert_called_with(message="No notifications received.")
+            self.job.logger.info.assert_called_with("No notifications received.")
 
     def test_run_no_notification_source(self):
         """Test when a there are no Notification Sources."""
 
         NotificationSource.objects.all().delete()
-        processed_notifications = self.job.run(commit=True)
+        processed_notifications = self.job.run()
         self.assertEqual(0, len(processed_notifications))
-        self.job.log_warning.assert_called_with(
-            message="No notification sources configured to retrieve notifications from."
-        )
+        self.job.logger.warning.assert_called_with("No notification sources configured to retrieve notifications from.")
 
     def test_run_invalid_notification(self):
         """Test when a there is an invalid notification."""
@@ -221,18 +217,15 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
         ) as mock_tag_message:
             mock_get_notifications.return_value = [test_notification]
-            processed_notifications = self.job.run(commit=True)
+            self.job.run()
 
             mock_get_notifications.assert_called_once()
-            self.assertEqual(1, len(processed_notifications))
-            self.assertEqual(1, len(RawNotification.objects.all()))
+            self.assertEqual(0, len(RawNotification.objects.all()))
             self.assertEqual(0, len(ParsedNotification.objects.all()))
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
             self.assertEqual(0, len(Note.objects.all()))
             mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
-            self.job.log_warning.assert_called()
-            self.job.log_debug.assert_called_with("1 notifications processed.")
 
     def test_process_raw_notification_no_provider_in_parser(self):
         """Test process_raw_notification with non existant Provider in the parser library."""
@@ -244,12 +237,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
 
         self.assertNotEqual(res, None)
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
-        self.job.log_warning.assert_called_with(
-            message=f"Notification Parser not found for {test_notification.provider_type}"
+        self.job.logger.warning.assert_called_with(
+            f"Notification Parser not found for {test_notification.provider_type}", extra=ANY
         )
 
     def test_process_raw_notification_no_provider_in_plugin(self):
-        """Test process_raw_notification with non existant provider in the Plugin."""
+        """Test process_raw_notification with non existant provider in the App."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
         test_notification.provider_type = "telstra"
@@ -258,8 +251,8 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
 
         self.assertEqual(res, None)
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "unknown-provider")
-        self.job.log_warning.assert_called_with(
-            message=f"Raw notification not created because is referencing to a provider not existent: {test_notification.provider_type}"
+        self.job.logger.warning.assert_called_with(
+            "Raw notification not created because is referencing to a provider not existent.", extra=ANY
         )
 
     def test_process_raw_notification(self):
@@ -272,7 +265,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         self.assertEqual(raw_notification.pk, res)
         self.assertEqual(raw_notification.parsed, True)
         self.assertEqual(1, len(ParsedNotification.objects.all()))
-        self.job.log_success.assert_any_call(raw_notification, message="Raw notification created.")
+        self.job.logger.info.assert_any_call("Raw notification created.", extra=ANY)
 
     def test_process_raw_notification_duplicated_issue(self):
         """Test process_raw_notification duplicated."""
@@ -283,7 +276,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         # A duplicated RawNotification skip creation
         res = process_raw_notification(self.job, test_notification)
         self.assertEqual(res, None)
-        self.assertIn("Raw notification already existed with ID", str(self.job.log_debug.call_args))
+        self.assertIn("Raw notification already existed with ID", str(self.job.logger.debug.call_args))
 
         # After a duplicated RawNotification, a new RawNotification should be inserted
         test_notification.subject = "another_subject"
@@ -297,21 +290,19 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data["status"] = "Non valid status"
         test_notification = generate_email_notification(notification_data, self.source)
         with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
-            res = process_raw_notification(self.job, test_notification)
+            with self.assertRaises(ProviderError):
+                process_raw_notification(self.job, test_notification)
 
-        raw_notification = RawNotification.objects.get(pk=res)
-        self.assertEqual(raw_notification.pk, res)
-        self.assertEqual(raw_notification.parsed, False)
         self.assertEqual(0, len(ParsedNotification.objects.all()))
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
-        self.job.log_success.assert_any_call(raw_notification, message="Raw notification created.")
-        self.job.log_warning.assert_called()
+        self.job.logger.info.assert_any_call("Raw notification created.", extra=ANY)
+        self.job.logger.error.assert_called()
 
     def test_get_maintenances_from_notification(self):
         """Test get_maintenances_from_notification."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
             parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
 
@@ -323,32 +314,33 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data = get_base_notification_data()
         notification_data["status"] = "Non valid status"
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
-            parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
+            with self.assertRaises(ProviderError):
+                get_maintenances_from_notification(self.job, test_notification, provider)
 
-        self.assertIsNone(parser_maintenances)
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
-        self.job.log_failure.assert_called()
+        self.job.logger.error.assert_called()
 
     def test_get_maintenances_from_notification_non_existent_provider_in_parser(self):
         """Test get_maintenances_from_notification."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         provider.cf["provider_parser_circuit_maintenances"] = "unkown_provider_in_parser"
         with patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message:
             parser_maintenances = get_maintenances_from_notification(self.job, test_notification, provider)
 
         self.assertIsNone(parser_maintenances)
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
-        self.job.log_warning.assert_any_call(message=f"Notification Parser not found for {provider.slug}")
+        assert isinstance(self.job.logger.warning, Mock)
+        self.job.logger.warning.assert_called_with(f"Notification Parser not found for {provider.name}", extra=ANY)
 
     def test_create_circuit_maintenance(self):
         """Test create_circuit_maintenance."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         RawNotification.objects.get_or_create(
             subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
@@ -363,7 +355,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         create_circuit_maintenance(
             self.job,
             test_notification,
-            f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+            f"{provider.name}-{parsed_maintenance.maintenance_id}",
             parsed_maintenance,
             provider,
         )
@@ -376,7 +368,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data = get_base_notification_data()
         notification_data["circuitimpacts"] = [{"cid": "nonexistent", "impact": "NO-IMPACT"}]
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         RawNotification.objects.get_or_create(
             subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
@@ -392,7 +384,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             create_circuit_maintenance(
                 self.job,
                 test_notification,
-                f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+                f"{provider.name}-{parsed_maintenance.maintenance_id}",
                 parsed_maintenance,
                 provider,
             )
@@ -406,7 +398,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         """Test create_circuit_maintenance with an unknown status."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         RawNotification.objects.get_or_create(
             subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
@@ -422,7 +414,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         create_circuit_maintenance(
             self.job,
             test_notification,
-            f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+            f"{provider.name}-{parsed_maintenance.maintenance_id}",
             parsed_maintenance,
             provider,
         )
@@ -437,12 +429,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         """Test update_circuit_maintenance."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
         ) as mock_get_notifications:
             mock_get_notifications.return_value = [test_notification]
-            self.job.run(commit=True)
+            self.job.run()
 
         # Adding changes
         notification_data["status"] = "COMPLETED"
@@ -455,7 +447,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
-        maintenance_id = f"{provider.slug}-{parsed_maintenance.maintenance_id}"
+        maintenance_id = f"{provider.name}-{parsed_maintenance.maintenance_id}"
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         update_circuit_maintenance(self.job, test_notification, circuit_maintenance_entry, parsed_maintenance, provider)
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
@@ -475,7 +467,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data["stamp"] = datetime(2021, 2, 2, 9, 33, 34, tzinfo=timezone.utc)
         test_notification_newer = generate_email_notification(notification_data, self.source)
 
-        provider = Provider.objects.get(slug=test_notification_older.provider_type)
+        provider = Provider.objects.get(name=test_notification_older.provider_type)
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
         ) as mock_get_notifications, patch(
@@ -483,14 +475,14 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         ) as mock_tag_message:
             # We simulate that the newer notifications are retrieved first, so processed first
             mock_get_notifications.return_value = [test_notification_newer, test_notification_older]
-            self.job.run(commit=True)
+            self.job.run()
 
         # Verify that both notifications where related to same CircuitMaintenance
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
 
         mock_tag_message.assert_called_with(self.job, test_notification_older.msg_id, "out-of-sequence")
 
-        maintenance_id = f"{provider.slug}-{notification_data['name']}"
+        maintenance_id = f"{provider.name}-{notification_data['name']}"
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         # Verify that the final status of the CircuitMaintenance depends on the newest notification
         self.assertEqual(circuit_maintenance_entry.status, "COMPLETED")
@@ -501,19 +493,19 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         """Test update_circuit_maintenance with a "NO-CHANGE" status value."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         with patch(
             "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
         ) as mock_get_notifications:
             mock_get_notifications.return_value = [test_notification]
-            self.job.run(commit=True)
+            self.job.run()
 
         # Adding changes
         parser_provider = init_provider(provider_type=test_notification.provider_type)
         data_to_process = NotificationData.init_from_email_bytes(test_notification.raw_payload)
         parsed_maintenance = parser_provider.get_maintenances(data_to_process)[0]
         parsed_maintenance.status = "NO-CHANGE"
-        maintenance_id = f"{provider.slug}-{parsed_maintenance.maintenance_id}"
+        maintenance_id = f"{provider.name}-{parsed_maintenance.maintenance_id}"
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
 
         update_circuit_maintenance(self.job, test_notification, circuit_maintenance_entry, parsed_maintenance, provider)
@@ -535,10 +527,10 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification_newer = generate_email_notification(notification_data, self.source)
         test_notification_newer.subject = "abcdefghijiklmnopqrstuvwxyz " * 10
         test_notification_newer.sender = f"{'abcdefghij' * 20}@example.com"
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         with patch("nautobot_circuit_maintenance.handle_notifications.handler.get_notifications") as mock_get_notif:
             mock_get_notif.return_value = [test_notification, test_notification_newer]
-            self.job.run(commit=True)
+            self.job.run()
 
         # Make sure raw notification sender and subject were correctly truncated
         self.assertEqual(2, len(RawNotification.objects.all()))
@@ -549,7 +541,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(test_notification.subject[:MAX_NOTIFICATION_SENDER_LENGTH], raw_notification.subject)
 
         # Make sure maintenance name was correctly truncated on both create and update
-        maintenance_id = f"{provider.slug}-{notification_data['name']}"[:MAX_MAINTENANCE_NAME_LENGTH]
+        maintenance_id = f"{provider.name}-{notification_data['name']}"[:MAX_MAINTENANCE_NAME_LENGTH]
         self.assertEqual(MAX_MAINTENANCE_NAME_LENGTH, len(maintenance_id))
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
@@ -577,12 +569,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         ) as mock_get_notifications:
             test_notification = generate_email_notification(notification_data, self.source)
             mock_get_notifications.return_value = [test_notification]
-            self.job.run(commit=True)
+            self.job.run()
             # Running it again with another notification but for same maintenance wit the same unexistent circuit
             test_notification = generate_email_notification(notification_data, self.source)
             test_notification.subject = "another subject"
             mock_get_notifications.return_value = [test_notification]
-            self.job.run(commit=True)
+            self.job.run()
 
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(0, len(CircuitImpact.objects.all()))
@@ -592,7 +584,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         """Test create_circuit_maintenance."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
-        provider = Provider.objects.get(slug=test_notification.provider_type)
+        provider = Provider.objects.get(name=test_notification.provider_type)
         RawNotification.objects.get_or_create(
             subject=test_notification.subject[:MAX_NOTIFICATION_SUBJECT_LENGTH],
             provider=provider,
@@ -609,7 +601,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         create_circuit_maintenance(
             self.job,
             test_notification,
-            f"{provider.slug}-{parsed_maintenance.maintenance_id}",
+            f"{provider.name}-{parsed_maintenance.maintenance_id}",
             parsed_maintenance,
             provider,
         )

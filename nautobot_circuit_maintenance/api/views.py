@@ -2,15 +2,24 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import viewsets
 
-from nautobot.extras.api.views import CustomFieldModelViewSet
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
+from nautobot.apps.api import CustomFieldModelViewSet
+from nautobot_circuit_maintenance.models import (
+    CircuitImpact,
+    CircuitMaintenance,
+    Note,
+    NotificationSource,
+    RawNotification,
+    ParsedNotification,
+)
 from nautobot_circuit_maintenance import filters
 
 from .serializers import (
     NoteSerializer,
     NotificationSourceSerializer,
+    ParsedNotificationSerializer,
+    RawNotificationSerializer,
     CircuitMaintenanceSerializer,
-    CircuitMaintenanceCircuitImpactSerializer,
+    CircuitImpactSerializer,
 )
 
 
@@ -33,8 +42,24 @@ class MaintenanceCircuitImpactTaskView(CustomFieldModelViewSet):
     """API view for Circuit Impact CRUD operations."""
 
     queryset = CircuitImpact.objects.prefetch_related()
-    serializer_class = CircuitMaintenanceCircuitImpactSerializer
+    serializer_class = CircuitImpactSerializer
     filterset_class = filters.CircuitImpactFilterSet
+
+
+class RawNotificationTaskView(viewsets.ReadOnlyModelViewSet):
+    """API view for Notification Source CRUD operations."""
+
+    queryset = RawNotification.objects.prefetch_related()
+    serializer_class = RawNotificationSerializer
+    filterset_class = filters.RawNotificationFilterSet
+
+
+class ParsedNotificationTaskView(viewsets.ReadOnlyModelViewSet):
+    """API view for Notification Source CRUD operations."""
+
+    queryset = ParsedNotification.objects.prefetch_related()
+    serializer_class = ParsedNotificationSerializer
+    filterset_class = filters.ParsedNotificationFilterSet
 
 
 class NotificationSourceTaskView(viewsets.ReadOnlyModelViewSet):

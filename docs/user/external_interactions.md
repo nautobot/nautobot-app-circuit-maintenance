@@ -12,7 +12,7 @@ This app utilizes the GMAIL Api to retrieve circuit maintenance notices via emai
 
 ### Rest API
 
-The plugin includes 6 API endpoints to manage its related objects, complete info in the Swagger section.
+The app includes 6 API endpoints to manage its related objects, complete info in the Swagger section.
 
 - Circuit Maintenance: `/api/plugins​/circuit-maintenance​/maintenance`
 - Circuit Impact: `/api/plugins​/circuit-maintenance​/circuitimpact`

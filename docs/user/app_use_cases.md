@@ -8,7 +8,7 @@ This app is generally used for integrating Circuit Maintenace notifcations from 
 
 Once setup, Notifcations from your provider will get parsed, and notifiation objects will be created. These notification objects show both a visual cue on circuits in Nautobot as well as dashboards and other places to consume the information. 
 
-When notifications are created, there is also a Job that may be run to determine if any Circuit Maintenance activities overlap on specific site, which may affect redundancy for the site. 
+When notifications are created, there is also a Job that may be run to determine if any Circuit Maintenance activities overlap on specific location, which may affect redundancy for the location. 
 
 ## General Usage
 
@@ -60,8 +60,8 @@ There are also the following optional attributes:
 - `source_header`: Specify a particular email header to use to identify the source of a particular notification and assign it to the appropriate provider. If unset, `From` will be used, but if your emails are not received directly from the provider but instead pass through a mailing list or alias, you might need to set this to a different value such as `X-Original-Sender` instead.
 - `limit_emails_with_not_header_from`: List of emails used to restrict the emails retrieved when NOT using the `source_header` "From" and we can't use the `Provider` original emails to filter.
 - `extra_scopes`: Specify a list of additional Google OAuth2 scopes to request access to in addition to Gmail API read-only access.
-- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to enable the optional feature of automatically labeling messages as they are processed by this plugin for later investigation and troubleshooting. See below for how to look up the IDs for the desired labels; any labels that are not specified will be skipped. Currently supported labels are:
-    - `unknown-provider` - A message was inspected but the plugin could not identify which provider this message came from in order to parse it properly
+- `labels`: Specify a dictionary of message labels and their corresponding Gmail label IDs; used to enable the optional feature of automatically labeling messages as they are processed by this app for later investigation and troubleshooting. See below for how to look up the IDs for the desired labels; any labels that are not specified will be skipped. Currently supported labels are:
+    - `unknown-provider` - A message was inspected but the app could not identify which provider this message came from in order to parse it properly
     - `parsing-failed` - An error occurred while trying to parse this message
     - `parsed` - The message was parsed successfully
     - `ignored` - Parsing of the message determined that there is no relevant circuit maintenance content in the message
@@ -69,7 +69,7 @@ There are also the following optional attributes:
     - `unknown-cids` - Parsing of the message determined that it references one or more circuit IDs (CIDs) that could not be found within Nautobot's database.
 
 !!! note
-    If you want to use the `labels` feature, you _must_ include `"https://www.googleapis.com/auth/gmail.modify"` in the `extra_scopes` list so that the plugin will be allowed to make changes to the Gmail messages to apply the labels.
+    If you want to use the `labels` feature, you _must_ include `"https://www.googleapis.com/auth/gmail.modify"` in the `extra_scopes` list so that the app will be allowed to make changes to the Gmail messages to apply the labels.
 
 ```py
 PLUGINS_CONFIG = {
@@ -141,20 +141,20 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 
 ### Metrics
 
-Leveraging the `nautobot-capacity-metrics` plugin, the `nautobot-circuit-maintenance` plugin can expose application metrics at `/api/plugins/capacity-metrics/app-metrics` if desired.
+Leveraging the `nautobot-capacity-metrics` app, the `nautobot-circuit-maintenance` app can expose application metrics at `/api/plugins/capacity-metrics/app-metrics` if desired.
 
 Current exposed metric is the `circuit operational status` which shows the operational status for each `Circuit`(attached to a `CircuitTermination`) depending on related Circuit Maintenances (1: Operational, 2: Under active maintenance):
 
 ```
 # HELP circuit_maintenance_status Circuit operational status
 # TYPE circuit_maintenance_status gauge
-circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",site="Barcelona"} 2.0
-circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",site="Girona"} 1.0
+circuit_maintenance_status{circuit="1111111",circuit_type="Transit",provider="ntt",location="Barcelona"} 2.0
+circuit_maintenance_status{circuit="2222222",circuit_type="Peering",provider="colt",location="Girona"} 1.0
 ```
 
-Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict. (Of course you must also install the `nautobot_capacity_metrics` plugin and ensure that it is included in `PLUGINS` as a prerequisite to enabling this feature.)
+Metric generation is **disabled** by default, to **enable** them, add a `enable: True` in the `nautobot_circuit_maintenance.metrics` dict. (Of course you must also install the `nautobot_capacity_metrics` app and ensure that it is included in `PLUGINS` as a prerequisite to enabling this feature.)
 
-By default, each circuit has attached some labels and values (cid, provider, type and site), but these labels can be defined in the Plugin configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object.
+By default, each circuit has attached some labels and values (cid, provider, type and location), but these labels can be defined in the App configuration by adding an optional dictionary (under "metrics" -> "labels_attached") with the label name and the attributes within the Circuit object.
 
 !!! note
     In case of a value that can be multiple values, such as `terminations`, the first defined one will be used)
@@ -168,8 +168,8 @@ PLUGINS_CONFIG = {
             "labels_attached": {
                 "circuit": "circuit.cid",
                 "provider": "circuit.provider.name",
-                "circuit_type": "circuit.type.name",
-                "site": "site.name",
+                "circuit_type": "circuit.circuit_type.name",
+                "location": "location.name",
             }
         },
     }
@@ -214,6 +214,6 @@ Attributes:
 
 ### Circuit Overlap Job
 
-The circuit overlap job that gets included with the Circuit Maintenance Plugin is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a site. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job.
+The circuit overlap job that gets included with the Circuit Maintenance App is a job that is going to search for possible overlapping maintenances, which **may** cause an outage of a location. The variable `overlap_job_exclude_no_impact ` controls on the check if a maintenance notification has an expected impact. Default is `False` for this setting, that any maintenance notification will be alerted on within the Nautobot Job.
 
 Use the Job regularly to search for overlapping maintenance and review any log message that has a Warning level that will indicate that there is a possible overlapping maintenance.

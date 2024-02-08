@@ -1,4 +1,4 @@
-"""Admin management content for this plugin."""
+"""Admin management content for this app."""
 
 from django.contrib import admin
 from .models import NotificationSource
