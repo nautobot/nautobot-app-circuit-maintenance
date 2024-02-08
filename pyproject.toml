@@ -28,6 +28,7 @@ packages = [
 [tool.poetry.dependencies]
 bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
+exchangelib = "^5.1.0"
 django-cryptography = "^1.1"
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
