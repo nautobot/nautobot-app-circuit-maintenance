@@ -472,7 +472,7 @@ class ExchangeWebService(EmailSource):
         self.close_session()
 
     def receive_notifications(
-        self, job_logger: Job, since_timestamp: datetime.datetime = None
+        self, job: Job, since_timestamp: datetime.datetime = None
     ) -> Iterable[MaintenanceNotification]:
         """Retrieve emails since an specific time, if provided."""
         self.open_session()
@@ -490,22 +490,17 @@ class ExchangeWebService(EmailSource):
             since_time = exchangelib.EWSDateTime.fromtimestamp(epoch, tz=exchangelib.UTC)
             mailbox = mailbox.filter(datetime_received__gte=since_time)
 
-        if job_logger.debug:
-            message = f"Fetched {mailbox.count()} emails from {self.name} source."
-            job_logger.log_debug(message=message)
+        job.logger.debug(message=f"Fetched {mailbox.count()} emails from {self.name} source.")
 
-        received_notifications = [self.get_notification_from_item(job_logger, item) for item in mailbox]
-
-        if job_logger.debug:
-            message = f"Raw notifications created {len(received_notifications)} from {self.name}."
-            job_logger.log_debug(message=message)
+        received_notifications = [self.get_notification_from_item(job, item) for item in mailbox]
+        job.logger.debug(message=f"Raw notifications created {len(received_notifications)} from {self.name}.")
 
         self.close_session()
         return received_notifications
 
     def get_notification_from_item(
         self,
-        job_logger: Job,
+        job: Job,
         item: exchangelib.items.message.Message,
     ) -> Optional[MaintenanceNotification]:
         """Return a MaintenanceNotification derived from a give email item."""
@@ -514,9 +509,11 @@ class ExchangeWebService(EmailSource):
 
         provider_type = self.get_provider_type_from_email(email_source)
         if not provider_type:
-            message = f"Not possible to determine the provider_type for {email_source}"
-            job_logger.log_warning(message=message)
-            self.tag_message(job_logger, msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
+            job.logger.warning(
+                f"Not possible to determine the provider_type for {email_source}",
+                extra={"object": email_source},
+            )
+            self.tag_message(job, msg_id, MessageProcessingStatus.UNKNOWN_PROVIDER)
             return None
 
         return MaintenanceNotification(

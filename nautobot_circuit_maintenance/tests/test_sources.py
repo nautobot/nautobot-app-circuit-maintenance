@@ -743,11 +743,11 @@ class TestExchangeWebService(TestCase):
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
     def test_receive_notifications__with_folder(self, open_session_mock):
         """Test EWS receive_notifications method."""
-        job_logger_mock = MagicMock(debug=True)  # MockedJob  # nocommit
+        job_mock = MockedJob()
         session_mock = MagicMock()
         ews_source = self._get_ews_source_instance(folder="circuit-notifications")
         ews_source.session = session_mock
-        result = ews_source.receive_notifications(job_logger_mock)
+        result = ews_source.receive_notifications(job_mock)
 
         with self.subTest("received notifications"):
             self.assertEqual(result, [])
@@ -760,20 +760,21 @@ class TestExchangeWebService(TestCase):
             mailbox.filter.assert_any_call(sender__in=[])
 
         with self.subTest("log_debug called with mailbox.count"):
-            mailbox = session_mock.inbox.__truediv__().filter()
-            message = f"Fetched {mailbox.count()} emails from {ews_source.name} source."
-            job_logger_mock.log_debug.assert_any_call(message=message)
+            mailbox = session_mock.inbox.__truediv__().filter()  # pylint: disable=unnecessary-dunder-call
+            job_mock.logger.debug.assert_any_call(
+                message=f"Fetched {mailbox.count()} emails from {ews_source.name} source."
+            )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
     def test_receive_notifications__with_since_timestamp(self, open_session_mock):
         """Test EWS receive_notifications method."""
-        job_logger_mock = MagicMock(debug=False)  # MockedJob  # nocommit
+        job_mock = MockedJob()
         since_timestamp = datetime.datetime(2021, 9, 20, 17, 49, 50, 0)
         session_mock = MagicMock()
         ews_source = self._get_ews_source_instance()
-        ews_source.emails_to_fetch = ["nsp@my_provider"]
+        ews_source.emails_to_fetch = ["noc@nsp"]
         ews_source.session = session_mock
-        result = ews_source.receive_notifications(job_logger_mock, since_timestamp)
+        result = ews_source.receive_notifications(job_mock, since_timestamp)
 
         with self.subTest("received notifications"):
             self.assertEqual(result, [])
@@ -782,7 +783,7 @@ class TestExchangeWebService(TestCase):
             open_session_mock.assert_called_once()
 
         with self.subTest("mailbox filter called with sender__in"):
-            session_mock.inbox.filter.assert_any_call(sender__in=["nsp@my_provider"])
+            session_mock.inbox.filter.assert_any_call(sender__in=["noc@nsp"])
 
         with self.subTest("mailbox filter called with datetime_received__gte"):
             epoch = int(since_timestamp.strftime("%s"))
@@ -790,23 +791,20 @@ class TestExchangeWebService(TestCase):
             mailbox = session_mock.inbox.filter.return_value
             mailbox.filter.assert_called_once_with(datetime_received__gte=since_time)
 
-        with self.subTest("log_debug not called since debug=False"):
-            job_logger_mock.log_debug.assert_not_called()
-
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.get_provider_type_from_email")
     def test_get_notification_from_item__with_provider_type(self, provider_type_mock):
         """Test EWS get_notification_from_item method."""
-        job_logger_mock = MagicMock(debug=True)  # MockedJob  # nocommit
+        job_mock = MockedJob()
         item_mock = MagicMock(
             id=b"msg_id",
             subject="subject",
             mime_content=b"raw payload",
         )
-        item_mock.sender.email_address = "noc-noc@nsp"
+        item_mock.sender.email_address = "noc@nsp"
         provider_type_mock.return_value = "NSP"
 
         ews_source = self._get_ews_source_instance()
-        result = ews_source.get_notification_from_item(job_logger_mock, item_mock)
+        result = ews_source.get_notification_from_item(job_mock, item_mock)
 
         with self.subTest("check result"):
             expected = MaintenanceNotification(
@@ -820,23 +818,22 @@ class TestExchangeWebService(TestCase):
             )
             self.assertEqual(result, expected)
 
-        with self.subTest("log_debug not called"):
-            job_logger_mock.log_debug.assert_not_called()
-
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.get_provider_type_from_email")
     def test_get_notification_from_item__without_provider_type(self, provider_type_mock):
         """Test EWS get_notification_from_item method."""
-        job_logger_mock = MagicMock(debug=True)  # MockedJob  # nocommit
+        job_mock = MockedJob()
         item_mock = MagicMock()
-        item_mock.sender.email_address = "noc-noc@nsp"
+        item_mock.sender.email_address = "noc@nsp"
         provider_type_mock.return_value = None
 
         ews_source = self._get_ews_source_instance()
-        result = ews_source.get_notification_from_item(job_logger_mock, item_mock)
+        result = ews_source.get_notification_from_item(job_mock, item_mock)
 
         with self.subTest("check result is None"):
             self.assertEqual(result, None)
 
-        with self.subTest("log_warning called with message"):
-            message = f"Not possible to determine the provider_type for {item_mock.sender.email_address}"
-            job_logger_mock.log_warning.assert_called_once_with(message=message)
+        with self.subTest("logger.warning called with message"):
+            job_mock.logger.warning.assert_called_once_with(
+                f"Not possible to determine the provider_type for {item_mock.sender.email_address}",
+                extra={"object": "noc@nsp"},
+            )
