@@ -1,0 +1,138 @@
+{
+  "type": "object",
+  "properties": {
+    "raw_notification_initial_days_since": {
+      "type": "integer",
+      "default": 100
+    },
+    "raw_notification_size": {
+      "type": "integer",
+      "default": 16384
+    },
+    "dashboard_n_days": {
+      "type": "integer",
+      "default": 30
+    },
+    "overlap_job_exclude_no_impact": {
+      "type": "boolean",
+      "default": false
+    },
+    "notification_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "secret": {
+            "$ref": "#/definitions/secret"
+          },
+          "credentials_file": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "attach_all_providers": {
+            "type": "boolean",
+            "default": true
+          },
+          "source_header": {
+            "type": "string",
+            "default": "From"
+          },
+          "limit_emails_with_not_header_from": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          "extra_scopes": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "string"
+            }
+          },
+          "labels": {
+            "type": "object",
+            "default": {},
+            "properties": {
+              "unknown-provider": {
+                "type": "string"
+              },
+              "parsing-failed": {
+                "type": "string"
+              },
+              "parsed": {
+                "type": "string"
+              },
+              "ignored": {
+                "type": "string"
+              },
+              "out-of-sequence": {
+                "type": "string"
+              },
+              "unknown-cids": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "name",
+          "account",
+          "url"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "secret"
+            ]
+          },
+          {
+            "required": [
+              "credentials_file"
+            ]
+          }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metrics": {
+      "type" : "object",
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "default": true
+        },
+        "labels_attached": {
+          "type": "object",
+          "properties": {
+            "circuit": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "string"
+            },
+            "circuit_type": {
+              "type": "string"
+            },
+            "site": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
