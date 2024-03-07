@@ -17,7 +17,7 @@ You will need access to an email account that receives provider maintenance noti
 ## Install Guide
 
 !!! note
-    Apps can be installed manually or using Python's `pip`. See the [nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/plugins/#install-the-package) for more details. The pip package name for this app is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
+    Apps can be installed from the [Python Package Index](https://pypi.org/) or locally. See the [Nautobot documentation](https://docs.nautobot.com/projects/core/en/stable/user-guide/administration/installation/app-install/) for more details. The pip package name for this app is [`nautobot-circuit-maintenance`](https://pypi.org/project/nautobot-circuit-maintenance/).
 
 The app is available as a Python package via PyPI and can be installed with `pip`:
 
