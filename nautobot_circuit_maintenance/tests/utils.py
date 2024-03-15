@@ -30,6 +30,7 @@ class MockedJob:
 
 
 def assert_called_with_substring(mock, substring):
+    """Helper function to check for substrings in mock called args."""
     for call_args in mock.call_args_list:
         args, _ = call_args
         for arg in args:
