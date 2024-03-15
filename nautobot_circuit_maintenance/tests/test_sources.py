@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from parameterized import parameterized
-from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+from pydantic import ValidationError
 
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
