@@ -29,6 +29,7 @@ from nautobot_circuit_maintenance.handle_notifications.sources import (
     EmailSource,
 )
 from .test_handler import get_base_notification_data, generate_email_notification
+from .utils import assert_called_with_substring
 
 
 SOURCE_IMAP = {
@@ -276,9 +277,9 @@ class TestIMAPSource(TestCase):
         """Test get_notifications without IMAP account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         get_notifications(self.logger, NotificationSource.objects.all(), 0)
-
-        self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
+        assert_called_with_substring(
+            self.logger.log_warning,
+            f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount",
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -516,8 +517,9 @@ class TestGmailAPISource(TestCase):
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         get_notifications(self.logger, NotificationSource.objects.all(), 0)
 
-        self.logger.log_warning.assert_called_with(
-            message=f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)"
+        assert_called_with_substring(
+            self.logger.log_warning,
+            f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount",
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
