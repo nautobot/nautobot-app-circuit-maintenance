@@ -28,7 +28,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
-from pydantic import BaseModel, ValidationError  # pylint: disable=no-name-in-module
+from pydantic import BaseModel, ValidationError
 
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
