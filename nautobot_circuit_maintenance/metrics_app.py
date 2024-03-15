@@ -1,4 +1,5 @@
 """Nautobot Circuit Maintenance app application level metrics exposed through nautobot_capacity_metrics."""
+
 from collections import OrderedDict
 import functools
 from datetime import datetime, timezone

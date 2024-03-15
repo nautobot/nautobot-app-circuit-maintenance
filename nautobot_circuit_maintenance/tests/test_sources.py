@@ -1,4 +1,5 @@
 """Test sources utils."""
+
 # import base64
 import datetime
 import json
@@ -11,7 +12,7 @@ from django.conf import settings
 from django.test import TestCase
 from nautobot.circuits.models import Provider
 from parameterized import parameterized
-from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+from pydantic import ValidationError  # pylint: disable=no-name-in-module
 
 from nautobot_circuit_maintenance.handle_notifications.sources import IMAP
 from nautobot_circuit_maintenance.handle_notifications.sources import EmailSource
