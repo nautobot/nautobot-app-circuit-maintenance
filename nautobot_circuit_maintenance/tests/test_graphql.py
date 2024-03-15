@@ -1,4 +1,5 @@
 """GraphQL tests."""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 

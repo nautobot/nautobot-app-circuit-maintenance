@@ -1,4 +1,5 @@
 """Serializer for Circuit Maintenance API."""
+
 from rest_framework import serializers
 from nautobot.circuits.api.nested_serializers import NestedProviderSerializer
 from nautobot.circuits.api.serializers import CircuitSerializer

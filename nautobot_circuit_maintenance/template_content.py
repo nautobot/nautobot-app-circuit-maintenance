@@ -1,4 +1,5 @@
 """Additions to existing Nautobot page content."""
+
 from nautobot.extras.plugins import PluginTemplateExtension
 from .models import CircuitImpact
 

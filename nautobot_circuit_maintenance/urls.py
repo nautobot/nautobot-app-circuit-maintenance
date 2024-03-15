@@ -1,4 +1,5 @@
 """URLS for Circuit Maintenance."""
+
 from django.urls import path
 from nautobot.extras.views import ObjectChangeLogView
 

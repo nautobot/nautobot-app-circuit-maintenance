@@ -1,4 +1,5 @@
 """Notifications jobs."""
+
 import datetime
 import traceback
 from typing import Optional, List

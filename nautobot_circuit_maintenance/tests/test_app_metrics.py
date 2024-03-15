@@ -1,4 +1,5 @@
 """Test cases for application metrics endpoint views."""
+
 from datetime import datetime, timedelta, timezone
 from django.test import TestCase
 from nautobot.circuits.models import Circuit, CircuitType, Provider, CircuitTermination

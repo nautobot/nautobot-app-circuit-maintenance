@@ -1,4 +1,5 @@
 """Site searching Job definition."""
+
 import collections
 from datetime import date
 
