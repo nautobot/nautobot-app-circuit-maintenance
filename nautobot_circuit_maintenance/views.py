@@ -1,4 +1,5 @@
 """Views for Circuit Maintenance."""
+
 import datetime
 import logging
 

@@ -17,7 +17,6 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
@@ -26,6 +25,7 @@ markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 nautobot = { version = "^1.4.0", optional = true }  # Used for local development
 nautobot-capacity-metrics = {version = "*", optional = true }
 python = "^3.8"
+pydantic = "^1"
 
 [tool.poetry.dev-dependencies]
 Markdown = "*"

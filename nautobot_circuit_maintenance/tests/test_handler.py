@@ -1,4 +1,5 @@
 """Tests for Handle Notifications methods."""
+
 import uuid
 from unittest.mock import Mock, patch
 from datetime import datetime, timezone
