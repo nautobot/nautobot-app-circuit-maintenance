@@ -1,1 +1,0 @@
-Drop bs4 direct dependency and add Pydantic
