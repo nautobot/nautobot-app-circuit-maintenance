@@ -1,6 +1,6 @@
 ---
 name: "CI"
-concurrency:  # Cancel any existing runs of this workflow for this same PR
+concurrency: # Cancel any existing runs of this workflow for this same PR
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 on: # yamllint disable-line rule:truthy rule:comments
@@ -121,7 +121,7 @@ jobs:
       matrix:
         python-version: ["3.8", "3.9", "3.10"]
         db-backend: ["postgresql"]
-        nautobot-version: ["stable"]
+        nautobot-version: ["1.6.15"]
         include:
           - python-version: "3.10"
             db-backend: "postgresql"

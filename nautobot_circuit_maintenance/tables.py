@@ -1,4 +1,5 @@
 """Tables for Circuit Maintenance."""
+
 import django_tables2 as tables
 
 from nautobot.utilities.tables import BaseTable, ToggleColumn

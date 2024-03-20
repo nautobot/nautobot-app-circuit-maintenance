@@ -1,4 +1,5 @@
 """Filtering logic for Circuit Maintenance instances."""
+
 import logging
 
 import django_filters

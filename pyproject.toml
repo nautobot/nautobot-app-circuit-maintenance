@@ -25,6 +25,7 @@ markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 nautobot = { version = "^1.4.0", optional = true }  # Used for local development
 nautobot-capacity-metrics = {version = "*", optional = true }
 python = "^3.8"
+pydantic = "^1"
 
 [tool.poetry.dev-dependencies]
 Markdown = "*"

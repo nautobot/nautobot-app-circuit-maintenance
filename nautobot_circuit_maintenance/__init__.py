@@ -1,4 +1,5 @@
 """Init for Circuit Maintenance plugin."""
+
 from importlib import metadata
 
 from django.apps import apps as global_apps

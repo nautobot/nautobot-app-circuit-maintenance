@@ -1,4 +1,5 @@
 """Views for API."""
+
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import viewsets
 
