@@ -1,4 +1,5 @@
 """Navigation for Circuit Maintenance."""
+
 from nautobot.core.choices import ButtonColorChoices
 
 # TODO: NavMenuButton is not part of the new 2.0 UI, this should be replaced
