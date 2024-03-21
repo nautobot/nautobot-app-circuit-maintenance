@@ -2,11 +2,17 @@
 
 <!-- towncrier release notes start -->
 
+## v1.0.3 - 2024-03-22
+
+### Added
+
+- [#290](https://github.com/nautobot/nautobot-app-circuit-maintenance/pull/290) - Support Pydantic 2.x support without dropping Pydantic 1.x
+
 ## v1.0.2 - 2024-03-21
 
 ### Fixed
 
-- [#261](https://github.com/nautobot/nautobot-app-circuit-maintenance/pull/293) - Drop bs4 direct dependency and acknowledge dependency on Pydantic 1.x
+- [#293](https://github.com/nautobot/nautobot-app-circuit-maintenance/pull/293) - Drop bs4 direct dependency and acknowledge dependency on Pydantic 1.x
 
 ## v1.0.1 - 2023-09-21
 
