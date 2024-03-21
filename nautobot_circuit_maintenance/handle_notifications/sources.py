@@ -23,8 +23,14 @@ from google.oauth2.credentials import Credentials
 from django.conf import settings
 from django.utils.text import slugify
 
-from pydantic import BaseModel  # pylint: disable=no-name-in-module
-from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+from pydantic import BaseModel
+
+try:
+    # Pydantic 1.x
+    from pydantic.error_wrappers import ValidationError
+except ImportError:
+    from pydantic import ValidationError
+
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 
@@ -184,10 +190,10 @@ class MaintenanceNotification(BaseModel):
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
-    """Abstract class that shares some methods and attributes accross email based sources."""
+    """Abstract class that shares some methods and attributes accros email based sources."""
 
     account: str
-    emails_to_fetch = []
+    emails_to_fetch: List[str] = []
     source_header: str = "From"
 
     def get_account_id(self) -> str:
@@ -422,7 +428,7 @@ class GmailAPI(EmailSource):
     credentials: Optional[Union[service_account.Credentials, Credentials]] = None
 
     # The required scope for baseline functionality (add gmail.modify permission in extra_scopes to enable tagging)
-    SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+    SCOPES: List[str] = ["https://www.googleapis.com/auth/gmail.readonly"]
 
     extra_scopes: List[str] = []
     limit_emails_with_not_header_from: List[str] = []
