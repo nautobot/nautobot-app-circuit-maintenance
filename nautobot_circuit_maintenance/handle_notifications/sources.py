@@ -23,7 +23,14 @@ from google.oauth2.credentials import Credentials
 from django.conf import settings
 from django.utils.text import slugify
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+
+try:
+    # Pydantic 1.x
+    from pydantic.error_wrappers import ValidationError
+except ImportError:
+    from pydantic import ValidationError
+
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 
