@@ -1,10 +1,10 @@
 # Circuit Maintenance
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/icon-nautobot-circuit-maintenance.png" class="logo" height="200px">
+  <img src="https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/icon-nautobot-circuit-maintenance.png" class="logo" height="200px">
   <br>
-  <a href="https://github.com/nautobot/nautobot-plugin-circuit-maintenance/actions"><img src="https://github.com/nautobot/nautobot-plugin-circuit-maintenance/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest"><img src="https://readthedocs.org/projects/nautobot-plugin-circuit-maintenance/badge/"></a>
+  <a href="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions"><img src="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"><img src="https://readthedocs.org/projects/nautobot-plugin-circuit-maintenance/badge/"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/v/nautobot-circuit-maintenance"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/dm/nautobot-circuit-maintenance"></a>
   <br>
@@ -13,19 +13,19 @@
 
 ## Overview
 
-A plugin for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circuit Maintenances related to Nautobot Circuits.
+A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circuit Maintenances related to Nautobot Circuits.
 
 `nautobot-circuit-maintenance` lets you handle maintenances for your Circuits based on notifications received via email by leveraging [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser), a notifications parser library for multiple network service providers that exposes structured data following a recommendation defined in this [draft NANOG BCOP](https://github.com/jda/maintnote-std/blob/master/standard.md).
 
 ### Screenshots
 
-More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the plugin's added functionality:
+More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
 
-![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/dashboard.png)
+![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/dashboard.png)
 
-![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_maintenance.png)
+![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_maintenance.png)
 
-![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-plugin-circuit-maintenance/develop/docs/images/circuit_notifications.png)
+![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_notifications.png)
 
 
 ## Try it out!
@@ -46,7 +46,7 @@ Full documentation for this App can be found over on the [Nautobot Docs](https:/
 
 ### Contributing to the Documentation
 
-You can find all the Markdown source for the App documentation under the [`docs`](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/tree/develop/docs) folder in this repository. For simple edits, a Markdown capable editor is sufficient: clone the repository and edit away.
+You can find all the Markdown source for the App documentation under the [`docs`](https://github.com/nautobot/nautobot-app-circuit-maintenance/tree/develop/docs) folder in this repository. For simple edits, a Markdown capable editor is sufficient: clone the repository and edit away.
 
 If you need to view the fully-generated documentation site, you can build it with [MkDocs](https://www.mkdocs.org/). A container hosting the documentation can be started using the `invoke` commands (details in the [Development Environment Guide](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/dev/dev_environment/#docker-development-environment)) on [http://localhost:8001](http://localhost:8001). Using this container, as your changes to the documentation are saved, they will be automatically rebuilt and any pages currently being viewed will be reloaded in your browser.
 

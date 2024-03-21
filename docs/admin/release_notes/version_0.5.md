@@ -6,8 +6,8 @@ This document describes all new features and changes in the release `0.5`. The f
 
 ### Added
 
-- [#159](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/159) Add support for Mysql DB.
+- [#159](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/159) Add support for Mysql DB.
 
 ### Changed
 
-- [#165](https://github.com/nautobot/nautobot-plugin-circuit-maintenance/issues/165) Numerous UI/UX refinements and improvements. See #176 for details.
+- [#165](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/165) Numerous UI/UX refinements and improvements. See #176 for details.

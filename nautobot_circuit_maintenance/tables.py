@@ -1,4 +1,5 @@
 """Tables for Circuit Maintenance."""
+
 import django_tables2 as tables
 
 from nautobot.core.tables import BaseTable, ToggleColumn
@@ -19,7 +20,16 @@ class CircuitMaintenanceTable(BaseTable):
         """Meta for class CircuitMaintenanceTable."""
 
         model = CircuitMaintenance
-        fields = ("pk", "ack", "name", "status", "providers", "circuits", "start_time", "end_time")
+        fields = (  # pylint: disable=nb-use-fields-all
+            "pk",
+            "ack",
+            "name",
+            "status",
+            "providers",
+            "circuits",
+            "start_time",
+            "end_time",
+        )
 
 
 class RawNotificationTable(BaseTable):
@@ -35,7 +45,15 @@ class RawNotificationTable(BaseTable):
         """Meta for class CircuitMaintenanceNofiticationRawTable."""
 
         model = RawNotification
-        fields = ("pk", "subject", "provider", "sender", "source", "parsed", "stamp")
+        fields = (  # pylint: disable=nb-use-fields-all
+            "pk",
+            "subject",
+            "provider",
+            "sender",
+            "source",
+            "parsed",
+            "stamp",
+        )
 
 
 class CircuitImpactTable(BaseTable):
@@ -50,7 +68,7 @@ class CircuitImpactTable(BaseTable):
         """Meta for class CircuitImpactTable."""
 
         model = CircuitImpact
-        fields = ("pk", "maintenance", "circuit", "impact")
+        fields = ("pk", "maintenance", "circuit", "impact")  # pylint: disable=nb-use-fields-all
 
 
 class NoteTable(BaseTable):
@@ -64,7 +82,7 @@ class NoteTable(BaseTable):
         """Meta for class NoteTable."""
 
         model = Note
-        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")
+        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")  # pylint: disable=nb-use-fields-all
 
 
 class NotificationSourceTable(BaseTable):
@@ -78,4 +96,4 @@ class NotificationSourceTable(BaseTable):
         """Meta for class NotificationSourceTable."""
 
         model = NotificationSource
-        fields = ("pk", "name", "attach_all_providers", "providers")
+        fields = ("pk", "name", "attach_all_providers", "providers")  # pylint: disable=nb-use-fields-all

@@ -1,4 +1,5 @@
 """Tests for Handle Notifications methods."""
+
 import uuid
 from unittest.mock import Mock, patch, ANY
 from datetime import datetime, timezone
@@ -242,7 +243,7 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         )
 
     def test_process_raw_notification_no_provider_in_plugin(self):
-        """Test process_raw_notification with non existant provider in the Plugin."""
+        """Test process_raw_notification with non existant provider in the App."""
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
         test_notification.provider_type = "telstra"
