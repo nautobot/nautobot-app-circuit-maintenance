@@ -1,4 +1,5 @@
 """Tests for Overlap Jobs being included."""
+
 # pylint: disable=missing-class-docstring,no-name-in-module
 from datetime import datetime
 from typing import NamedTuple

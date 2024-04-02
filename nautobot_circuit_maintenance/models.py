@@ -1,4 +1,5 @@
 """Models for Circuit Maintenance."""
+
 import logging
 import pickle  # nosec
 from datetime import datetime, timezone
