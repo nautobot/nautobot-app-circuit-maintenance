@@ -20,7 +20,7 @@ class CircuitMaintenanceTable(BaseTable):
         """Meta for class CircuitMaintenanceTable."""
 
         model = CircuitMaintenance
-        fields = (  # pylint: disable=nb-use-fields-all
+        fields = (
             "pk",
             "ack",
             "name",
@@ -45,7 +45,7 @@ class RawNotificationTable(BaseTable):
         """Meta for class CircuitMaintenanceNofiticationRawTable."""
 
         model = RawNotification
-        fields = (  # pylint: disable=nb-use-fields-all
+        fields = (
             "pk",
             "subject",
             "provider",
@@ -68,7 +68,7 @@ class CircuitImpactTable(BaseTable):
         """Meta for class CircuitImpactTable."""
 
         model = CircuitImpact
-        fields = ("pk", "maintenance", "circuit", "impact")  # pylint: disable=nb-use-fields-all
+        fields = ("pk", "maintenance", "circuit", "impact")
 
 
 class NoteTable(BaseTable):
@@ -82,7 +82,7 @@ class NoteTable(BaseTable):
         """Meta for class NoteTable."""
 
         model = Note
-        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")  # pylint: disable=nb-use-fields-all
+        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")
 
 
 class NotificationSourceTable(BaseTable):
@@ -96,4 +96,4 @@ class NotificationSourceTable(BaseTable):
         """Meta for class NotificationSourceTable."""
 
         model = NotificationSource
-        fields = ("pk", "name", "attach_all_providers", "providers")  # pylint: disable=nb-use-fields-all
+        fields = ("pk", "name", "attach_all_providers", "providers")
