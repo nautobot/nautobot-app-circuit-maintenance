@@ -1,4 +1,5 @@
 """Init for Circuit Maintenance app."""
+
 from importlib import metadata
 
 from django.apps import apps as global_apps
@@ -90,6 +91,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
 
     def ready(self):
+        """Perform initialization tasks required once the app is ready."""
         super().ready()
         post_migrate.connect(custom_fields_extension, sender=self)
         post_migrate.connect(import_notification_sources, sender=self)

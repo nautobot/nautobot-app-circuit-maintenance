@@ -1,4 +1,5 @@
 """Serializer for Circuit Maintenance API."""
+
 from nautobot.core.api.serializers import NautobotModelSerializer
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,

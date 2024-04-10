@@ -1,6 +1,6 @@
 ---
 dev_addr: "127.0.0.1:8001"
-edit_uri: "edit/main/nautobot-plugin-circuit-maintenance/docs"
+edit_uri: "edit/main/nautobot-app-circuit-maintenance/docs"
 site_dir: "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs"
 site_name: "Circuit Maintenance Documentation"
 site_url: "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
@@ -81,7 +81,11 @@ markdown_extensions:
       anchor_linenums: true
   - "pymdownx.inlinehilite"
   - "pymdownx.snippets"
-  - "pymdownx.superfences"
+  - "pymdownx.superfences":
+      custom_fences:
+        - name: "mermaid"
+          class: "mermaid"
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - "footnotes"
 plugins:
   - "search"

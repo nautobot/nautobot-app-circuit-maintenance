@@ -1,4 +1,5 @@
 """Unit tests for nautobot_circuit_maintenance models."""
+
 import datetime
 
 from django.test import TestCase

@@ -1,13 +1,14 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "2.0.0"
+version = "2.1.0"
 description = "Nautobot app to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/nautobot/nautobot-app-circuit-maintenance"
 repository = "https://github.com/nautobot/nautobot-app-circuit-maintenance"
-keywords = ["nautobot", "nautobot-plugin", "nautobot-app"]
+documentation = "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
+keywords = ["nautobot", "nautobot-app", "nautobot-plugin"]
 classifiers = [
     "Intended Audience :: Developers",
     "Development Status :: 5 - Production/Stable",
@@ -17,16 +18,15 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
-include = [
-    "LICENSE",
-    "README.md",
-]
 packages = [
     { include = "nautobot_circuit_maintenance" },
 ]
+include = [
+    # Poetry by default will exclude files that are in .gitignore
+    "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs/**/*",
+]
 
 [tool.poetry.dependencies]
-bs4 = "^0.0.1"
 circuit-maintenance-parser = "^2.0.0"
 exchangelib = "^5.1.0"
 django-cryptography = "^1.1"
@@ -37,6 +37,7 @@ markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 nautobot = "^2.0.0"  # Used for local development
 nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
 python = ">=3.8, <3.12"
+pydantic = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 Markdown = "*"
@@ -47,19 +48,29 @@ django-debug-toolbar = "*"
 flake8 = "*"
 invoke = "*"
 ipython = "*"
-mkdocs = "1.5.2"
-mkdocs-material = "9.1.15"
-mkdocs-version-annotations = "1.0.0"
-mkdocstrings = "0.22.0"
-mkdocstrings-python = "1.5.2"
-parameterized = "*"
-pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
 pylint-nautobot = "*"
-toml = "*"
-towncrier = "~22.8.0"
+ruff = "*"
 yamllint = "*"
+toml = "*"
+# Rendering docs to HTML
+mkdocs = "1.5.2"
+# Material for MkDocs theme
+mkdocs-material = "9.1.15"
+# Render custom markdown for version added/changed/remove notes
+mkdocs-version-annotations = "1.0.0"
+# Automatic documentation from sources, for MkDocs
+mkdocstrings = "0.22.0"
+mkdocstrings-python = "1.5.2"
+parameterized = "*"
+towncrier = "~23.6.0"
+to-json-schema = "*"
+jsonschema = "*"
+
+[tool.poetry.extras]
+all = [
+]
 
 [tool.black]
 line-length = 120
@@ -121,17 +132,42 @@ supported_nautobot_versions = [
     "2.0.0"
 ]
 
-[tool.pydocstyle]
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "D",  # pydocstyle
+]
+ignore = [
+    # warning: `one-blank-line-before-class` (D203) and `no-blank-line-before-class` (D211) are incompatible.
+    "D203",  # 1 blank line required before class docstring
+
+    # D212 is enabled by default in google convention, and complains if we have a docstring like:
+    # """
+    # My docstring is on the line after the opening quotes instead of on the same line as them.
+    # """
+    # We've discussed and concluded that we consider this to be a valid style choice.
+    "D212",  # Multi-line docstring summary should start at the first line
+    "D213",  # Multi-line docstring summary should start at the second line
+
+    # Produces a lot of issues in the current codebase.
+    "D401",  # First line of docstring should be in imperative mood
+    "D407",  # Missing dashed underline after section
+    "D416",  # Section name ends in colon
+]
+
+[tool.ruff.lint.pydocstyle]
 convention = "google"
-inherit = false
-match = "(?!__init__).*\\.py"
-match-dir = "(?!tests|migrations|development)[^\\.].*"
-# D212 is enabled by default in google convention, and complains if we have a docstring like:
-# """
-# My docstring is on the line after the opening quotes instead of on the same line as them.
-# """
-# We've discussed and concluded that we consider this to be a valid style choice.
-add_ignore = "D212"
+
+[tool.ruff.per-file-ignores]
+"nautobot_circuit_maintenance/migrations/*" = [
+    "D",  # pydocstyle
+]
+"nautobot_circuit_maintenance/tests/*" = [
+    "D",  # pydocstyle
+]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
@@ -145,9 +181,47 @@ template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/{issue})"
 
-[tool.towncrier.fragment.added]
-[tool.towncrier.fragment.changed]
-[tool.towncrier.fragment.deprecated]
-[tool.towncrier.fragment.fixed]
-[tool.towncrier.fragment.removed]
-[tool.towncrier.fragment.security]
+[[tool.towncrier.type]]
+directory = "security"
+name = "Security"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "added"
+name = "Added"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "changed"
+name = "Changed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "deprecated"
+name = "Deprecated"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removed"
+name = "Removed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "fixed"
+name = "Fixed"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "dependencies"
+name = "Dependencies"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "documentation"
+name = "Documentation"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "housekeeping"
+name = "Housekeeping"
+showcontent = true

@@ -14,7 +14,7 @@ from django.conf import settings
 from django.test import TestCase
 from nautobot.circuits.models import Provider
 from parameterized import parameterized
-from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
+from pydantic import ValidationError
 
 from nautobot_circuit_maintenance.handle_notifications.sources import IMAP
 from nautobot_circuit_maintenance.handle_notifications.sources import EmailSource
@@ -29,7 +29,7 @@ from nautobot_circuit_maintenance.models import NotificationSource
 
 from .test_handler import generate_email_notification
 from .test_handler import get_base_notification_data
-from .utils import MockedJob
+from .utils import MockedJob, assert_called_with_substring
 
 SOURCE_IMAP = {
     "name": "source imap",
@@ -270,10 +270,9 @@ class TestIMAPSource(TestCase):
         job = MockedJob()
         get_notifications(job, NotificationSource.objects.all(), 0)
 
-        job.logger.warning.assert_called_with(
-            f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)",
-            extra=ANY,
-            exc_info=True,
+        assert_called_with_substring(
+            job.logger.warning,
+            f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount",
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
@@ -511,10 +510,9 @@ class TestGmailAPISource(TestCase):
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         get_notifications(self.job, NotificationSource.objects.all(), 0)
 
-        self.job.logger.warning.assert_called_with(
-            f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount\n  none is not an allowed value (type=type_error.none.not_allowed)",
-            extra=ANY,
-            exc_info=True,
+        assert_called_with_substring(
+            self.job.logger.warning,
+            f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount",
         )
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")

@@ -1,4 +1,5 @@
 """Tables for Circuit Maintenance."""
+
 import django_tables2 as tables
 
 from nautobot.core.tables import BaseTable, ToggleColumn
@@ -19,7 +20,16 @@ class CircuitMaintenanceTable(BaseTable):
         """Meta for class CircuitMaintenanceTable."""
 
         model = CircuitMaintenance
-        fields = ("pk", "ack", "name", "status", "providers", "circuits", "start_time", "end_time")
+        fields = (
+            "pk",
+            "ack",
+            "name",
+            "status",
+            "providers",
+            "circuits",
+            "start_time",
+            "end_time",
+        )
 
 
 class RawNotificationTable(BaseTable):
@@ -35,7 +45,15 @@ class RawNotificationTable(BaseTable):
         """Meta for class CircuitMaintenanceNofiticationRawTable."""
 
         model = RawNotification
-        fields = ("pk", "subject", "provider", "sender", "source", "parsed", "stamp")
+        fields = (
+            "pk",
+            "subject",
+            "provider",
+            "sender",
+            "source",
+            "parsed",
+            "stamp",
+        )
 
 
 class CircuitImpactTable(BaseTable):
