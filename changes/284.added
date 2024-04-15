@@ -1,0 +1,1 @@
+Added feature to support Microsoft Exchange Web Services as an Email platform.

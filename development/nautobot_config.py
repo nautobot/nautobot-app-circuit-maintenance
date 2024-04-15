@@ -168,6 +168,13 @@ PLUGINS_CONFIG = {
                 "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
                 # "attach_all_providers": True,
             },
+            {
+                "name": "my ews source",
+                "url": os.environ.get("CM_NS_4_URL", ""),
+                "account": os.environ.get("CM_NS_4_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_4_CREDENTIALS_FILE", ""),
+                # "attach_all_providers": True,
+            },
         ],
         "metrics": {
             "enable": True,

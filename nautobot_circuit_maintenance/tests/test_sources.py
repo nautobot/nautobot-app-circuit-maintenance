@@ -7,7 +7,9 @@ import os
 from email.message import EmailMessage
 from unittest.mock import ANY
 from unittest.mock import patch
+from unittest.mock import MagicMock
 
+import exchangelib
 from django.conf import settings
 from django.test import TestCase
 from nautobot.circuits.models import Provider
@@ -16,9 +18,11 @@ from pydantic import ValidationError
 
 from nautobot_circuit_maintenance.handle_notifications.sources import IMAP
 from nautobot_circuit_maintenance.handle_notifications.sources import EmailSource
+from nautobot_circuit_maintenance.handle_notifications.sources import ExchangeWebService
 from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPI
 from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIOauth
 from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIServiceAccount
+from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification
 from nautobot_circuit_maintenance.handle_notifications.sources import Source
 from nautobot_circuit_maintenance.handle_notifications.sources import get_notifications
 from nautobot_circuit_maintenance.models import NotificationSource
@@ -656,3 +660,178 @@ class TestGmailAPISource(TestCase):
         source.emails_to_fetch = emails_to_fetch
 
         self.assertEqual(result, source._get_search_criteria(since_timestamp))  # pylint: disable=protected-access
+
+
+class TestExchangeWebService(TestCase):
+    """Test methods of the ExchangeWebService EmailSource class."""
+
+    @staticmethod
+    def _get_ews_source_instance(**kwargs):
+        """Return an ExchangeWebService instance."""
+        ews_source = ExchangeWebService(
+            name="EWS Test",
+            url="ews://localhost",
+            account="email.user@localhost",
+            password="pass",
+            access_type="delegate",
+            authentication_user="domain\\user",
+            server="localhost",
+            **kwargs,
+        )
+        return ews_source
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Account")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Configuration")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Credentials")
+    def test_open_session(self, credentials_mock, configuration_mock, account_mock):
+        """Test EWS open_session method."""
+        ews_source = self._get_ews_source_instance()
+
+        with self.subTest("ews_source.session is None"):
+            self.assertIsNone(ews_source.session)
+
+        ews_source.open_session()
+
+        with self.subTest("ews_source.session is an Account"):
+            self.assertEqual(ews_source.session, account_mock.return_value)
+
+        with self.subTest("Credentials call args"):
+            credentials_mock.assert_called_with(
+                username="domain\\user",
+                password="pass",
+            )
+
+        with self.subTest("Configuration call args"):
+            configuration_mock.assert_called_with(
+                server="localhost",
+                credentials=credentials_mock.return_value,
+            )
+
+    def test_close_session(self):
+        """Test EWS close_session method."""
+        session_mock = MagicMock()
+        ews_source = self._get_ews_source_instance()
+        ews_source.session = session_mock
+        ews_source.close_session()
+
+        with self.subTest("ews_source.session is None after close_session"):
+            self.assertIsNone(ews_source.session)
+
+        with self.subTest("session.protocol is closed"):
+            session_mock.protocol.close.assert_called_once()
+
+        with self.subTest("ews_source.session is unchanged when session is None"):
+            ews_source.session = None
+            ews_source.close_session()
+            self.assertIsNone(ews_source.session)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.close_session")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
+    def test__authentication_logic(self, open_session_mock, close_session_mock):
+        """Test EWS _authentication_logic method."""
+        ews_source = self._get_ews_source_instance()
+        ews_source._authentication_logic()  # pylint: disable=protected-access
+
+        with self.subTest("ews_source.open_session is called"):
+            open_session_mock.assert_called_once()
+
+        with self.subTest("ews_source.close_session is called"):
+            close_session_mock.assert_called_once()
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
+    def test_receive_notifications__with_folder(self, open_session_mock):
+        """Test EWS receive_notifications method."""
+        job_mock = MockedJob()
+        session_mock = MagicMock()
+        ews_source = self._get_ews_source_instance(folder="circuit-notifications")
+        ews_source.session = session_mock
+        result = ews_source.receive_notifications(job_mock)
+
+        with self.subTest("received notifications"):
+            self.assertEqual(result, [])
+
+        with self.subTest("ews_source.open_session is called"):
+            open_session_mock.assert_called_once()
+
+        with self.subTest("mailbox filter called with sender__in"):
+            mailbox = session_mock.inbox.__truediv__.return_value
+            mailbox.filter.assert_any_call(sender__in=[])
+
+        with self.subTest("log_debug called with mailbox.count"):
+            mailbox = session_mock.inbox.__truediv__().filter()  # pylint: disable=unnecessary-dunder-call
+            job_mock.logger.debug.assert_any_call(
+                message=f"Fetched {mailbox.count()} emails from {ews_source.name} source."
+            )
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
+    def test_receive_notifications__with_since_timestamp(self, open_session_mock):
+        """Test EWS receive_notifications method."""
+        job_mock = MockedJob()
+        since_timestamp = datetime.datetime(2021, 9, 20, 17, 49, 50, 0)
+        session_mock = MagicMock()
+        ews_source = self._get_ews_source_instance()
+        ews_source.emails_to_fetch = ["noc@nsp"]
+        ews_source.session = session_mock
+        result = ews_source.receive_notifications(job_mock, since_timestamp)
+
+        with self.subTest("received notifications"):
+            self.assertEqual(result, [])
+
+        with self.subTest("ews_source.open_session is called"):
+            open_session_mock.assert_called_once()
+
+        with self.subTest("mailbox filter called with sender__in"):
+            session_mock.inbox.filter.assert_any_call(sender__in=["noc@nsp"])
+
+        with self.subTest("mailbox filter called with datetime_received__gte"):
+            epoch = int(since_timestamp.strftime("%s"))
+            since_time = exchangelib.EWSDateTime.fromtimestamp(epoch, tz=exchangelib.UTC)
+            mailbox = session_mock.inbox.filter.return_value
+            mailbox.filter.assert_called_once_with(datetime_received__gte=since_time)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.get_provider_type_from_email")
+    def test_get_notification_from_item__with_provider_type(self, provider_type_mock):
+        """Test EWS get_notification_from_item method."""
+        job_mock = MockedJob()
+        item_mock = MagicMock(
+            id=b"msg_id",
+            subject="subject",
+            mime_content=b"raw payload",
+        )
+        item_mock.sender.email_address = "noc@nsp"
+        provider_type_mock.return_value = "NSP"
+
+        ews_source = self._get_ews_source_instance()
+        result = ews_source.get_notification_from_item(job_mock, item_mock)
+
+        with self.subTest("check result"):
+            expected = MaintenanceNotification(
+                source=ews_source,
+                sender=item_mock.sender.email_address,
+                subject=item_mock.subject,
+                provider_type=provider_type_mock.return_value,
+                raw_payload=item_mock.mime_content,
+                date=str(item_mock.datetime_created),
+                msg_id=item_mock.id,
+            )
+            self.assertEqual(result, expected)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.get_provider_type_from_email")
+    def test_get_notification_from_item__without_provider_type(self, provider_type_mock):
+        """Test EWS get_notification_from_item method."""
+        job_mock = MockedJob()
+        item_mock = MagicMock()
+        item_mock.sender.email_address = "noc@nsp"
+        provider_type_mock.return_value = None
+
+        ews_source = self._get_ews_source_instance()
+        result = ews_source.get_notification_from_item(job_mock, item_mock)
+
+        with self.subTest("check result is None"):
+            self.assertEqual(result, None)
+
+        with self.subTest("logger.warning called with message"):
+            job_mock.logger.warning.assert_called_once_with(
+                f"Not possible to determine the provider_type for {item_mock.sender.email_address}",
+                extra={"object": "noc@nsp"},
+            )
