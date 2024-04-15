@@ -4379,10 +4379,10 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
-all = []
+all = ["exchangelib"]
 ews = ["exchangelib"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "7e6db11aac48b48c72d6dba11eba12b80ef527f82390e7ff48ee8c005b8f0764"
+content-hash = "1e881b0076000bb56148d0df353b686a982a0e686023f93fe6ec7b086699c7c2"
