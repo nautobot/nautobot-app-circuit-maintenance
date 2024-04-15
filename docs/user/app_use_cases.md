@@ -136,6 +136,12 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 
 #### Microsoft Exchange Web Services (EWS)
 
+Support for Microsoft Exchange Web Services requires the `exchangelib` library. This can be easily installed along with the plugin using the following command:
+
+```no-highlight
+pip install nautobot-circuit-maintenance[ews]
+```
+
 To specify an EWS account, provide a `url` starting with `ews://` followed by the server hostname.
 
 In addition to the There is 1 additional required attribute:

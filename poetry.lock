@@ -301,7 +301,7 @@ beautifulsoup4 = "*"
 name = "cached-property"
 version = "1.5.2"
 description = "A decorator for caching properties in classes."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
@@ -1184,7 +1184,7 @@ pytz = "*"
 name = "dnspython"
 version = "2.6.1"
 description = "DNS toolkit"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "dnspython-2.6.1-py3-none-any.whl", hash = "sha256:5ef3b9680161f6fa89daf8ad451b5f1a33b18ae8a1c6778cdf4b43f08c0a6e50"},
@@ -1270,7 +1270,7 @@ dev = ["coverage", "coveralls", "pytest"]
 name = "exchangelib"
 version = "5.2.0"
 description = "Client for Microsoft Exchange Web Services (EWS)"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "exchangelib-5.2.0-py3-none-any.whl", hash = "sha256:01415aaaaeb7a254d6865ee10f966d3d9c4beb4c077f83417bd16b7a48c30068"},
@@ -1838,7 +1838,7 @@ test-extra = ["curio", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.21)", "pa
 name = "isodate"
 version = "0.6.1"
 description = "An ISO 8601 date/time/duration parser and formatter"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "isodate-0.6.1-py2.py3-none-any.whl", hash = "sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96"},
@@ -3232,7 +3232,7 @@ diagrams = ["jinja2", "railroad-diagrams"]
 name = "pyspnego"
 version = "0.10.2"
 description = "Windows Negotiate Authentication Client and Server"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "pyspnego-0.10.2-py3-none-any.whl", hash = "sha256:3d5c5c28dbd0cd6a679acf45219630254db3c0e5ad4a16de521caa0585b088c0"},
@@ -3606,7 +3606,7 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 name = "requests-ntlm"
 version = "1.2.0"
 description = "This package allows for HTTP NTLM authentication using the requests library."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "requests_ntlm-1.2.0-py3-none-any.whl", hash = "sha256:b7781090c647308a88b55fb530c7b3705cef45349e70a83b8d6731e7889272a6"},
@@ -3937,7 +3937,7 @@ test = ["pytest", "pytest-cov"]
 name = "sspilib"
 version = "0.1.0"
 description = "SSPI API bindings for Python"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "sspilib-0.1.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5e43f3e684e9d29c80324bd54f52dac65ac4b18d81a2dcd529dce3994369a14d"},
@@ -4158,7 +4158,7 @@ files = [
 name = "tzlocal"
 version = "5.2"
 description = "tzinfo object for the local timezone"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "tzlocal-5.2-py3-none-any.whl", hash = "sha256:49816ef2fe65ea8ac19d19aa7a1ae0551c834303d5014c6d5a62e4cbda8047b8"},
@@ -4380,8 +4380,9 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [extras]
 all = []
+ews = ["exchangelib"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.12"
-content-hash = "f53eb3f3839cbde2670ced2258c45592fcbd5c1b44ecdf0b4349055ca7429720"
+content-hash = "7e6db11aac48b48c72d6dba11eba12b80ef527f82390e7ff48ee8c005b8f0764"

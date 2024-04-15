@@ -28,8 +28,9 @@ include = [
 
 [tool.poetry.dependencies]
 circuit-maintenance-parser = "^2.0.0"
-exchangelib = "^5.1.0"
 django-cryptography = "^1.1"
+exchangelib = { version = ">=5.1.0", optional = true }
+# TODO: gmail-auth should be optional.
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
@@ -69,8 +70,12 @@ to-json-schema = "*"
 jsonschema = "*"
 
 [tool.poetry.extras]
+ews = [
+    "exchangelib",
+]
 all = [
 ]
+
 
 [tool.black]
 line-length = 120
