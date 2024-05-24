@@ -7,7 +7,6 @@ from django import forms
 from django_filters.widgets import BooleanWidget
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.forms import (
-    BootstrapMixin,
     DateTimePicker,
     DynamicModelMultipleChoiceField,
     StaticSelect2,
@@ -17,10 +16,11 @@ from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import (
     AddRemoveTagsForm,
     CustomFieldBulkEditForm,
-    CustomFieldFilterForm,
     CustomFieldModelForm,
     RelationshipModelForm,
 )
+from nautobot.apps.forms import BootstrapMixin, CustomFieldModelFilterFormMixin
+
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
     CircuitImpact,
@@ -65,7 +65,7 @@ class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelForm, RelationshipM
         widgets = {"start_time": DateTimePicker(), "end_time": DateTimePicker()}
 
 
-class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldFilterForm):
+class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
     """Form for filtering CircuitMaintenance instances."""
 
     model = CircuitMaintenance
@@ -123,7 +123,7 @@ class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
         nullable_fields = ["level"]
 
 
-class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldFilterForm):
+class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
     """Form for filtering Raw Notification instances."""
 
     model = RawNotification
