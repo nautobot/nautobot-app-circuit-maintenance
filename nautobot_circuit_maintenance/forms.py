@@ -13,13 +13,14 @@ from nautobot.core.forms import (
     StaticSelect2Multiple,
 )
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
-from nautobot.extras.forms import (
-    AddRemoveTagsForm,
-    CustomFieldBulkEditForm,
-    CustomFieldModelForm,
-    RelationshipModelForm,
+from nautobot.extras.forms import AddRemoveTagsForm
+from nautobot.apps.forms import (
+    BootstrapMixin,
+    CustomFieldModelBulkEditFormMixin,
+    CustomFieldModelFilterFormMixin,
+    CustomFieldModelFormMixin,
+    RelationshipModelFormMixin,
 )
-from nautobot.apps.forms import BootstrapMixin, CustomFieldModelFilterFormMixin
 
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
@@ -34,7 +35,7 @@ from .models import (
 BLANK_CHOICE = (("", "---------"),)
 
 
-class CircuitImpactForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelForm):
+class CircuitImpactForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
     """Form for creating new circuit ID info."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
@@ -45,7 +46,7 @@ class CircuitImpactForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelF
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
+class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
     """Form for bulk editing Circuit Impact."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitImpact.objects.all(), widget=forms.MultipleHiddenInput)
@@ -54,7 +55,7 @@ class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBu
         nullable_fields = ["impact"]
 
 
-class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelForm):
+class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
     """Filter Form for CircuitMaintenance instances."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
@@ -88,7 +89,7 @@ class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldModelFilterFormMix
     end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
 
 
-class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
+class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
     """Form for bulk editing Circuit Maintenances."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitMaintenance.objects.all(), widget=forms.MultipleHiddenInput)
@@ -100,7 +101,7 @@ class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFi
         nullable_fields = ["status", "ack", "description"]
 
 
-class NoteForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelForm):
+class NoteForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
     """Form for creating new maintenance note."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
@@ -111,7 +112,7 @@ class NoteForm(BootstrapMixin, CustomFieldModelForm, RelationshipModelForm):
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
+class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
     """Form for bulk editing Notes."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
@@ -148,7 +149,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
         fields = ["providers"]
 
 
-class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
+class NotificationSourceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
     """Form for bulk editing NotificationSources."""
 
     pk = forms.ModelMultipleChoiceField(queryset=NotificationSource.objects.all(), widget=forms.MultipleHiddenInput)
