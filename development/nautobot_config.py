@@ -105,11 +105,11 @@ if not _TESTING:
         "disable_existing_loggers": False,
         "formatters": {
             "normal": {
-                "format": "%(asctime)s.%(msecs)03d %(levelname)-7s %(name)s :\n  %(message)s",
+                "format": "%(asctime)s.%(msecs)03d %(levelname)-7s %(name)s : %(message)s",
                 "datefmt": "%H:%M:%S",
             },
             "verbose": {
-                "format": "%(asctime)s.%(msecs)03d %(levelname)-7s %(name)-20s %(filename)-15s %(funcName)30s() :\n  %(message)s",
+                "format": "%(asctime)s.%(msecs)03d %(levelname)-7s %(name)-20s %(filename)-15s %(funcName)30s() : %(message)s",
                 "datefmt": "%H:%M:%S",
             },
         },
@@ -166,6 +166,13 @@ PLUGINS_CONFIG = {
                 "url": os.environ.get("CM_NS_3_URL", ""),
                 "account": os.environ.get("CM_NS_3_ACCOUNT", ""),
                 "credentials_file": os.environ.get("CM_NS_3_CREDENTIALS_FILE", ""),
+                # "attach_all_providers": True,
+            },
+            {
+                "name": "my ews source",
+                "url": os.environ.get("CM_NS_4_URL", ""),
+                "account": os.environ.get("CM_NS_4_ACCOUNT", ""),
+                "credentials_file": os.environ.get("CM_NS_4_CREDENTIALS_FILE", ""),
                 # "attach_all_providers": True,
             },
         ],

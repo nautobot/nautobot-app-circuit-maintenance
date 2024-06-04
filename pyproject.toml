@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "2.1.0"
+version = "2.2.0"
 description = "Nautobot app to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/nautobot/nautobot-app-circuit-maintenance"
 repository = "https://github.com/nautobot/nautobot-app-circuit-maintenance"
+documentation = "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
 keywords = ["nautobot", "nautobot-app", "nautobot-plugin"]
 classifiers = [
     "Intended Audience :: Developers",
@@ -28,6 +29,8 @@ include = [
 [tool.poetry.dependencies]
 circuit-maintenance-parser = "^2.0.0"
 django-cryptography = "^1.1"
+exchangelib = { version = ">=5.1.0", optional = true }
+# TODO: gmail-auth should be optional.
 google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
@@ -63,10 +66,17 @@ mkdocstrings = "0.22.0"
 mkdocstrings-python = "1.5.2"
 parameterized = "*"
 towncrier = "~23.6.0"
+to-json-schema = "*"
+jsonschema = "*"
 
 [tool.poetry.extras]
-all = [
+ews = [
+    "exchangelib",
 ]
+all = [
+    "exchangelib",
+]
+
 
 [tool.black]
 line-length = 120
@@ -172,7 +182,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.towncrier]
 package = "nautobot_circuit_maintenance"
 directory = "changes"
-filename = "docs/admin/release_notes/version_2.0.md"
+filename = "docs/admin/release_notes/version_2.2.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/{issue})"

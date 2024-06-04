@@ -283,6 +283,7 @@ class CircuitImpactListView(generic.ObjectListView):
 
     table = tables.CircuitImpactTable
     filterset = filters.CircuitImpactFilterSet
+    filterset_form = forms.CircuitImpactFilterForm
     queryset = models.CircuitImpact.objects.all()
     action_buttons = ("add", "export")
 
@@ -335,6 +336,7 @@ class NoteListView(generic.ObjectListView):
     table = tables.NoteTable
     queryset = models.Note.objects.all()
     filterset = filters.NoteFilterSet
+    filterset_form = forms.NoteFilterForm
     action_buttons = ("add", "export")
 
 

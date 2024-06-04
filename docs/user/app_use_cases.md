@@ -134,7 +134,42 @@ While it's easy to define appropriate Gmail labels from the Gmail web UI, the UI
 
 ![screenshot of gmail interactive api](../images/gmail_api_explorer_label_ids.png)
 
+#### Microsoft Exchange Web Services (EWS)
 
+Support for Microsoft Exchange Web Services requires the `exchangelib` library. This can be easily installed along with the plugin using the following command:
+
+```no-highlight
+pip install nautobot-circuit-maintenance[ews]
+```
+
+To specify an EWS account, provide a `url` starting with `ews://` followed by the server hostname.
+
+In addition to the There is 1 additional required attribute:
+
+- `authentication_user`: User account used to authenticate. This might be `domain\\user_id`
+
+There is also one optional attribute:
+
+- `folder`: You can specify a sub-folder of the Inbox where maintenance notifications are located (useful for testing against personal inbox).
+
+
+```py
+PLUGINS_CONFIG = {
+    "nautobot_circuit_maintenance": {
+        "notification_sources": [
+            {
+                "name": "my custom name",
+                "account": os.getenv("CM_NS_1_ACCOUNT", ""),  # email address
+                "secret": os.getenv("CM_NS_1_SECRET", ""),  # account password
+                "url": os.getenv("CM_NS_1_URL", ""),  # ews://hostname
+                "authentication_user": os.getenv("CM_NS_1_AUTH_USER"),  # domain\\user
+                "folder": "Circuit Notifications",  # optional folder under inbox
+                "attach_all_providers": True,  # optional
+            }
+        ]
+    }
+}
+```
 
 
 ## Use-cases and common workflows
