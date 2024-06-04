@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 
 try:
     import exchangelib
+
     EXCHANGELIB_PRESENT = True
 except ImportError:
     EXCHANGELIB_PRESENT = False
