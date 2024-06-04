@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## [v2.2.1 (2024-06-04)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.1)
+
+### Dependencies
+
+- [#303](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/303) - Added backwards-compatibility with Pydantic 1.x.
+
+
 ## [v2.2.0 (2024-06-04)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.0)
 
 ### Added
