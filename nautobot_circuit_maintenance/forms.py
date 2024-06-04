@@ -55,6 +55,24 @@ class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldMo
         nullable_fields = ["impact"]
 
 
+class CircuitImpactFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
+    """Filter Form for CircuitImpactFilterForm."""
+
+    model = CircuitImpact
+    q = forms.CharField(required=False, label="Search")
+    maintenance = DynamicModelMultipleChoiceField(
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="pk",
+        required=False,
+    )
+    circuit = DynamicModelMultipleChoiceField(
+        queryset=Circuit.objects.all(),
+        to_field_name="pk",
+        required=False,
+    )
+    impact = forms.CharField(max_length=50)
+
+
 class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
     """Filter Form for CircuitMaintenance instances."""
 
@@ -122,6 +140,21 @@ class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEd
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         nullable_fields = ["level"]
+
+
+class NoteFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
+    """Filter Form for creating new maintenance note."""
+
+    model = Note
+    q = forms.CharField(required=False, label="Search")
+    maintenance = DynamicModelMultipleChoiceField(
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="pk",
+        required=False,
+    )
+    title = forms.CharField(max_length=200)
+    level = forms.CharField(max_length=50, required=False)
+    comment = forms.CharField(max_length=200)
 
 
 class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
