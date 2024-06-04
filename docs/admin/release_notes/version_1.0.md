@@ -1,3 +1,5 @@
+# v1.0 Release Notes
+
 <!-- markdownlint-disable MD024 -->
 
 ## v1.0.1 - 2023-09-21
@@ -17,9 +19,6 @@
 - [#261](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/261) - Fixed pylint-nautobot `nb-string-field-blank-null` issues.
 - [#267](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/267) - Fixed (by removing) dependency `google-oauth`.
 
-# v1.0 Release
-
-<!-- towncrier release notes start -->
 ## [v1.0.1 (2023-09-29)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v1.0.1)
 
 ### Added
