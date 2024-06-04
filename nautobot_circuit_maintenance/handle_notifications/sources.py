@@ -114,7 +114,7 @@ class Source(BaseModel):
         return is_authenticated, message
 
     @classmethod
-    def init(cls: Type[T], name: str) -> T:
+    def init(cls: Type[T], name: str) -> T:  # pylint: disable=too-many-branches
         """Factory Pattern to get the specific Source Class depending on the scheme."""
         for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
             "notification_sources", []
