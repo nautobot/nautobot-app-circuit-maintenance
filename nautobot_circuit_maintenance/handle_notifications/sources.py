@@ -18,7 +18,12 @@ from typing import TypeVar
 from typing import Union
 from urllib.parse import urlparse
 
-import exchangelib
+try:
+    import exchangelib
+
+    EXCHANGELIB_PRESENT = True
+except ImportError:
+    EXCHANGELIB_PRESENT = False
 from django.conf import settings
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
@@ -109,7 +114,7 @@ class Source(BaseModel):
         return is_authenticated, message
 
     @classmethod
-    def init(cls: Type[T], name: str) -> T:
+    def init(cls: Type[T], name: str) -> T:  # pylint: disable=too-many-branches
         """Factory Pattern to get the specific Source Class depending on the scheme."""
         for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
             "notification_sources", []
@@ -137,6 +142,8 @@ class Source(BaseModel):
                 source_header=config.get("source_header", "From"),
             )
         if scheme == "ews":
+            if not EXCHANGELIB_PRESENT:
+                raise ValueError("You must install 'exchangelib' to use the 'ews' scheme.")
             return ExchangeWebService(
                 name=name,
                 url=url,
@@ -434,7 +441,7 @@ class ExchangeWebService(EmailSource):
     password: str
     server: str
     folder: Optional[str] = None
-    session: Optional[exchangelib.Account] = None
+    session: Optional["exchangelib.Account"] = None
 
     class Config:
         """Pydantic BaseModel config."""
@@ -443,6 +450,8 @@ class ExchangeWebService(EmailSource):
 
     def open_session(self):
         """Open session to EWS server."""
+        if not EXCHANGELIB_PRESENT:
+            raise RuntimeError("You must install 'exchangelib' to use this source")
         if not self.session:
             credentials = exchangelib.Credentials(
                 username=self.authentication_user,
@@ -500,7 +509,7 @@ class ExchangeWebService(EmailSource):
     def get_notification_from_item(
         self,
         job: Job,
-        item: exchangelib.items.message.Message,
+        item: "exchangelib.items.message.Message",
     ) -> Optional[MaintenanceNotification]:
         """Return a MaintenanceNotification derived from a give email item."""
         msg_id = item.id
