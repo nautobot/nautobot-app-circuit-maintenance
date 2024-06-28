@@ -89,6 +89,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     }
     caching_config = {}
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
+    docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
 
     def ready(self):
         """Perform initialization tasks required once the app is ready."""
