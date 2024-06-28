@@ -89,9 +89,5 @@ urlpatterns = [
         name="notificationsource_changelog",
         kwargs={"model": NotificationSource},
     ),
-    path(
-        "docs/",
-        RedirectView.as_view(url=static("nautobot_circuit_maintenance/docs/index.html")),
-        name="docs"
-    )
+    path("docs/", RedirectView.as_view(url=static("nautobot_circuit_maintenance/docs/index.html")), name="docs"),
 ]
