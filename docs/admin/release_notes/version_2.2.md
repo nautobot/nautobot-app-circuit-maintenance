@@ -1,6 +1,14 @@
 # v2.2 Release Notes
 
 <!-- towncrier release notes start -->
+
+## [v2.2.3 (2024-07-03)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.3)
+
+### Documentation
+
+- [#345](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/345) - Updated app config and urls to populate documentation link.
+
+
 ## [v2.2.2 (2024-06-04)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.2)
 
 ### Fixed

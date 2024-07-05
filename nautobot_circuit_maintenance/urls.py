@@ -1,6 +1,9 @@
 """URLS for Circuit Maintenance."""
 
 from django.urls import path
+from django.templatetags.static import static
+from django.views.generic import RedirectView
+
 from nautobot.extras.views import ObjectChangeLogView
 
 from . import views
@@ -86,4 +89,5 @@ urlpatterns = [
         name="notificationsource_changelog",
         kwargs={"model": NotificationSource},
     ),
+    path("docs/", RedirectView.as_view(url=static("nautobot_circuit_maintenance/docs/index.html")), name="docs"),
 ]
