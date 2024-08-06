@@ -214,7 +214,7 @@ class CircuitMaintenanceView(generic.ObjectView):
         maintenance_note = models.Note.objects.filter(maintenance=instance)
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
-            "-raw_notification__date"
+            "-raw_notification__stamp"
         )
 
         return {
