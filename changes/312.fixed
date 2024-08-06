@@ -1,0 +1,1 @@
+Fixed incorrect reference to nonexistent `raw_notification__date` field that caused errors under Django 4.2.
