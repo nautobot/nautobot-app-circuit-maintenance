@@ -8,6 +8,8 @@
 
 - [#312](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/312) - Fixed incorrect reference to nonexistent `raw_notification__date` field that caused errors under Django 4.2.
 
+## [v2.2.3 (2024-07-03)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.3)
+
 ### Documentation
 
 - [#345](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/345) - Updated app config and urls to populate documentation link.
