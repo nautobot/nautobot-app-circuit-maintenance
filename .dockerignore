@@ -18,8 +18,7 @@ docs/_build
 FAQ.md
 .git/
 .gitignore
-.github/
-tasks.py
+.github
 LICENSE
 **/*.log
 **/.vscode/
