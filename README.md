@@ -18,7 +18,7 @@ To avoid extra work and temporary links, make sure that publishing docs (or merg
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/v/nautobot-circuit-maintenance"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/dm/nautobot-circuit-maintenance"></a>
   <br>
-  An <a href="https://www.networktocode.com/nautobot/apps/">App</a> for <a href="https://nautobot.com/">Nautobot</a>.
+  An <a href="https://networktocode.com/nautobot-apps/">App</a> for <a href="https://nautobot.com/">Nautobot</a>.
 </p>
 
 ## Overview
