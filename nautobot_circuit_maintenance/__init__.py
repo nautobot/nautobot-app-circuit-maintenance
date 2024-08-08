@@ -1,5 +1,6 @@
-"""Init for Circuit Maintenance app."""
+"""App declaration for nautobot_circuit_maintenance."""
 
+# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
 from importlib import metadata
 
 from django.apps import apps as global_apps
@@ -75,8 +76,9 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     verbose_name = "Circuit Maintenance Management"
     version = __version__
     author = "Network to Code, LLC"
-    author_email = "opensource@networktocode.com"
-    description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
+    description = (
+        "Nautobot app to automatically handle Circuit Maintenances Notifications."
+    )
     base_url = "circuit-maintenance"
     min_version = "2.0.0"
     max_version = "2.99"

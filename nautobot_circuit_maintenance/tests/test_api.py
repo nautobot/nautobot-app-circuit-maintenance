@@ -1,18 +1,13 @@
-"""Test for Circuit Maintenace API."""
+"""Unit tests for nautobot_circuit_maintenance."""
 
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
-
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import CircuitType
-from nautobot.circuits.models import Provider
-from nautobot.core.testing import APIViewTestCases
-from nautobot.extras.models import Status
+from nautobot.users.models import Token
+from rest_framework import status
+from rest_framework.test import APIClient
 
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
+User = get_user_model()
 
 
 class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
