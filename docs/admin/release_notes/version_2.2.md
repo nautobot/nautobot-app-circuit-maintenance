@@ -2,7 +2,7 @@
 
 <!-- towncrier release notes start -->
 
-## [v2.2.4 (2024-08-07)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.4)
+## [v2.2.4 (2024-08-08)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.2.4)
 
 ### Fixed
 
