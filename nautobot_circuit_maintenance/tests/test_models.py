@@ -3,16 +3,11 @@
 import datetime
 
 from django.test import TestCase
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import CircuitType
-from nautobot.circuits.models import Provider
+from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.extras.models import Status
 
 from nautobot_circuit_maintenance.choices import CircuitImpactChoices
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
-from nautobot_circuit_maintenance.models import NotificationSource
-from nautobot_circuit_maintenance.models import RawNotification
+from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, NotificationSource, RawNotification
 
 
 class CircuitMaintenanceModelTestCase(TestCase):

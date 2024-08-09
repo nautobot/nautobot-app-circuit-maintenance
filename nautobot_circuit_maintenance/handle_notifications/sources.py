@@ -8,14 +8,7 @@ import json
 import logging
 import os
 import re
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Type
-from typing import TypeVar
-from typing import Union
+from typing import Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 from urllib.parse import urlparse
 
 try:
@@ -29,8 +22,7 @@ from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import Resource
-from googleapiclient.discovery import build
+from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job

@@ -1,10 +1,10 @@
 """Navigation for Circuit Maintenance."""
 
-from nautobot.core.choices import ButtonColorChoices
+from nautobot.apps.ui import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab
 
 # TODO: NavMenuButton is not part of the new 2.0 UI, this should be replaced
 from nautobot.core.apps import NavMenuButton
-from nautobot.apps.ui import NavMenuTab, NavMenuGroup, NavMenuItem, NavMenuAddButton
+from nautobot.core.choices import ButtonColorChoices
 
 menu_items = (
     NavMenuTab(

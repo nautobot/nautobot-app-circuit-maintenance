@@ -1,16 +1,12 @@
 """URLS for Circuit Maintenance."""
 
-from django.urls import path
 from django.templatetags.static import static
+from django.urls import path
 from django.views.generic import RedirectView
-
 from nautobot.extras.views import ObjectChangeLogView
 
 from . import views
-from .models import CircuitImpact
-from .models import CircuitMaintenance
-from .models import Note
-from .models import NotificationSource
+from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 
 urlpatterns = [
     # Overview

@@ -1,13 +1,13 @@
 """Unit tests for nautobot_circuit_maintenance."""
 
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
-from nautobot.users.models import Token
-from rest_framework import status
-from rest_framework.test import APIClient
+from datetime import datetime, timedelta, timezone
 
-User = get_user_model()
+from django.urls import reverse
+from nautobot.circuits.models import Circuit, CircuitType, Provider
+from nautobot.core.testing import APIViewTestCases
+from nautobot.extras.models import Status
+
+from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance
 
 
 class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
@@ -41,7 +41,6 @@ class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
             }
         ]
 
-    # pylint: disable-next=no-self-use
     def get_deletable_object(self):
         """Return an object that can be deleted via the API."""
         return CircuitMaintenance.objects.get_or_create(
@@ -110,7 +109,6 @@ class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
             {"maintenance": maintenances[1].id, "circuit": circuits[1].id},
         ]
 
-    # pylint: disable-next=no-self-use
     def get_deletable_object(self):
         """Return an object that can be deleted via the API."""
         return CircuitImpact.objects.get_or_create(

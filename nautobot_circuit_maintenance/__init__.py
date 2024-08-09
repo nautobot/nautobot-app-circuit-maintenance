@@ -76,9 +76,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     verbose_name = "Circuit Maintenance Management"
     version = __version__
     author = "Network to Code, LLC"
-    description = (
-        "Nautobot app to automatically handle Circuit Maintenances Notifications."
-    )
+    description = "Nautobot app to automatically handle Circuit Maintenances Notifications."
     base_url = "circuit-maintenance"
     min_version = "2.0.0"
     max_version = "2.99"
@@ -103,6 +101,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
         if settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
             # pylint: disable=import-outside-toplevel
             from nautobot_capacity_metrics import register_metric_func
+
             from .metrics_app import metric_circuit_operational
 
             register_metric_func(metric_circuit_operational)
