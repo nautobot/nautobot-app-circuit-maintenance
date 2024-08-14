@@ -1,37 +1,37 @@
 """Tests for Handle Notifications methods."""
 
 import uuid
-from unittest.mock import Mock, patch, ANY
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime
+from unittest.mock import ANY, Mock, patch
+
+from circuit_maintenance_parser import NotificationData, init_provider
+from circuit_maintenance_parser.errors import ProviderError
 from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
-from circuit_maintenance_parser import init_provider, NotificationData
-from circuit_maintenance_parser.errors import ProviderError
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
+    HandleCircuitMaintenanceNotifications,
     create_circuit_maintenance,
     get_maintenances_from_notification,
     get_since_reference,
-    HandleCircuitMaintenanceNotifications,
     process_raw_notification,
     update_circuit_maintenance,
 )
-
+from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification, Source
 from nautobot_circuit_maintenance.models import (
-    CircuitMaintenance,
-    CircuitImpact,
     MAX_MAINTENANCE_NAME_LENGTH,
     MAX_NOTIFICATION_SENDER_LENGTH,
     MAX_NOTIFICATION_SUBJECT_LENGTH,
-    NotificationSource,
+    CircuitImpact,
+    CircuitMaintenance,
     Note,
-    RawNotification,
+    NotificationSource,
     ParsedNotification,
+    RawNotification,
 )
-from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification, Source
 
 from .utils import MockedLogger
 

@@ -3,8 +3,16 @@
 # pylint: disable=nb-incorrect-base-class
 
 """Forms for Circuit Maintenance."""
+
 from django import forms
 from django_filters.widgets import BooleanWidget
+from nautobot.apps.forms import (
+    BootstrapMixin,
+    CustomFieldModelBulkEditFormMixin,
+    CustomFieldModelFilterFormMixin,
+    CustomFieldModelFormMixin,
+    RelationshipModelFormMixin,
+)
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.forms import (
     DateTimePicker,
@@ -14,13 +22,6 @@ from nautobot.core.forms import (
 )
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import AddRemoveTagsForm
-from nautobot.apps.forms import (
-    BootstrapMixin,
-    CustomFieldModelBulkEditFormMixin,
-    CustomFieldModelFilterFormMixin,
-    CustomFieldModelFormMixin,
-    RelationshipModelFormMixin,
-)
 
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
@@ -30,7 +31,6 @@ from .models import (
     NotificationSource,
     RawNotification,
 )
-
 
 BLANK_CHOICE = (("", "---------"),)
 

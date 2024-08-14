@@ -1,11 +1,12 @@
 """Nautobot Circuit Maintenance app application level metrics exposed through nautobot_capacity_metrics."""
 
-from collections import OrderedDict
 import functools
+from collections import OrderedDict
 from datetime import datetime, timezone
-from prometheus_client.core import GaugeMetricFamily
-from nautobot.circuits.models import CircuitTermination
+
 from django.conf import settings
+from nautobot.circuits.models import CircuitTermination
+from prometheus_client.core import GaugeMetricFamily
 
 from .models import CircuitImpact, CircuitMaintenance
 

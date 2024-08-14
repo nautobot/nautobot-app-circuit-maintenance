@@ -3,16 +3,16 @@
 import logging
 import pickle  # nosec
 from datetime import datetime, timezone
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.urls import reverse
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-from nautobot.extras.utils import extras_features
+from django.urls import reverse
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.core.models.generics import PrimaryModel, OrganizationalModel
+from nautobot.core.models.generics import OrganizationalModel, PrimaryModel
+from nautobot.extras.utils import extras_features
 
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
 
@@ -193,10 +193,11 @@ class NotificationSource(OrganizationalModel):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
 
+# TODO: Look if we can replace token with Nautobot Secrets.
     @property
     def token(self):
         """Getter for _token."""
-        return pickle.loads(self._token)  # nosec
+        return pickle.loads(self._token)  # noqa: S301
 
     @token.setter
     def token(self, value):

@@ -1,28 +1,27 @@
 # TBD: Review skipped tests
 # pylint: disable=duplicate-code,too-many-public-methods
 """Test for Circuit Maintenace Views."""
-from datetime import datetime
-from datetime import timezone
+
+from datetime import datetime, timezone
 from unittest import skip
 from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import CircuitType
-from nautobot.circuits.models import Provider
-from nautobot.core.testing import ModelViewTestCase
-from nautobot.core.testing import ViewTestCases
+from nautobot.circuits.models import Circuit, CircuitType, Provider
+from nautobot.core.testing import ModelViewTestCase, ViewTestCases
 from nautobot.extras.models import Status
 from nautobot.users.models import ObjectPermission
 
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
-from nautobot_circuit_maintenance.models import Note
-from nautobot_circuit_maintenance.models import NotificationSource
-from nautobot_circuit_maintenance.models import ParsedNotification
-from nautobot_circuit_maintenance.models import RawNotification
+from nautobot_circuit_maintenance.models import (
+    CircuitImpact,
+    CircuitMaintenance,
+    Note,
+    NotificationSource,
+    ParsedNotification,
+    RawNotification,
+)
 from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
 
 

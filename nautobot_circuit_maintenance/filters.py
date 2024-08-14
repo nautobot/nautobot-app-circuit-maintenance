@@ -4,17 +4,11 @@ import logging
 
 import django_filters
 from django.db.models import Q
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import Provider
+from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.filters import NaturalKeyOrPKMultipleChoiceFilter
 from nautobot.extras.filters import NautobotFilterSet
 
-from .models import CircuitImpact
-from .models import CircuitMaintenance
-from .models import Note
-from .models import NotificationSource
-from .models import ParsedNotification
-from .models import RawNotification
+from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, ParsedNotification, RawNotification
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +43,7 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         model = CircuitMaintenance
         fields = ["id", "name", "status", "ack"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -96,7 +90,7 @@ class NoteFilterSet(NautobotFilterSet):
         model = Note
         fields = ["id", "maintenance", "title"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -139,7 +133,7 @@ class RawNotificationFilterSet(NautobotFilterSet):
             "stamp",
         ]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -168,7 +162,7 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
         model = ParsedNotification
         fields = ["maintenance", "raw_notification", "json"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -190,7 +184,7 @@ class NotificationSourceFilterSet(NautobotFilterSet):
         model = NotificationSource
         fields = ["name", "attach_all_providers"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
