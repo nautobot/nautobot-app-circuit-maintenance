@@ -1,6 +1,6 @@
 ---
 dev_addr: "127.0.0.1:8001"
-edit_uri: "edit/main/nautobot-app-circuit-maintenance/docs"
+edit_uri: "edit/main/docs"
 site_dir: "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs"
 site_name: "Circuit Maintenance Documentation"
 site_url: "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"

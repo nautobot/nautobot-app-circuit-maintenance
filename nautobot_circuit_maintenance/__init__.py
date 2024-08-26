@@ -15,7 +15,7 @@ class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
     verbose_name = "Circuit Maintenance"
     version = __version__
     author = "Network to Code, LLC"
-    description = "Nautobot app to automatically handle Circuit Maintenances Notifications."
+    description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
     required_settings = []
     min_version = "2.0.0"
