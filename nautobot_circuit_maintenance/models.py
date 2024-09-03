@@ -193,7 +193,7 @@ class NotificationSource(OrganizationalModel):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:notificationsource", args=[self.pk])
 
-# TODO: Look if we can replace token with Nautobot Secrets.
+    # TODO: Look if we can replace token with Nautobot Secrets.
     @property
     def token(self):
         """Getter for _token."""

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "0.1.0"
-description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices"
+version = "2.2.2"
+description = "Nautobot app to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -31,6 +31,16 @@ include = [
 python = ">=3.8,<3.13"
 # Used for local development
 nautobot = "^2.0.0"
+circuit-maintenance-parser = "^2.0.0"
+django-cryptography = "^1.1"
+exchangelib = { version = ">=5.1.0", optional = true }
+# TODO: gmail-auth should be optional.
+google-api-python-client = "^2.9.0"
+google-auth-httplib2 = "^0.1.0"
+google-auth-oauthlib = "^0.5.0"
+markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
+nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
+pydantic = ">=1.10.4,<3"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "*"
@@ -54,6 +64,7 @@ mkdocs-material = "9.5.32"
 mkdocstrings = "0.25.2"
 mkdocstrings-python = "1.10.8"
 griffe = "1.1.1"
+parameterized = "*"
 towncrier = "~23.6.0"
 to-json-schema = "*"
 jsonschema = "*"
@@ -62,8 +73,12 @@ jsonschema = "*"
 ews = [
     "exchangelib",
 ]
+capacity_metrics = [
+    "nautobot-capacity-metrics",
+]
 all = [
     "exchangelib",
+    "nautobot-capacity-metrics",
 ]
 
 
@@ -104,7 +119,6 @@ target-version = "py38"
 select = [
     "D",  # pydocstyle
     "F", "E", "W",  # flake8
-    "PL", # pylint
     "S",  # bandit
     "I",  # isort
 ]
