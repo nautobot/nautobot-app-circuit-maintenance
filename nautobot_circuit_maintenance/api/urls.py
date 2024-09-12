@@ -8,7 +8,7 @@ router = routers.DefaultRouter()
 router.register("maintenance", views.MaintenanceTaskView)
 router.register("note", views.MaintenanceNoteTaskView)
 router.register("circuitimpact", views.MaintenanceCircuitImpactTaskView)
-router.register("notificationsource", views.NotificationSourceTaskView)
+router.register("source", views.NotificationSourceTaskView)
 router.register("parsednotification", views.ParsedNotificationTaskView)
 router.register("rawnotification", views.RawNotificationTaskView)
 
