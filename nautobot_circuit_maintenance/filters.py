@@ -124,7 +124,7 @@ class RawNotificationFilterSet(NautobotFilterSet):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = '__all__'
+        exclude = ["raw"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -175,7 +175,7 @@ class NotificationSourceFilterSet(NautobotFilterSet):
         """Meta class attributes for NotificationSourceFilterSet."""
 
         model = NotificationSource
-        fields = '__all__'
+        exclude = ["_token"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
