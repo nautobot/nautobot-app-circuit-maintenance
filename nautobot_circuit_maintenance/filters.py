@@ -41,7 +41,7 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitMaintenanceFilterSet."""
 
         model = CircuitMaintenance
-        fields = ["id", "name", "status", "ack"]
+        fields = '__all__'
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -71,7 +71,7 @@ class CircuitImpactFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitImpactFilterSet."""
 
         model = CircuitImpact
-        fields = ["id", "maintenance", "circuit", "impact"]
+        fields = '__all__'
 
 
 class NoteFilterSet(NautobotFilterSet):
@@ -88,7 +88,7 @@ class NoteFilterSet(NautobotFilterSet):
         """Meta class attributes for NoteFilterSet."""
 
         model = Note
-        fields = ["id", "maintenance", "title"]
+        fields = '__all__'
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -124,14 +124,7 @@ class RawNotificationFilterSet(NautobotFilterSet):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = [
-            "subject",
-            "provider",
-            "sender",
-            "source",
-            "parsed",
-            "stamp",
-        ]
+        exclude = ["raw"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -160,7 +153,7 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
         """Meta class attributes for ParsedNotificationFilterSet."""
 
         model = ParsedNotification
-        fields = ["maintenance", "raw_notification", "json"]
+        fields = '__all__'
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -182,7 +175,7 @@ class NotificationSourceFilterSet(NautobotFilterSet):
         """Meta class attributes for NotificationSourceFilterSet."""
 
         model = NotificationSource
-        fields = ["name", "attach_all_providers"]
+        exclude = ["_token"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
