@@ -27,7 +27,6 @@ from .choices import CircuitMaintenanceStatusChoices
 from .models import (
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     RawNotification,
 )
@@ -117,44 +116,6 @@ class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFi
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         nullable_fields = ["status", "ack", "description"]
-
-
-class NoteForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
-    """Form for creating new maintenance note."""
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        """Metaclass attributes for NoteForm."""
-
-        model = Note
-        fields = ["maintenance", "title", "comment", "level"]
-        widgets = {"maintenance": forms.HiddenInput()}
-
-
-class NoteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
-    """Form for bulk editing Notes."""
-
-    pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
-    title = forms.CharField(max_length=200)
-    level = forms.CharField(max_length=50, required=False)
-    comment = forms.CharField(max_length=200)
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        nullable_fields = ["level"]
-
-
-class NoteFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
-    """Filter Form for creating new maintenance note."""
-
-    model = Note
-    q = forms.CharField(required=False, label="Search")
-    maintenance = DynamicModelMultipleChoiceField(
-        queryset=CircuitMaintenance.objects.all(),
-        to_field_name="pk",
-        required=False,
-    )
-    title = forms.CharField(max_length=200)
-    level = forms.CharField(max_length=50, required=False)
-    comment = forms.CharField(max_length=200)
 
 
 class RawNotificationFilterSetForm(BootstrapMixin, CustomFieldModelFilterFormMixin):

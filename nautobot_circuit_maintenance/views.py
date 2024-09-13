@@ -8,8 +8,12 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.contrib.contenttypes.models import ContentType
+
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.views import generic
+from nautobot.extras.models import Note
+from nautobot.apps.views import NautobotUIViewSet
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
@@ -188,25 +192,25 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
 
         return self.queryset.count() / delta_months
 
-
-class CircuitMaintenanceListView(generic.ObjectListView):
-    """View for listing the config circuitmaintenance feature definition."""
-
+class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
+    """Circuit Maintenance Class."""
     queryset = models.CircuitMaintenance.objects.order_by("-start_time")
-    table = tables.CircuitMaintenanceTable
-    filterset = filters.CircuitMaintenanceFilterSet
-    filterset_form = forms.CircuitMaintenanceFilterForm
+    table_class = tables.CircuitMaintenanceTable
+    filterset_class = filters.CircuitMaintenanceFilterSet
+    filterset_form_class = forms.CircuitMaintenanceFilterForm
     action_buttons = ("add", "export")
+    form_class = forms.CircuitMaintenanceForm
+    bulk_update_form_class = forms.CircuitMaintenanceBulkEditForm
 
-
-class CircuitMaintenanceView(generic.ObjectView):
-    """Detail view for specific circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, request, instance): # pylint: disable=signature-differs
         """Extend content of detailed view for Circuit Maintenance."""
-        maintenance_note = models.Note.objects.filter(maintenance=instance)
+        if instance:
+            maintenance_note = Note.objects.filter(
+                assigned_object_id=instance.id,
+                assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
+            )
+        else:
+            maintenance_note = None
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
             "-raw_notification__stamp"
@@ -217,44 +221,6 @@ class CircuitMaintenanceView(generic.ObjectView):
             "maintenance_note": maintenance_note,
             "parsednotification": parsednotification,
         }
-
-
-class CircuitMaintenanceEditView(generic.ObjectEditView):
-    """View for editting circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    model_form = forms.CircuitMaintenanceForm
-
-
-class CircuitMaintenanceDeleteView(generic.ObjectDeleteView):
-    """View for deleting circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-
-
-class CircuitMaintenanceBulkImportView(generic.BulkImportView):
-    """View for bulk of circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    table = tables.CircuitMaintenanceTable
-
-
-class CircuitMaintenanceBulkEditView(generic.BulkEditView):
-    """View for bulk editing circuitmaintenance features."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    filterset = filters.CircuitMaintenanceFilterSet
-    table = tables.CircuitMaintenanceTable
-    form = forms.CircuitMaintenanceBulkEditForm
-
-
-class CircuitMaintenanceBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting circuitmaintenance features."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    filterset = filters.CircuitMaintenanceFilterSet
-    table = tables.CircuitMaintenanceTable
-
 
 class CircuitMaintenanceJobView(generic.ObjectView):
     """Special View to trigger the Job to look for new Circuit Maintenances."""
@@ -324,57 +290,6 @@ class CircuitImpactBulkDeleteView(generic.BulkDeleteView):
     filterset = filters.CircuitImpactFilterSet
     table = tables.CircuitImpactTable
 
-
-class NoteListView(generic.ObjectListView):
-    """View for listing all notes."""
-
-    table = tables.NoteTable
-    queryset = models.Note.objects.all()
-    filterset = filters.NoteFilterSet
-    filterset_form = forms.NoteFilterForm
-    action_buttons = ("add", "export")
-
-
-class NoteEditView(generic.ObjectEditView):
-    """View for editing a maintenance note."""
-
-    queryset = models.Note.objects.all()
-    model_form = forms.NoteForm
-
-
-class NoteView(generic.ObjectView):
-    """View for maintenance note."""
-
-    queryset = models.Note.objects.all()
-
-
-class NoteDeleteView(generic.ObjectDeleteView):
-    """View for deleting maintenance note."""
-
-    queryset = models.Note.objects.all()
-
-
-class NoteBulkImportView(generic.BulkImportView):
-    """View for bulk of Notes."""
-
-    queryset = models.Note.objects.all()
-    table = tables.NoteTable
-
-
-class NoteBulkEditView(generic.BulkEditView):
-    """View for bulk editing Notes."""
-
-    queryset = models.Note.objects.all()
-    table = tables.NoteTable
-    form = forms.NoteBulkEditForm
-
-
-class NoteBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting Notes."""
-
-    queryset = models.Note.objects.all()
-    filterset = filters.NoteFilterSet
-    table = tables.NoteTable
 
 
 class RawNotificationView(generic.ObjectView):

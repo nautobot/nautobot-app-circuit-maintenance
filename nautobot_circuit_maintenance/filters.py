@@ -8,7 +8,7 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.filters import NaturalKeyOrPKMultipleChoiceFilter
 from nautobot.extras.filters import NautobotFilterSet
 
-from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, ParsedNotification, RawNotification
+from .models import CircuitImpact, CircuitMaintenance, NotificationSource, ParsedNotification, RawNotification
 
 logger = logging.getLogger(__name__)
 
@@ -72,30 +72,6 @@ class CircuitImpactFilterSet(NautobotFilterSet):
 
         model = CircuitImpact
         fields = '__all__'
-
-
-class NoteFilterSet(NautobotFilterSet):
-    """Filter capabilities for Note instances."""
-
-    maintenance = NaturalKeyOrPKMultipleChoiceFilter(
-        field_name="maintenance",
-        queryset=CircuitMaintenance.objects.all(),
-        to_field_name="name",
-        label="CircuitMaintenance",
-    )
-
-    class Meta:
-        """Meta class attributes for NoteFilterSet."""
-
-        model = Note
-        fields = '__all__'
-
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(title__icontains=value)
-        return queryset.filter(qs_filter)
 
 
 class RawNotificationFilterSet(NautobotFilterSet):

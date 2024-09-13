@@ -17,7 +17,6 @@ from nautobot.users.models import ObjectPermission
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     ParsedNotification,
     RawNotification,
@@ -30,23 +29,9 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
 
     model = CircuitMaintenance
 
-    def _get_base_url(self):
-        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
-
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
 
-    @skip("Not implemented yet.")
-    def test_has_advanced_tab(self):
-        pass
-
-    @skip("Not implemented yet.")
-    def test_get_object_notes(self):
-        pass
-
-    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
-    def test_queryset_to_csv(self):
-        pass
 
     @classmethod
     def setUpTestData(cls):
@@ -77,13 +62,6 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
             "description": "TEST 0 descr",
             "status": "TENTATIVE",
         }
-
-        cls.csv_data = (
-            "name,start_time,end_time,description,status",
-            "UT-TEST-20,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 20 descr,TENTATIVE",
-            "UT-TEST-21,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 21 descr,TENTATIVE",
-            "UT-TEST-22,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 22 descr,TENTATIVE",
-        )
 
         cls.bulk_edit_data = {
             "status": "CANCELLED",
@@ -181,67 +159,6 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
         cls.bulk_edit_data = {
             "impact": "OUTAGE",
         }
-
-    def test_list_objects_with_constrained_permission(self):
-        """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
-
-
-class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
-    """View tests for Note."""
-
-    model = Note
-
-    def _get_base_url(self):
-        return f"plugins:{self.model._meta.app_label}:{self.model._meta.model_name}_{{}}"
-
-    def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
-        """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
-
-    @skip("Not implemented yet.")
-    def test_has_advanced_tab(self):
-        pass
-
-    @skip("Not implemented yet.")
-    def test_get_object_anonymous(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_list_objects_unknown_filter_no_strict_filtering(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_list_objects_unknown_filter_strict_filtering(self):
-        pass
-
-    @skip("Not Implemented")
-    def test_get_object_notes(self):
-        pass
-
-    @skip("Issue https://github.com/nautobot/nautobot/issues/3419")
-    def test_queryset_to_csv(self):
-        pass
-
-    @classmethod
-    def setUpTestData(cls):
-        """Setup environment for testing."""
-
-        maintenance = CircuitMaintenance.objects.create(
-            name="UT-TEST-1", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
-        )
-
-        Note.objects.create(maintenance=maintenance, title="Note 0", comment="comment 0")
-        Note.objects.create(maintenance=maintenance, title="Note 1", comment="comment 1")
-        Note.objects.create(maintenance=maintenance, title="Note 2", comment="comment 2")
-
-        cls.form_data = {"maintenance": maintenance, "title": "Note 3", "level": "INFO", "comment": "comment 3"}
-
-        cls.csv_data = (
-            "maintenance,title,level,comment",
-            f"{maintenance.name},Note 4,INFO,comment 4",
-            f"{maintenance.name},Note 5,INFO,comment 5",
-        )
-
-        cls.bulk_edit_data = {"level": "WARNING"}
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""

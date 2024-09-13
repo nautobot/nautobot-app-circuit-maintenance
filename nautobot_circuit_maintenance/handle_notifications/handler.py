@@ -10,19 +10,20 @@ from dateutil import parser
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.contrib.contenttypes.models import ContentType
+
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import DryRunVar, Job
+from nautobot.extras.models import Note
 
 from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import (
     MAX_MAINTENANCE_NAME_LENGTH,
-    MAX_NOTE_TITLE_LENGTH,
     MAX_NOTIFICATION_SENDER_LENGTH,
     MAX_NOTIFICATION_SUBJECT_LENGTH,
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     ParsedNotification,
     RawNotification,
@@ -71,13 +72,12 @@ def create_circuit_maintenance(
                 )
         else:
             note_entry, created = Note.objects.get_or_create(
-                maintenance=circuit_maintenance_entry,
-                title=f"Nonexistent circuit ID {circuit.circuit_id}"[:MAX_NOTE_TITLE_LENGTH],
-                comment=(
+                assigned_object_id=circuit_maintenance_entry.id,
+                assigned_object_type=ContentType.objects.get_for_model(CircuitMaintenance),
+                note=(
                     f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
                     "maintenance."
                 ),
-                level="WARNING",
             )
             if created:
                 job.logger.warning(
@@ -146,13 +146,12 @@ def update_circuit_maintenance(
             )
         else:
             note_entry, created = Note.objects.get_or_create(
-                maintenance=circuit_maintenance_entry,
-                title=f"Nonexistent circuit ID {circuit.circuit_id}"[:MAX_NOTE_TITLE_LENGTH],
-                comment=(
+                assigned_object_id=circuit_maintenance_entry.id,
+                assigned_object_type=ContentType.objects.get_for_model(CircuitMaintenance),
+                note=(
                     f"Circuit ID {circuit.circuit_id} referenced was not found in the database, so omitted from the "
                     "maintenance."
                 ),
-                level="WARNING",
             )
             if created:
                 job.logger.warning(
