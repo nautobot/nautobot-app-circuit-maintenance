@@ -6,7 +6,8 @@ import json
 import os
 from email.message import EmailMessage
 from unittest.mock import ANY, MagicMock, patch
-
+from googleapiclient.errors import HttpError
+from httplib2 import Response
 import exchangelib
 from django.conf import settings
 from django.test import TestCase
@@ -658,6 +659,22 @@ class TestGmailAPISource(TestCase):
         source.emails_to_fetch = emails_to_fetch
 
         self.assertEqual(result, source._get_search_criteria(since_timestamp))  # pylint: disable=protected-access
+
+    @patch('time.sleep', return_value=None)
+    def test_execute_retry_logic(self, mock_sleep):
+        """Test the googleapi execute retry logic."""
+        mock_request = MagicMock()
+
+        # Mock the execute method to raise an HttpError the first time and succeed the second time
+        mock_request.execute.side_effect = [
+            HttpError(resp=Response({'status': 503}), content=b'Service Unavailable'),  # First attempt fails
+            "Success!"  # Second attempt succeeds
+        ]
+
+        result = self.source._execute_with_retries(mock_request, self.job) # pylint: disable=protected-access
+        self.assertEqual(result, "Success!")
+        self.assertEqual(mock_request.execute.call_count, 2)
+        mock_sleep.assert_called_once_with(1)  # Initial delay of 1 second
 
 
 class TestExchangeWebService(TestCase):

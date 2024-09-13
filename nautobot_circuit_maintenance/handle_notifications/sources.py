@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import time
 from typing import Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 from urllib.parse import urlparse
 
@@ -580,17 +581,57 @@ class GmailAPI(EmailSource):
 
         return b""
 
+    @staticmethod
+    def _execute_with_retries(request, job, retries=5, delay=1, backoff=2):
+        """
+        Executes a Google API request with retries and exponential backoff.
+
+        Args:
+            request: The Google API request object.
+            job: Job object to log.
+            retries (int): Maximum number of retries.
+            delay (int/float): Initial delay between retries.
+            backoff (int/float): Backoff multiplier to increase delay.
+
+        Returns:
+            The result of the successful execution of the request.
+
+        Raises:
+            HttpError: If all retries fail, it raises the last HttpError.
+        """
+        attempt = 0
+        last_response = None
+        while attempt < retries:
+            try:
+                return request.execute()
+            except HttpError as http_error:
+                # Check if the error is retryable (e.g., 500, 503, rate limit)
+                last_response = http_error.resp
+                if http_error.resp.status in [500, 502, 503, 504]:
+                    attempt += 1
+                    job.logger.warning(f"Google API attempt {attempt} failed: {http_error}. Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                    delay *= backoff
+                else:
+                    # Raise the error if it's not retryable (e.g., 400, 403)
+                    raise
+
+        if last_response:
+            raise HttpError(resp=last_response, content=last_response.reason)
+        return None
+
     def fetch_email(self, job: Job, msg_id: str) -> Optional[MaintenanceNotification]:
         """Fetch an specific email ID.
 
         See data format:  https://developers.google.com/gmail/api/reference/rest/v1/users.messages#Message
         """
-        received_email = (
+        request = (
             self.service.users()  # pylint: disable=no-member
             .messages()
             .get(userId=self.account, id=msg_id, format="raw")
-            .execute()
         )
+
+        received_email = self._execute_with_retries(request, job)
 
         raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
         email_message = email.message_from_bytes(raw_email_string)
