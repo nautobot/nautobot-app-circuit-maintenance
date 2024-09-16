@@ -1,5 +1,6 @@
-"""Init for Circuit Maintenance app."""
+"""App declaration for nautobot_circuit_maintenance."""
 
+# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
 from importlib import metadata
 
 from django.apps import apps as global_apps
@@ -75,7 +76,6 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     verbose_name = "Circuit Maintenance Management"
     version = __version__
     author = "Network to Code, LLC"
-    author_email = "opensource@networktocode.com"
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
     min_version = "2.0.0"
@@ -101,6 +101,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
         if settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
             # pylint: disable=import-outside-toplevel
             from nautobot_capacity_metrics import register_metric_func
+
             from .metrics_app import metric_circuit_operational
 
             register_metric_func(metric_circuit_operational)

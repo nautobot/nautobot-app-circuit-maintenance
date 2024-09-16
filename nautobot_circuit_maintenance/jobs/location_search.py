@@ -1,12 +1,12 @@
 # pylint: disable=logging-fstring-interpolation
 """Location searching Job definition."""
+
 import collections
 from datetime import date
 
 from django.conf import settings
-
-from nautobot.extras.jobs import Job
 from nautobot.circuits.models import Circuit
+from nautobot.extras.jobs import Job
 
 from nautobot_circuit_maintenance.models import CircuitMaintenance
 

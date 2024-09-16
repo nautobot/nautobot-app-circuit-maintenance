@@ -5,9 +5,7 @@ import datetime
 import json
 import os
 from email.message import EmailMessage
-from unittest.mock import ANY
-from unittest.mock import patch
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock, patch
 
 import exchangelib
 from django.conf import settings
@@ -16,19 +14,20 @@ from nautobot.circuits.models import Provider
 from parameterized import parameterized
 from pydantic import ValidationError
 
-from nautobot_circuit_maintenance.handle_notifications.sources import IMAP
-from nautobot_circuit_maintenance.handle_notifications.sources import EmailSource
-from nautobot_circuit_maintenance.handle_notifications.sources import ExchangeWebService
-from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPI
-from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIOauth
-from nautobot_circuit_maintenance.handle_notifications.sources import GmailAPIServiceAccount
-from nautobot_circuit_maintenance.handle_notifications.sources import MaintenanceNotification
-from nautobot_circuit_maintenance.handle_notifications.sources import Source
-from nautobot_circuit_maintenance.handle_notifications.sources import get_notifications
+from nautobot_circuit_maintenance.handle_notifications.sources import (
+    IMAP,
+    EmailSource,
+    ExchangeWebService,
+    GmailAPI,
+    GmailAPIOauth,
+    GmailAPIServiceAccount,
+    MaintenanceNotification,
+    Source,
+    get_notifications,
+)
 from nautobot_circuit_maintenance.models import NotificationSource
 
-from .test_handler import generate_email_notification
-from .test_handler import get_base_notification_data
+from .test_handler import generate_email_notification, get_base_notification_data
 from .utils import MockedJob, assert_called_with_substring
 
 SOURCE_IMAP = {
@@ -263,7 +262,6 @@ class TestIMAPSource(TestCase):
             extra=ANY,
         )
 
-    # pylint: disable-next=no-self-use
     def test_get_notifications_no_imap_account(self):
         """Test get_notifications without IMAP account."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]

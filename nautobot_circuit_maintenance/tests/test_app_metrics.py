@@ -1,21 +1,14 @@
 """Test cases for application metrics endpoint views."""
 
-from datetime import datetime
-from datetime import timedelta
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 
 from django.test import TestCase
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import CircuitTermination
-from nautobot.circuits.models import CircuitType
-from nautobot.circuits.models import Provider
-from nautobot.dcim.models import Location
-from nautobot.dcim.models import LocationType
+from nautobot.circuits.models import Circuit, CircuitTermination, CircuitType, Provider
+from nautobot.dcim.models import Location, LocationType
 from nautobot.extras.models import Status
 
 from nautobot_circuit_maintenance.metrics_app import metric_circuit_operational
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
+from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance
 
 
 class AppMetricTests(TestCase):

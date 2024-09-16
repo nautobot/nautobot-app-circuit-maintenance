@@ -8,16 +8,11 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import Provider
+from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.views import generic
 
-from nautobot_circuit_maintenance import filters
-from nautobot_circuit_maintenance import forms
-from nautobot_circuit_maintenance import models
-from nautobot_circuit_maintenance import tables
-from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize
-from nautobot_circuit_maintenance.handle_notifications.sources import Source
+from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 logger = logging.getLogger(__name__)

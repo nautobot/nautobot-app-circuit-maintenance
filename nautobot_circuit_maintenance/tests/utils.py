@@ -1,7 +1,8 @@
 # pylint: disable=logging-fstring-interpolation
 """Test utilities."""
-from unittest.mock import Mock
+
 import logging
+from unittest.mock import Mock
 
 
 def _add(level):

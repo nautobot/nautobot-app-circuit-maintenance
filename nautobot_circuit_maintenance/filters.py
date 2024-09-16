@@ -4,17 +4,11 @@ import logging
 
 import django_filters
 from django.db.models import Q
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import Provider
+from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.filters import NaturalKeyOrPKMultipleChoiceFilter
 from nautobot.extras.filters import NautobotFilterSet
 
-from .models import CircuitImpact
-from .models import CircuitMaintenance
-from .models import Note
-from .models import NotificationSource
-from .models import ParsedNotification
-from .models import RawNotification
+from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, ParsedNotification, RawNotification
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +41,9 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitMaintenanceFilterSet."""
 
         model = CircuitMaintenance
-        fields = ["id", "name", "status", "ack"]
+        fields = '__all__'
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -77,7 +71,7 @@ class CircuitImpactFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitImpactFilterSet."""
 
         model = CircuitImpact
-        fields = ["id", "maintenance", "circuit", "impact"]
+        fields = '__all__'
 
 
 class NoteFilterSet(NautobotFilterSet):
@@ -94,9 +88,9 @@ class NoteFilterSet(NautobotFilterSet):
         """Meta class attributes for NoteFilterSet."""
 
         model = Note
-        fields = ["id", "maintenance", "title"]
+        fields = '__all__'
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -130,16 +124,9 @@ class RawNotificationFilterSet(NautobotFilterSet):
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         model = RawNotification
-        fields = [
-            "subject",
-            "provider",
-            "sender",
-            "source",
-            "parsed",
-            "stamp",
-        ]
+        exclude = ["raw"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -166,9 +153,9 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
         """Meta class attributes for ParsedNotificationFilterSet."""
 
         model = ParsedNotification
-        fields = ["maintenance", "raw_notification", "json"]
+        fields = '__all__'
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset
@@ -188,9 +175,9 @@ class NotificationSourceFilterSet(NautobotFilterSet):
         """Meta class attributes for NotificationSourceFilterSet."""
 
         model = NotificationSource
-        fields = ["name", "attach_all_providers"]
+        exclude = ["_token"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument, no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
         if not value.strip():
             return queryset

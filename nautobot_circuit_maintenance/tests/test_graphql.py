@@ -1,17 +1,13 @@
 """GraphQL tests."""
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.test import override_settings
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import CircuitType
-from nautobot.circuits.models import Provider
+from django.test import TestCase, override_settings
+from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.core.graphql import execute_query
 from nautobot.core.testing.utils import create_test_user
 from nautobot.extras.models import Status
 
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
+from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance
 
 # Use the proper swappable User model
 User = get_user_model()

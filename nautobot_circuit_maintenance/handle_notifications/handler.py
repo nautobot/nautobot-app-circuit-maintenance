@@ -1,38 +1,34 @@
 # pylint: disable=logging-fstring-interpolation
 """Notifications jobs."""
+
 import datetime
 import uuid
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from circuit_maintenance_parser import Maintenance
-from circuit_maintenance_parser import NotificationData
-from circuit_maintenance_parser import ProviderError
-from circuit_maintenance_parser import init_provider
+from circuit_maintenance_parser import Maintenance, NotificationData, ProviderError, init_provider
 from dateutil import parser
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from nautobot.circuits.models import Circuit
-from nautobot.circuits.models import Provider
-from nautobot.extras.jobs import Job
-from nautobot.extras.jobs import DryRunVar
+from nautobot.circuits.models import Circuit, Provider
+from nautobot.extras.jobs import DryRunVar, Job
 
 from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
-from nautobot_circuit_maintenance.models import MAX_MAINTENANCE_NAME_LENGTH
-from nautobot_circuit_maintenance.models import MAX_NOTE_TITLE_LENGTH
-from nautobot_circuit_maintenance.models import MAX_NOTIFICATION_SENDER_LENGTH
-from nautobot_circuit_maintenance.models import MAX_NOTIFICATION_SUBJECT_LENGTH
-from nautobot_circuit_maintenance.models import CircuitImpact
-from nautobot_circuit_maintenance.models import CircuitMaintenance
-from nautobot_circuit_maintenance.models import Note
-from nautobot_circuit_maintenance.models import NotificationSource
-from nautobot_circuit_maintenance.models import ParsedNotification
-from nautobot_circuit_maintenance.models import RawNotification
+from nautobot_circuit_maintenance.models import (
+    MAX_MAINTENANCE_NAME_LENGTH,
+    MAX_NOTE_TITLE_LENGTH,
+    MAX_NOTIFICATION_SENDER_LENGTH,
+    MAX_NOTIFICATION_SUBJECT_LENGTH,
+    CircuitImpact,
+    CircuitMaintenance,
+    Note,
+    NotificationSource,
+    ParsedNotification,
+    RawNotification,
+)
 
-from .sources import MaintenanceNotification
-from .sources import get_notifications
+from .sources import MaintenanceNotification, get_notifications
 
 name = "Circuit Maintenance"  # pylint: disable=invalid-name
 

@@ -1,26 +1,26 @@
 """Views for API."""
 
 from django.contrib.contenttypes.models import ContentType
+from nautobot.apps.api import CustomFieldModelViewSet
 from rest_framework import viewsets
 
-from nautobot.apps.api import CustomFieldModelViewSet
+from nautobot_circuit_maintenance import filters
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
     Note,
     NotificationSource,
-    RawNotification,
     ParsedNotification,
+    RawNotification,
 )
-from nautobot_circuit_maintenance import filters
 
 from .serializers import (
+    CircuitImpactSerializer,
+    CircuitMaintenanceSerializer,
     NoteSerializer,
     NotificationSourceSerializer,
     ParsedNotificationSerializer,
     RawNotificationSerializer,
-    CircuitMaintenanceSerializer,
-    CircuitImpactSerializer,
 )
 
 
