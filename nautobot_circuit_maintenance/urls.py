@@ -10,27 +10,27 @@ from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 
 urlpatterns = [
     # Overview
-    path("maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
+    path("circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
     #  Maintenance
-    path("maintenances/", views.CircuitMaintenanceListView.as_view(), name="circuitmaintenance_list"),
-    path("maintenances/add/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_add"),
-    path("maintenances/import/", views.CircuitMaintenanceBulkImportView.as_view(), name="circuitmaintenance_import"),
-    path("maintenances/edit/", views.CircuitMaintenanceBulkEditView.as_view(), name="circuitmaintenance_bulk_edit"),
+    path("circuit-maintenances/", views.CircuitMaintenanceListView.as_view(), name="circuitmaintenance_list"),
+    path("circuit-maintenances/add/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_add"),
+    path("circuit-maintenances/import/", views.CircuitMaintenanceBulkImportView.as_view(), name="circuitmaintenance_import"),
+    path("circuit-maintenances/edit/", views.CircuitMaintenanceBulkEditView.as_view(), name="circuitmaintenance_bulk_edit"),
     path(
-        "maintenances/delete/", views.CircuitMaintenanceBulkDeleteView.as_view(), name="circuitmaintenance_bulk_delete"
+        "circuit-maintenances/delete/", views.CircuitMaintenanceBulkDeleteView.as_view(), name="circuitmaintenance_bulk_delete"
     ),
-    path("maintenances/<uuid:pk>/", views.CircuitMaintenanceView.as_view(), name="circuitmaintenance"),
-    path("maintenances/<uuid:pk>/edit/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_edit"),
+    path("circuit-maintenances/<uuid:pk>/", views.CircuitMaintenanceView.as_view(), name="circuitmaintenance"),
+    path("circuit-maintenances/<uuid:pk>/edit/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_edit"),
     path(
-        "maintenances/<uuid:pk>/delete/", views.CircuitMaintenanceDeleteView.as_view(), name="circuitmaintenance_delete"
+        "circuit-maintenances/<uuid:pk>/delete/", views.CircuitMaintenanceDeleteView.as_view(), name="circuitmaintenance_delete"
     ),
     path(
-        "maintenances/<uuid:pk>/changelog/",
+        "circuit-maintenances/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
         name="circuitmaintenance_changelog",
         kwargs={"model": CircuitMaintenance},
     ),
-    path("maintenances/job/", views.CircuitMaintenanceJobView.as_view(), name="circuitmaintenance_job"),
+    path("circuit-maintenances/job/", views.CircuitMaintenanceJobView.as_view(), name="circuitmaintenance_job"),
     # Circuit Impact
     path("circuit-impacts/", views.CircuitImpactListView.as_view(), name="circuitimpact_list"),
     path("circuit-impacts/add/", views.CircuitImpactEditView.as_view(), name="circuitimpact_add"),
@@ -85,5 +85,5 @@ urlpatterns = [
         name="notificationsource_changelog",
         kwargs={"model": NotificationSource},
     ),
-    path("docs/", RedirectView.as_view(url=static("nautobot_circuit_maintenances/docs/index.html")), name="docs"),
+    path("docs/", RedirectView.as_view(url=static("nautobot_circuit_maintenance/docs/index.html")), name="docs"),
 ]
