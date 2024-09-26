@@ -35,7 +35,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(move_data_to_new_model, reverse_move_data),
-        migrations.DeleteModel(
-            name='Note',
-        ),
     ]
