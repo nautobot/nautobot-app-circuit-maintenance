@@ -1,1 +1,1 @@
-Provide retry logic for GoogleAPI execute
+Added retry logic to GoogleAPI execute.
