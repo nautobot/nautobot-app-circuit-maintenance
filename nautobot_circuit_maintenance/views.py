@@ -205,10 +205,13 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
 
     def get_extra_context(self, request, instance):  # pylint: disable=signature-differs
         """Extend content of detailed view for Circuit Maintenance."""
-        maintenance_note = Note.objects.filter(
-            assigned_object_id=instance.id,
-            assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
-        )
+        if instance:
+            maintenance_note = Note.objects.filter(
+                assigned_object_id=instance.id,
+                assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
+            )
+        else:
+            maintenance_note = None
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
             "-raw_notification__stamp"
