@@ -609,7 +609,9 @@ class GmailAPI(EmailSource):
                 last_response = http_error.resp
                 if http_error.resp.status in [500, 502, 503, 504]:
                     attempt += 1
-                    job.logger.warning(f"Google API attempt {attempt} failed: {http_error}. Retrying in {delay} seconds...")
+                    job.logger.warning(
+                        f"Google API attempt {attempt} failed: {http_error}. Retrying in {delay} seconds..."
+                    )
                     time.sleep(delay)
                     delay *= backoff
                 else:
