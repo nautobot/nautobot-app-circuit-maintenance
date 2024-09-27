@@ -5,7 +5,6 @@ from nautobot.core.api.serializers import NautobotModelSerializer
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     ParsedNotification,
     RawNotification,
@@ -39,16 +38,6 @@ class RawNotificationSerializer(NautobotModelSerializer):
         """Meta class for RawNotificationSerializer."""
 
         model = RawNotification
-        fields = "__all__"
-
-
-class NoteSerializer(NautobotModelSerializer):
-    """Serializer for API."""
-
-    class Meta:
-        """Meta class for MaintenanceNoteSerializer."""
-
-        model = Note
         fields = "__all__"
 
 

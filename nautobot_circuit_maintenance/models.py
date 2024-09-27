@@ -14,7 +14,7 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import OrganizationalModel, PrimaryModel
 from nautobot.extras.utils import extras_features
 
-from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
+from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ MAX_MAINTENANCE_NAME_LENGTH = 100
 MAX_NOTIFICATION_SENDER_LENGTH = 200
 MAX_NOTIFICATION_SUBJECT_LENGTH = 200
 MAX_NOTIFICATION_TOTAL_LENGTH = 16384
-MAX_NOTE_TITLE_LENGTH = 200
 
 
 @extras_features(
@@ -117,40 +116,6 @@ class CircuitImpact(OrganizationalModel):
     def get_absolute_url(self, api=False):
         """Returns reverse loop up URL."""
         return reverse("plugins:nautobot_circuit_maintenance:circuitimpact", args=[self.pk])
-
-
-@extras_features(
-    "custom_fields",
-    "custom_links",
-    "custom_validators",
-    "export_templates",
-    "relationships",
-    "webhooks",
-)
-class Note(OrganizationalModel):
-    """Model for maintenance notes."""
-
-    maintenance = models.ForeignKey(CircuitMaintenance, on_delete=models.CASCADE, default=None)
-    title = models.CharField(max_length=MAX_NOTE_TITLE_LENGTH)
-    level = models.CharField(
-        default=NoteLevelChoices.INFO,
-        max_length=50,
-        choices=NoteLevelChoices,
-    )
-    comment = models.TextField()
-
-    class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        ordering = ["last_updated"]
-        unique_together = ["maintenance", "title"]
-
-    def __str__(self):
-        """String value for HTML rendering."""
-        # str(self) is used in change logging, and ObjectChange.object_repr field is limited to 200 characters.
-        return f"{self.title}"[:200]
-
-    def get_absolute_url(self, api=False):
-        """Returns reverse loop up URL."""
-        return reverse("plugins:nautobot_circuit_maintenance:note", args=[self.pk])
 
 
 @extras_features(

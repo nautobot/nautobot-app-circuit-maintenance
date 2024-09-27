@@ -3,7 +3,7 @@
 import django_tables2 as tables
 from nautobot.core.tables import BaseTable, ToggleColumn
 
-from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, RawNotification
+from .models import CircuitImpact, CircuitMaintenance, NotificationSource, RawNotification
 
 
 class CircuitMaintenanceTable(BaseTable):
@@ -68,20 +68,6 @@ class CircuitImpactTable(BaseTable):
 
         model = CircuitImpact
         fields = ("pk", "maintenance", "circuit", "impact")  # pylint:disable=nb-use-fields-all
-
-
-class NoteTable(BaseTable):
-    """Table to display Note model."""
-
-    pk = ToggleColumn()
-    maintenance = tables.Column(linkify=True)
-    title = tables.Column(linkify=True)
-
-    class Meta(BaseTable.Meta):
-        """Meta for class NoteTable."""
-
-        model = Note
-        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")  # pylint:disable=nb-use-fields-all
 
 
 class NotificationSourceTable(BaseTable):

@@ -128,64 +128,6 @@
 
     <div class="panel panel-default">
         <div class="panel-heading">
-            <strong>Notes</strong>
-            <div class="pull-right noprint">
-            {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-                <a href="{% url 'plugins:nautobot_circuit_maintenance:note_add' %}?maintenance={{ object.id }}&return_url={{ object.get_absolute_url }}" >
-                    <span class="mdi mdi-plus" aria-hidden="true"></span> Add
-                </a>
-            {% endif %}
-            </div>
-        </div>
-        {% if not maintenance_note %}
-        <div class="panel-body">
-            <span class="text-muted">None</span>
-        </div>
-        {% else %}
-        <table class="table table-hover panel-body">
-            <tbody>
-                <tr>
-                    <th>Level</th>
-                    <th>Title</th>
-                    <th>Last Updated</th>
-                    <th>Comment</th>
-                    <th></th>
-                </tr>
-                {% for note in maintenance_note %}
-                <tr>
-                    <td>
-                        {{ note.level }}
-                    </td>
-                    <td>
-                        <a href="{{ note.get_absolute_url }}">{{ note.title }}</a>
-                    </td>
-                    <td>
-                        {{ note.last_updated }}
-                    </td>
-                    <td>
-                        {{ note.comment }}
-                    </td>
-                    <td class="text-right text-nowrap noprint">
-                        {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_edit' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-warning btn-xs">
-                                <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>
-                            </a>
-                        {% endif %}
-                        {% if perms.nautobot_circuit_maintenance.delete_circuitmaintenance %}
-                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_delete' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-danger btn-xs">
-                                <i class="glyphicon glyphicon-trash" aria-hidden="true"></i>
-                            </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-    </div>
-
-    <div class="panel panel-default">
-        <div class="panel-heading">
             <strong>Notifications</strong>
         </div>
         {% if not parsednotification %}

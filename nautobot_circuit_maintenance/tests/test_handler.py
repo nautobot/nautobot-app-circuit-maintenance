@@ -11,6 +11,7 @@ from circuit_maintenance_parser.errors import ProviderError
 from django.test import TestCase
 from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
+from nautobot.extras.models import Note
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
     HandleCircuitMaintenanceNotifications,
@@ -27,7 +28,6 @@ from nautobot_circuit_maintenance.models import (
     MAX_NOTIFICATION_SUBJECT_LENGTH,
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     ParsedNotification,
     RawNotification,
@@ -134,7 +134,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(1, len(ParsedNotification.objects.all()))
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(2, len(CircuitImpact.objects.all()))
-            self.assertEqual(0, len(Note.objects.all()))
             mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsed")
             self.job.logger.info.assert_called_with("1 notifications processed.")
 
@@ -159,8 +158,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(1, len(ParsedNotification.objects.all()))
             self.assertEqual(1, len(CircuitMaintenance.objects.all()))
             self.assertEqual(2, len(CircuitImpact.objects.all()))
-            self.assertEqual(1, len(Note.objects.all()))
-            self.assertIn(fake_cid, Note.objects.all().first().title)
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "parsed")
             mock_tag_message.assert_any_call(self.job, test_notification.msg_id, "unknown-cids")
             self.job.logger.info.assert_called_with("1 notifications processed.")
@@ -172,7 +169,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
                 ParsedNotification,
                 CircuitMaintenance,
                 CircuitImpact,
-                Note,
             ):
                 objectchange = model.objects.first().to_objectchange("create")
                 objectchange.request_id = uuid.uuid4()
@@ -194,7 +190,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(0, len(ParsedNotification.objects.all()))
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
-            self.assertEqual(0, len(Note.objects.all()))
             self.job.logger.info.assert_called_with("No notifications received.")
 
     def test_run_no_notification_source(self):
@@ -225,7 +220,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
             self.assertEqual(0, len(ParsedNotification.objects.all()))
             self.assertEqual(0, len(CircuitMaintenance.objects.all()))
             self.assertEqual(0, len(CircuitImpact.objects.all()))
-            self.assertEqual(0, len(Note.objects.all()))
             mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "parsing-failed")
 
     def test_process_raw_notification_no_provider_in_parser(self):
@@ -362,7 +356,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         )
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(2, len(CircuitImpact.objects.all()))
-        self.assertEqual(0, len(Note.objects.all()))
 
     def test_create_circuit_maintenance_no_circuits(self):
         """Test create_circuit_maintenance without existent circuits."""
@@ -392,7 +385,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
 
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(0, len(CircuitImpact.objects.all()))
-        self.assertEqual(1, len(Note.objects.all()))
         mock_tag_message.assert_called_with(self.job, test_notification.msg_id, "unknown-cids")
 
     def test_create_circuit_maintenance_unknown_status(self):
@@ -422,7 +414,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
 
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(2, len(CircuitImpact.objects.all()))
-        self.assertEqual(0, len(Note.objects.all()))
 
         self.assertEqual("UNKNOWN", CircuitMaintenance.objects.first().status)
 
@@ -453,7 +444,6 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         update_circuit_maintenance(self.job, test_notification, circuit_maintenance_entry, parsed_maintenance, provider)
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(1, len(CircuitImpact.objects.all()))
-        self.assertEqual(1, len(Note.objects.all()))
         circuit_maintenance_entry = CircuitMaintenance.objects.get(name=maintenance_id)
         self.assertEqual(notification_data["status"], circuit_maintenance_entry.status)
         circuit_impact_entry = CircuitImpact.objects.get(circuit__cid__iexact=circuit_to_update["cid"])
@@ -608,4 +598,3 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         )
         self.assertEqual(1, len(CircuitMaintenance.objects.all()))
         self.assertEqual(1, len(CircuitImpact.objects.all()))
-        self.assertEqual(0, len(Note.objects.all()))
