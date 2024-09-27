@@ -5,15 +5,14 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
-from django.contrib.contenttypes.models import ContentType
-
+from nautobot.apps.views import NautobotUIViewSet
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.views import generic
 from nautobot.extras.models import Note
-from nautobot.apps.views import NautobotUIViewSet
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
@@ -192,8 +191,10 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
 
         return self.queryset.count() / delta_months
 
+
 class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     """Circuit Maintenance Class."""
+
     queryset = models.CircuitMaintenance.objects.order_by("-start_time")
     table_class = tables.CircuitMaintenanceTable
     filterset_class = filters.CircuitMaintenanceFilterSet
@@ -202,15 +203,12 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     form_class = forms.CircuitMaintenanceForm
     bulk_update_form_class = forms.CircuitMaintenanceBulkEditForm
 
-    def get_extra_context(self, request, instance): # pylint: disable=signature-differs
+    def get_extra_context(self, request, instance):  # pylint: disable=signature-differs
         """Extend content of detailed view for Circuit Maintenance."""
-        if instance:
-            maintenance_note = Note.objects.filter(
-                assigned_object_id=instance.id,
-                assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
-            )
-        else:
-            maintenance_note = None
+        maintenance_note = Note.objects.filter(
+            assigned_object_id=instance.id,
+            assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
+        )
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
             "-raw_notification__stamp"
@@ -221,6 +219,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
             "maintenance_note": maintenance_note,
             "parsednotification": parsednotification,
         }
+
 
 class CircuitMaintenanceJobView(generic.ObjectView):
     """Special View to trigger the Job to look for new Circuit Maintenances."""
@@ -289,7 +288,6 @@ class CircuitImpactBulkDeleteView(generic.BulkDeleteView):
     queryset = models.CircuitImpact.objects.all()
     filterset = filters.CircuitImpactFilterSet
     table = tables.CircuitImpactTable
-
 
 
 class RawNotificationView(generic.ObjectView):

@@ -11,6 +11,7 @@ from nautobot.apps.forms import (
     CustomFieldModelBulkEditFormMixin,
     CustomFieldModelFilterFormMixin,
     CustomFieldModelFormMixin,
+    NoteModelFormMixin,
     RelationshipModelFormMixin,
 )
 from nautobot.circuits.models import Circuit, Provider
@@ -72,7 +73,7 @@ class CircuitImpactFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
     impact = forms.CharField(max_length=50)
 
 
-class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
+class CircuitMaintenanceForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin, NoteModelFormMixin):
     """Filter Form for CircuitMaintenance instances."""
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"

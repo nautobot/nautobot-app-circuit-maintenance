@@ -4,33 +4,35 @@ from django.db import migrations
 
 
 def move_data_to_new_model(apps, schema_editor):
-    CircuitMaintenance = apps.get_model('nautobot_circuit_maintenance', 'CircuitMaintenance')
-    ContentType = apps.get_model('contenttypes', 'ContentType')
-    OldModel = apps.get_model('nautobot_circuit_maintenance', 'Note')
-    NewModel = apps.get_model('extras', 'Note')
+    CircuitMaintenance = apps.get_model("nautobot_circuit_maintenance", "CircuitMaintenance")
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    OldModel = apps.get_model("nautobot_circuit_maintenance", "Note")
+    NewModel = apps.get_model("extras", "Note")
 
     for old_obj in OldModel.objects.all():
         NewModel.objects.create(
             note=old_obj.title + "\n" + old_obj.comment,
             assigned_object_type=ContentType.objects.get_for_model(CircuitMaintenance),
             assigned_object_id=old_obj.maintenance.id,
-            user_name="migration"
+            user_name="migration",
         )
 
+
 def reverse_move_data(apps, schema_editor):
-    OldModel = apps.get_model('nautobot_circuit_maintenance', 'Note')
-    NewModel = apps.get_model('extras', 'Note')
+    OldModel = apps.get_model("nautobot_circuit_maintenance", "Note")
+    NewModel = apps.get_model("extras", "Note")
 
     for new_obj in NewModel.objects.all():
         OldModel.objects.create(
-            title=new_obj.note[:20], # truncate to 20
+            title=new_obj.note[:20],  # truncate to 20
             content=new_obj.note,
-            maintenance=new_obj.assigned_object
+            maintenance=new_obj.assigned_object,
         )
-class Migration(migrations.Migration):
 
+
+class Migration(migrations.Migration):
     dependencies = [
-        ('nautobot_circuit_maintenance', '0013_rename_site_search_job'),
+        ("nautobot_circuit_maintenance", "0013_rename_site_search_job"),
     ]
 
     operations = [

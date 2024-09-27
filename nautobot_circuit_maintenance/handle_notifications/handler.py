@@ -8,10 +8,9 @@ from typing import List, Optional
 from circuit_maintenance_parser import Maintenance, NotificationData, ProviderError, init_provider
 from dateutil import parser
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.contrib.contenttypes.models import ContentType
-
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.extras.jobs import DryRunVar, Job
 from nautobot.extras.models import Note

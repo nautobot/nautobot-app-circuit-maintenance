@@ -32,7 +32,6 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
     def assertInstanceEqual(self, instance, data, api=False):  # pylint: disable=arguments-differ
         """Used to overwrite inbuilt function. Causing type issues for datetimepicker."""
 
-
     @classmethod
     def setUpTestData(cls):
         """Setup environment for testing."""

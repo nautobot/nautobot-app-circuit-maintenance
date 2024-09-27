@@ -32,7 +32,7 @@ urlpatterns = [
     path("impact/edit/", views.CircuitImpactBulkEditView.as_view(), name="circuitimpact_bulk_edit"),
     path("impact/delete/", views.CircuitImpactBulkDeleteView.as_view(), name="circuitimpact_bulk_delete"),
     path("impact/import/", views.CircuitImpactBulkImportView.as_view(), name="circuitimpact_import"),
-   # Raw Notification
+    # Raw Notification
     path("rawnotification/", views.RawNotificationListView.as_view(), name="rawnotification_list"),
     path("rawnotification/<uuid:pk>/", views.RawNotificationView.as_view(), name="rawnotification"),
     path("rawnotification/<uuid:pk>/delete/", views.RawNotificationDeleteView.as_view(), name="rawnotification_delete"),
