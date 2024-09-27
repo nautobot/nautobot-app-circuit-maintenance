@@ -1,6 +1,6 @@
 ---
 dev_addr: "127.0.0.1:8001"
-edit_uri: "edit/main/nautobot-app-circuit-maintenance/docs"
+edit_uri: "edit/main/docs"
 site_dir: "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs"
 site_name: "Circuit Maintenance Documentation"
 site_url: "https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"
@@ -116,6 +116,7 @@ nav:
       - Compatibility Matrix: "admin/compatibility_matrix.md"
       - Release Notes:
           - "admin/release_notes/index.md"
+          - v2.3: "admin/release_notes/version_2.3.md"
           - v2.2: "admin/release_notes/version_2.2.md"
           - v2.1: "admin/release_notes/version_2.1.md"
           - v2.0: "admin/release_notes/version_2.0.md"
