@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/icon-nautobot-circuit-maintenance.png" class="logo" height="200px">
   <br>
   <a href="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions"><img src="https://github.com/nautobot/nautobot-app-circuit-maintenance/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"><img src="https://readthedocs.org/projects/nautobot-app-circuit-maintenance/badge/"></a>
+  <a href="https://docs.nautobot.com/projects/circuit-maintenance/en/latest/"><img src="https://readthedocs.org/projects/nautobot-plugin-circuit-maintenance/badge/"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/v/nautobot-circuit-maintenance"></a>
   <a href="https://pypi.org/project/nautobot-circuit-maintenance/"><img src="https://img.shields.io/pypi/dm/nautobot-circuit-maintenance"></a>
   <br>
