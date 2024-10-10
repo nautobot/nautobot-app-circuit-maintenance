@@ -22,6 +22,7 @@ class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
     max_version = "2.9999"
     default_settings = {}
     caching_config = {}
+    docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
 
 
 config = NautobotCircuitMaintenanceConfig  # pylint:disable=invalid-name
