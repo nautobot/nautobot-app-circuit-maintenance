@@ -24,7 +24,8 @@ class Migration(migrations.Migration):
             name="stamp",
             field=models.DateTimeField(null=True),
         ),
-        migrations.RunPython(copy_date_to_stamp),
+        # TODO: Move data migration into a separate file and add a reverse migration
+        migrations.RunPython(code=copy_date_to_stamp, reverse_code=migrations.RunPython.noop),
         migrations.AlterField(
             model_name="rawnotification",
             name="stamp",

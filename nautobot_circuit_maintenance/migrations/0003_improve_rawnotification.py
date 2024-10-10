@@ -40,7 +40,8 @@ class Migration(migrations.Migration):
                 to="nautobot_circuit_maintenance.notificationsource",
             ),
         ),
-        migrations.RunPython(migrate_source),
+        # TODO: Move data migration into a separate file and add a reverse migration
+        migrations.RunPython(code=migrate_source, reverse_code=migrations.RunPython.noop),
         migrations.RemoveField(
             model_name="rawnotification",
             name="source_old",

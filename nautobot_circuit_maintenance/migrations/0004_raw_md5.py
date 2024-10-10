@@ -26,7 +26,8 @@ class Migration(migrations.Migration):
                 name="_raw_md5",
                 field=models.TextField(null=True),
             ),
-            migrations.RunPython(gen_raw_md5),
+            # TODO: Move data migration into a separate file and add a reverse migration
+            migrations.RunPython(code=gen_raw_md5, reverse_code=migrations.RunPython.noop),
             migrations.AlterField(
                 model_name="rawnotification",
                 name="_raw_md5",
@@ -45,7 +46,8 @@ class Migration(migrations.Migration):
                 name="_raw_md5",
                 field=models.CharField(null=True, max_length=512),
             ),
-            migrations.RunPython(gen_raw_md5),
+            # TODO: Move data migration into a separate file and add a reverse migration
+            migrations.RunPython(code=gen_raw_md5, reverse_code=migrations.RunPython.noop),
             migrations.AlterField(
                 model_name="rawnotification",
                 name="_raw_md5",
