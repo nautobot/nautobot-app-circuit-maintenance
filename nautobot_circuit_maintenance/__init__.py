@@ -88,23 +88,7 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
         "overlap_job_exclude_no_impact": False,
     }
     caching_config = {}
-    home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
     docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
-
-    def ready(self):
-        """Perform initialization tasks required once the app is ready."""
-        super().ready()
-        post_migrate.connect(custom_fields_extension, sender=self)
-        post_migrate.connect(import_notification_sources, sender=self)
-
-        # App metrics are disabled by default
-        if settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("metrics", {}).get("enable", False):
-            # pylint: disable=import-outside-toplevel
-            from nautobot_capacity_metrics import register_metric_func
-
-            from .metrics_app import metric_circuit_operational
-
-            register_metric_func(metric_circuit_operational)
 
 
 config = CircuitMaintenanceConfig  # pylint:disable=invalid-name
