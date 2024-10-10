@@ -2,6 +2,4 @@
 
 ## Circuit Maintenance Parser
 
-!!! warning "Developer Note - Remove Me!"
-    Optional page, remove if not applicable.
-    For examples see [Golden Config](https://github.com/nautobot/nautobot-app-golden-config/blob/develop/docs/dev/arch_decision.md).
+The Circuit Maintenance Parser library is separated from the Nautobot App to increase its usability outside of situations where Nautobot may not be installed or may be too heavy of tool in a specific use case. This also allows us to decouple app development from parser development.
