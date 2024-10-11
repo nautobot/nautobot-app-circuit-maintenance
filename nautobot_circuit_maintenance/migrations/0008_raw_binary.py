@@ -26,7 +26,8 @@ class Migration(migrations.Migration):
             name="raw_b",
             field=models.BinaryField(null=True),
         ),
-        migrations.RunPython(convert_raw_from_str_to_bytes),
+        # TODO: Move data migration into a separate file and add a reverse migration
+        migrations.RunPython(code=convert_raw_from_str_to_bytes, reverse_code=migrations.RunPython.noop),
         migrations.RemoveField(
             model_name="rawnotification",
             name="raw",
