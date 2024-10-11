@@ -14,7 +14,9 @@ router.register("maintenance", views.CircuitMaintenanceUIViewSet)
 
 urlpatterns = [
     # Overview
-    path("circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
+    path(
+        "circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"
+    ),
     path("circuit-maintenances/job/", views.CircuitMaintenanceJobView.as_view(), name="circuitmaintenance_job"),
     # Circuit Impact
     path("circuit-impacts/", views.CircuitImpactListView.as_view(), name="circuitimpact_list"),
@@ -34,7 +36,9 @@ urlpatterns = [
     # Raw Notification
     path("raw-notifications/", views.RawNotificationListView.as_view(), name="rawnotification_list"),
     path("raw-notifications/<uuid:pk>/", views.RawNotificationView.as_view(), name="rawnotification"),
-    path("raw-notifications/<uuid:pk>/delete/", views.RawNotificationDeleteView.as_view(), name="rawnotification_delete"),
+    path(
+        "raw-notifications/<uuid:pk>/delete/", views.RawNotificationDeleteView.as_view(), name="rawnotification_delete"
+    ),
     path(
         "raw-notifications/delete/",
         views.RawNotificationBulkDeleteView.as_view(),
@@ -50,10 +54,22 @@ urlpatterns = [
     path("notification-sources/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
     path("notification-sources/google_authorize/<str:name>/", views.google_authorize, name="google_authorize"),
     path("notification-sources/google_oauth2callback/", views.google_oauth2callback, name="google_oauth2callback"),
-    path("notification-sources/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
-    path("notification-sources/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
+    path(
+        "notification-sources/edit/",
+        views.NotificationSourceBulkEditView.as_view(),
+        name="notificationsource_bulk_edit",
+    ),
+    path(
+        "notification-sources/<uuid:pk>/edit/",
+        views.NotificationSourceEditView.as_view(),
+        name="notificationsource_edit",
+    ),
     path("notification-sources/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
-    path("notification-sources/<uuid:pk>/validate/", views.NotificationSourceValidate.as_view(), name="notificationsource_validate"),
+    path(
+        "notification-sources/<uuid:pk>/validate/",
+        views.NotificationSourceValidate.as_view(),
+        name="notificationsource_validate",
+    ),
     path(
         "notification-sources/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
