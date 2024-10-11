@@ -73,6 +73,7 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
             "UT-TEST-22,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 22 descr,TENTATIVE",
         )
 
+
 class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     """View tests for CircuitImpact."""
 

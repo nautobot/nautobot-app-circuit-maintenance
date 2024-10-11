@@ -15,9 +15,9 @@ from nautobot.core.views import generic
 from nautobot.extras.models import Note
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.api import serializers
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 from nautobot_circuit_maintenance.models import CircuitMaintenance
-from nautobot_circuit_maintenance.api import serializers
 
 logger = logging.getLogger(__name__)
 
