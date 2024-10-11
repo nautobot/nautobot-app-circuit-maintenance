@@ -33,6 +33,7 @@ def reverse_move_data(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ("nautobot_circuit_maintenance", "0013_rename_site_search_job"),
+        ("extras", "0043_note"),
     ]
 
     operations = [

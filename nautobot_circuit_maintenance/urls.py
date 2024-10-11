@@ -14,6 +14,7 @@ router.register("circuit-maintenances", views.CircuitMaintenanceUIViewSet)
 
 urlpatterns = [
     # Overview
+    # TODO: migrate these to `actions` views
     path(
         "circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"
     ),
