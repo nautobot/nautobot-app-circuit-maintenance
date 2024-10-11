@@ -19,5 +19,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(_rename_site_to_location),
+        # TODO: Add a reverse migration
+        migrations.RunPython(code=_rename_site_to_location, reverse_code=migrations.RunPython.noop),
     ]

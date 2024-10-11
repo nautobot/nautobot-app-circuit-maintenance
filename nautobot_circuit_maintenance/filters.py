@@ -74,6 +74,30 @@ class CircuitImpactFilterSet(NautobotFilterSet):
         fields = "__all__"
 
 
+class NoteFilterSet(NautobotFilterSet):
+    """Filter capabilities for Note instances."""
+
+    maintenance = NaturalKeyOrPKMultipleChoiceFilter(
+        field_name="maintenance",
+        queryset=CircuitMaintenance.objects.all(),
+        to_field_name="name",
+        label="CircuitMaintenance",
+    )
+
+    class Meta:
+        """Meta class attributes for NoteFilterSet."""
+
+        model = Note
+        fields = "__all__"
+
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
+        """Perform the filtered search."""
+        if not value.strip():
+            return queryset
+        qs_filter = Q(title__icontains=value)
+        return queryset.filter(qs_filter)
+
+
 class RawNotificationFilterSet(NautobotFilterSet):
     """Filter capabilities for Raw Notification instances."""
 
