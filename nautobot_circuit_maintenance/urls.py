@@ -10,7 +10,7 @@ from . import views
 from .models import CircuitImpact, NotificationSource
 
 router = NautobotUIViewSetRouter()
-router.register("maintenance", views.CircuitMaintenanceUIViewSet)
+router.register("circuit-maintenances", views.CircuitMaintenanceUIViewSet)
 
 urlpatterns = [
     # Overview
