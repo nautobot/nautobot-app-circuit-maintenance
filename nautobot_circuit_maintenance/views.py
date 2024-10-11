@@ -17,6 +17,7 @@ from nautobot.extras.models import Note
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 from nautobot_circuit_maintenance.models import CircuitMaintenance
+from nautobot_circuit_maintenance.api import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -202,6 +203,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     action_buttons = ("add", "export")
     form_class = forms.CircuitMaintenanceForm
     bulk_update_form_class = forms.CircuitMaintenanceBulkEditForm
+    serializer_class = serializers.CircuitMaintenanceSerializer
 
     def get_extra_context(self, request, instance):  # pylint: disable=signature-differs
         """Extend content of detailed view for Circuit Maintenance."""

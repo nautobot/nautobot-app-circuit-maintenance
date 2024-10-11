@@ -66,6 +66,12 @@ class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
             "status": "CANCELLED",
         }
 
+        cls.csv_data = (
+            "name,start_time,end_time,description,status",
+            "UT-TEST-20,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 20 descr,TENTATIVE",
+            "UT-TEST-21,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 21 descr,TENTATIVE",
+            "UT-TEST-22,2020-10-06T10:00:00Z,2020-10-06T12:00:00Z,TEST 22 descr,TENTATIVE",
+        )
 
 class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
     """View tests for CircuitImpact."""
