@@ -48,15 +48,3 @@ class CircuitImpactChoices(ChoiceSet):
         (DEGRADED, "DEGRADED"),
         (OUTAGE, "OUTAGE"),
     )
-
-
-class NoteLevelChoices(ChoiceSet):
-    """Valid values for Circuit Maintenance Note level."""
-
-    INFO = "INFO"
-    WARNING = "WARNING"
-
-    CHOICES = (
-        (INFO, "INFO"),
-        (WARNING, "WARNING"),
-    )

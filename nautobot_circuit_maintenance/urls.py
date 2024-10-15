@@ -3,32 +3,20 @@
 from django.templatetags.static import static
 from django.urls import path
 from django.views.generic import RedirectView
+from nautobot.core.views.routers import NautobotUIViewSetRouter
 from nautobot.extras.views import ObjectChangeLogView
 
 from . import views
-from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
+from .models import CircuitImpact, NotificationSource
+
+router = NautobotUIViewSetRouter()
+router.register("circuit-maintenances", views.CircuitMaintenanceUIViewSet)
 
 urlpatterns = [
     # Overview
-    path("circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
-    #  Maintenance
-    path("circuit-maintenances/", views.CircuitMaintenanceListView.as_view(), name="circuitmaintenance_list"),
-    path("circuit-maintenances/add/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_add"),
-    path("circuit-maintenances/import/", views.CircuitMaintenanceBulkImportView.as_view(), name="circuitmaintenance_import"),
-    path("circuit-maintenances/edit/", views.CircuitMaintenanceBulkEditView.as_view(), name="circuitmaintenance_bulk_edit"),
+    # TODO: migrate these to `actions` views
     path(
-        "circuit-maintenances/delete/", views.CircuitMaintenanceBulkDeleteView.as_view(), name="circuitmaintenance_bulk_delete"
-    ),
-    path("circuit-maintenances/<uuid:pk>/", views.CircuitMaintenanceView.as_view(), name="circuitmaintenance"),
-    path("circuit-maintenances/<uuid:pk>/edit/", views.CircuitMaintenanceEditView.as_view(), name="circuitmaintenance_edit"),
-    path(
-        "circuit-maintenances/<uuid:pk>/delete/", views.CircuitMaintenanceDeleteView.as_view(), name="circuitmaintenance_delete"
-    ),
-    path(
-        "circuit-maintenances/<uuid:pk>/changelog/",
-        ObjectChangeLogView.as_view(),
-        name="circuitmaintenance_changelog",
-        kwargs={"model": CircuitMaintenance},
+        "circuit-maintenances/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"
     ),
     path("circuit-maintenances/job/", views.CircuitMaintenanceJobView.as_view(), name="circuitmaintenance_job"),
     # Circuit Impact
@@ -46,20 +34,12 @@ urlpatterns = [
     path("circuit-impacts/edit/", views.CircuitImpactBulkEditView.as_view(), name="circuitimpact_bulk_edit"),
     path("circuit-impacts/delete/", views.CircuitImpactBulkDeleteView.as_view(), name="circuitimpact_bulk_delete"),
     path("circuit-impacts/import/", views.CircuitImpactBulkImportView.as_view(), name="circuitimpact_import"),
-    # Notes
-    path("notes/", views.NoteListView.as_view(), name="note_list"),
-    path("notes/add/", views.NoteEditView.as_view(), name="note_add"),
-    path("notes/<uuid:pk>/edit/", views.NoteEditView.as_view(), name="note_edit"),
-    path("notes/<uuid:pk>/delete/", views.NoteDeleteView.as_view(), name="note_delete"),
-    path("notes/<uuid:pk>/", views.NoteView.as_view(), name="note"),
-    path("notes/edit/", views.NoteBulkEditView.as_view(), name="note_bulk_edit"),
-    path("notes/delete/", views.NoteBulkDeleteView.as_view(), name="note_bulk_delete"),
-    path("notes/import/", views.NoteBulkImportView.as_view(), name="note_import"),
-    path("notes/<uuid:pk>/changelog/", ObjectChangeLogView.as_view(), name="note_changelog", kwargs={"model": Note}),
     # Raw Notification
     path("raw-notifications/", views.RawNotificationListView.as_view(), name="rawnotification_list"),
     path("raw-notifications/<uuid:pk>/", views.RawNotificationView.as_view(), name="rawnotification"),
-    path("raw-notifications/<uuid:pk>/delete/", views.RawNotificationDeleteView.as_view(), name="rawnotification_delete"),
+    path(
+        "raw-notifications/<uuid:pk>/delete/", views.RawNotificationDeleteView.as_view(), name="rawnotification_delete"
+    ),
     path(
         "raw-notifications/delete/",
         views.RawNotificationBulkDeleteView.as_view(),
@@ -75,10 +55,22 @@ urlpatterns = [
     path("notification-sources/", views.NotificationSourceListView.as_view(), name="notificationsource_list"),
     path("notification-sources/google_authorize/<str:name>/", views.google_authorize, name="google_authorize"),
     path("notification-sources/google_oauth2callback/", views.google_oauth2callback, name="google_oauth2callback"),
-    path("notification-sources/edit/", views.NotificationSourceBulkEditView.as_view(), name="notificationsource_bulk_edit"),
-    path("notification-sources/<uuid:pk>/edit/", views.NotificationSourceEditView.as_view(), name="notificationsource_edit"),
+    path(
+        "notification-sources/edit/",
+        views.NotificationSourceBulkEditView.as_view(),
+        name="notificationsource_bulk_edit",
+    ),
+    path(
+        "notification-sources/<uuid:pk>/edit/",
+        views.NotificationSourceEditView.as_view(),
+        name="notificationsource_edit",
+    ),
     path("notification-sources/<uuid:pk>/", views.NotificationSourceView.as_view(), name="notificationsource"),
-    path("notification-sources/<uuid:pk>/validate/", views.NotificationSourceValidate.as_view(), name="notificationsource_validate"),
+    path(
+        "notification-sources/<uuid:pk>/validate/",
+        views.NotificationSourceValidate.as_view(),
+        name="notificationsource_validate",
+    ),
     path(
         "notification-sources/<uuid:pk>/changelog/",
         ObjectChangeLogView.as_view(),
@@ -87,3 +79,5 @@ urlpatterns = [
     ),
     path("docs/", RedirectView.as_view(url=static("nautobot_circuit_maintenance/docs/index.html")), name="docs"),
 ]
+
+urlpatterns += router.urls

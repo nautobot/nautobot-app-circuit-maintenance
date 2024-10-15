@@ -8,7 +8,6 @@ from nautobot_circuit_maintenance import filters
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
-    Note,
     NotificationSource,
     ParsedNotification,
     RawNotification,
@@ -17,7 +16,6 @@ from nautobot_circuit_maintenance.models import (
 from .serializers import (
     CircuitImpactSerializer,
     CircuitMaintenanceSerializer,
-    NoteSerializer,
     NotificationSourceSerializer,
     ParsedNotificationSerializer,
     RawNotificationSerializer,
@@ -30,13 +28,6 @@ class MaintenanceTaskView(CustomFieldModelViewSet):
     queryset = CircuitMaintenance.objects.prefetch_related()
     serializer_class = CircuitMaintenanceSerializer
     filterset_class = filters.CircuitMaintenanceFilterSet
-
-
-class MaintenanceNoteTaskView(CustomFieldModelViewSet):
-    """API view for Circuit Note CRUD operations."""
-
-    queryset = Note.objects.prefetch_related()
-    serializer_class = NoteSerializer
 
 
 class MaintenanceCircuitImpactTaskView(CustomFieldModelViewSet):

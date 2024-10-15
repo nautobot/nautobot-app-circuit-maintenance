@@ -6,7 +6,6 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register("circuit-maintenances", views.MaintenanceTaskView)
-router.register("notes", views.MaintenanceNoteTaskView)
 router.register("circuit-impacts", views.MaintenanceCircuitImpactTaskView)
 router.register("notification-sources", views.NotificationSourceTaskView)
 router.register("parsed-notifications", views.ParsedNotificationTaskView)
