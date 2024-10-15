@@ -11,7 +11,7 @@ def move_data_to_new_model(apps, schema_editor):
 
     for old_obj in OldModel.objects.all():
         NewModel.objects.create(
-            note=old_obj.title + "\n" + old_obj.comment,
+            note=f"### {old_obj.title}\n\n{old_obj.comment}",
             assigned_object_type=ContentType.objects.get_for_model(CircuitMaintenance),
             assigned_object_id=old_obj.maintenance.id,
             user_name="migration",
