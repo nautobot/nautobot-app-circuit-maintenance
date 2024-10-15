@@ -5,14 +5,12 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from nautobot.apps.views import NautobotUIViewSet
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.views import generic
-from nautobot.extras.models import Note
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.api import serializers
@@ -207,13 +205,6 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
 
     def get_extra_context(self, request, instance):  # pylint: disable=signature-differs
         """Extend content of detailed view for Circuit Maintenance."""
-        if instance:
-            maintenance_note = Note.objects.filter(
-                assigned_object_id=instance.id,
-                assigned_object_type=ContentType.objects.get_for_model(models.CircuitMaintenance),
-            )
-        else:
-            maintenance_note = None
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
             "-raw_notification__stamp"
@@ -221,7 +212,6 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
 
         return {
             "circuits": circuits,
-            "maintenance_note": maintenance_note,
             "parsednotification": parsednotification,
         }
 
