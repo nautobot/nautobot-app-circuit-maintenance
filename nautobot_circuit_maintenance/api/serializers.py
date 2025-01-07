@@ -1,72 +1,18 @@
-"""Serializer for Circuit Maintenance API."""
+"""API serializers for nautobot_circuit_maintenance."""
 
-from nautobot.core.api.serializers import NautobotModelSerializer
+from nautobot.apps.api import NautobotModelSerializer, TaggedModelSerializerMixin
 
-from nautobot_circuit_maintenance.models import (
-    CircuitImpact,
-    CircuitMaintenance,
-    Note,
-    NotificationSource,
-    ParsedNotification,
-    RawNotification,
-)
+from nautobot_circuit_maintenance import models
 
 
-class CircuitMaintenanceSerializer(NautobotModelSerializer):
-    """Serializer for API."""
+class CircuitMaintenanceSerializer(NautobotModelSerializer, TaggedModelSerializerMixin):  # pylint: disable=too-many-ancestors
+    """CircuitMaintenance Serializer."""
 
     class Meta:
-        """Meta class for MaintenanceSerializer."""
+        """Meta attributes."""
 
-        model = CircuitMaintenance
+        model = models.CircuitMaintenance
         fields = "__all__"
 
-
-class ParsedNotificationSerializer(NautobotModelSerializer):
-    """Serializer for API."""
-
-    class Meta:
-        """Meta class for ParsedNotificationSerializer."""
-
-        model = ParsedNotification
-        fields = "__all__"
-
-
-class RawNotificationSerializer(NautobotModelSerializer):
-    """Serializer for API."""
-
-    class Meta:
-        """Meta class for RawNotificationSerializer."""
-
-        model = RawNotification
-        fields = "__all__"
-
-
-class NoteSerializer(NautobotModelSerializer):
-    """Serializer for API."""
-
-    class Meta:
-        """Meta class for MaintenanceNoteSerializer."""
-
-        model = Note
-        fields = "__all__"
-
-
-class NotificationSourceSerializer(NautobotModelSerializer):
-    """Serializer for NotificationSource records."""
-
-    class Meta:
-        """Meta class for NotificationSourceSerializer."""
-
-        model = NotificationSource
-        fields = "__all__"
-
-
-class CircuitImpactSerializer(NautobotModelSerializer):
-    """Serializer for API."""
-
-    class Meta:
-        """Meta class for CircuitImpactSerializer."""
-
-        model = CircuitImpact
-        fields = "__all__"
+        # Option for disabling write for certain fields:
+        # read_only_fields = []

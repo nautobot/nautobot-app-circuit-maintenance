@@ -1,16 +1,11 @@
-"""URLS for Circuit Maintenance API."""
+"""Django API urlpatterns declaration for nautobot_circuit_maintenance app."""
 
-from rest_framework import routers
+from nautobot.apps.api import OrderedDefaultRouter
 
-from . import views
+from nautobot_circuit_maintenance.api import views
 
-router = routers.DefaultRouter()
-router.register("maintenance", views.MaintenanceTaskView)
-router.register("note", views.MaintenanceNoteTaskView)
-router.register("circuitimpact", views.MaintenanceCircuitImpactTaskView)
-router.register("notificationsource", views.NotificationSourceTaskView)
-router.register("parsednotification", views.ParsedNotificationTaskView)
-router.register("rawnotification", views.RawNotificationTaskView)
+router = OrderedDefaultRouter()
+# add the name of your api endpoint, usually hyphenated model name in plural, e.g. "my-model-classes"
+router.register("circuitmaintenance", views.CircuitMaintenanceViewSet)
 
-app_name = "nautobot_circuit_maintenance-api"  # pylint: disable=invalid-name
 urlpatterns = router.urls
