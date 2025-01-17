@@ -41,7 +41,7 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitMaintenanceFilterSet."""
 
         model = CircuitMaintenance
-        fields = '__all__'
+        fields = "__all__"
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -71,7 +71,7 @@ class CircuitImpactFilterSet(NautobotFilterSet):
         """Meta class attributes for CircuitImpactFilterSet."""
 
         model = CircuitImpact
-        fields = '__all__'
+        fields = "__all__"
 
 
 class NoteFilterSet(NautobotFilterSet):
@@ -88,7 +88,7 @@ class NoteFilterSet(NautobotFilterSet):
         """Meta class attributes for NoteFilterSet."""
 
         model = Note
-        fields = '__all__'
+        fields = "__all__"
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""
@@ -153,7 +153,7 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
         """Meta class attributes for ParsedNotificationFilterSet."""
 
         model = ParsedNotification
-        fields = '__all__'
+        fields = "__all__"
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """Perform the filtered search."""

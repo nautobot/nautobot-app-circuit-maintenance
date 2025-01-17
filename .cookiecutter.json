@@ -14,22 +14,23 @@
         "max_nautobot_version": "2.9999",
         "camel_name": "NautobotCircuitMaintenance",
         "project_short_description": "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices",
-        "model_class_name": "None",
+        "model_class_name": "CircuitMaintenance",
         "open_source_license": "Apache-2.0",
         "docs_base_url": "https://docs.nautobot.com",
         "docs_app_url": "https://docs.nautobot.com/projects/circuit-maintenance/en/latest",
         "_drift_manager": {
             "template": "https://github.com/nautobot/cookiecutter-nautobot-app.git",
             "template_dir": "nautobot-app",
-            "template_ref": "refs/tags/nautobot-app-v2.3.2",
+            "template_ref": "refs/tags/nautobot-app-v2.4.0",
             "cookie_dir": "",
             "branch_prefix": "drift-manager",
             "pull_request_strategy": "create",
             "post_actions": [
-                "black"
+                "ruff",
+                "poetry"
             ],
-            "draft": true,
-            "baked_commit_ref": "a05eb77056d979eb079934d35bda706b247b18e6"
+            "draft": false,
+            "baked_commit_ref": "f2ef7194f608b73ab88cb19070bbbd68a586e776"
         }
     }
 }
