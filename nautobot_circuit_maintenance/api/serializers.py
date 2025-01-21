@@ -16,3 +16,53 @@ class CircuitMaintenanceSerializer(NautobotModelSerializer, TaggedModelSerialize
 
         # Option for disabling write for certain fields:
         # read_only_fields = []
+
+
+class ParsedNotificationSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for ParsedNotificationSerializer."""
+
+        model = models.ParsedNotification
+        fields = "__all__"
+
+
+class RawNotificationSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for RawNotificationSerializer."""
+
+        model = models.RawNotification
+        fields = "__all__"
+
+
+class NoteSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for MaintenanceNoteSerializer."""
+
+        model = models.Note
+        fields = "__all__"
+
+
+class NotificationSourceSerializer(NautobotModelSerializer):
+    """Serializer for NotificationSource records."""
+
+    class Meta:
+        """Meta class for NotificationSourceSerializer."""
+
+        model = models.NotificationSource
+        fields = "__all__"
+
+
+class CircuitImpactSerializer(NautobotModelSerializer):
+    """Serializer for API."""
+
+    class Meta:
+        """Meta class for CircuitImpactSerializer."""
+
+        model = models.CircuitImpact
+        fields = "__all__"

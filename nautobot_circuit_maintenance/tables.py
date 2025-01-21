@@ -1,38 +1,98 @@
-"""Tables for nautobot_circuit_maintenance."""
+"""Tables for Circuit Maintenance."""
 
 import django_tables2 as tables
-from nautobot.apps.tables import BaseTable, ButtonsColumn, ToggleColumn
+from nautobot.core.tables import BaseTable, ToggleColumn
 
-from nautobot_circuit_maintenance import models
+from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, RawNotification
 
 
 class CircuitMaintenanceTable(BaseTable):
-    # pylint: disable=R0903
-    """Table for list view."""
+    """Table to display maintenace model."""
+
+    name = tables.Column(linkify=True)
+    circuits = tables.ManyToManyColumn(linkify_item=True)
+    providers = tables.ManyToManyColumn(linkify_item=True)
+
+    pk = ToggleColumn()
+
+    class Meta(BaseTable.Meta):
+        """Meta for class CircuitMaintenanceTable."""
+
+        model = CircuitMaintenance
+        fields = (  # pylint:disable=nb-use-fields-all
+            "pk",
+            "ack",
+            "name",
+            "status",
+            "providers",
+            "circuits",
+            "start_time",
+            "end_time",
+        )
+
+
+class RawNotificationTable(BaseTable):
+    """Table to display Raw Notifications model."""
+
+    subject = tables.Column(linkify=True)
+    source = tables.Column(linkify=True)
+    provider = tables.Column(linkify=True)
+
+    pk = ToggleColumn()
+
+    class Meta(BaseTable.Meta):
+        """Meta for class CircuitMaintenanceNofiticationRawTable."""
+
+        model = RawNotification
+        fields = (  # pylint:disable=nb-use-fields-all
+            "pk",
+            "subject",
+            "provider",
+            "sender",
+            "source",
+            "parsed",
+            "stamp",
+        )
+
+
+class CircuitImpactTable(BaseTable):
+    """Table to display Circuit Impact model."""
+
+    pk = ToggleColumn()
+    maintenance = tables.Column(linkify=True)
+    circuit = tables.Column(linkify=True)
+    impact = tables.Column(linkify=True)
+
+    class Meta(BaseTable.Meta):
+        """Meta for class CircuitImpactTable."""
+
+        model = CircuitImpact
+        fields = ("pk", "maintenance", "circuit", "impact")  # pylint:disable=nb-use-fields-all
+
+
+class NoteTable(BaseTable):
+    """Table to display Note model."""
+
+    pk = ToggleColumn()
+    maintenance = tables.Column(linkify=True)
+    title = tables.Column(linkify=True)
+
+    class Meta(BaseTable.Meta):
+        """Meta for class NoteTable."""
+
+        model = Note
+        fields = ("pk", "maintenance", "title", "level", "comment", "last_updated")  # pylint:disable=nb-use-fields-all
+
+
+class NotificationSourceTable(BaseTable):
+    """Table to display Circuit Impact model."""
 
     pk = ToggleColumn()
     name = tables.Column(linkify=True)
-    actions = ButtonsColumn(
-        models.CircuitMaintenance,
-        # Option for modifying the default action buttons on each row:
-        # buttons=("changelog", "edit", "delete"),
-        # Option for modifying the pk for the action buttons:
-        pk_field="pk",
-    )
+    providers = tables.ManyToManyColumn(linkify_item=True)
 
     class Meta(BaseTable.Meta):
-        """Meta attributes."""
+        """Meta for class NotificationSourceTable."""
 
-        model = models.CircuitMaintenance
-        fields = (
-            "pk",
-            "name",
-            "description",
-        )
-
-        # Option for modifying the columns that show up in the list view by default:
-        # default_columns = (
-        #     "pk",
-        #     "name",
-        #     "description",
-        # )
+        model = NotificationSource
+        fields = ("pk", "name", "attach_all_providers", "providers")  # pylint:disable=nb-use-fields-all
