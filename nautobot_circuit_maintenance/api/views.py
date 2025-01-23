@@ -1,4 +1,4 @@
-"""Views for API."""
+"""API views for nautobot_circuit_maintenance."""
 
 from django.contrib.contenttypes.models import ContentType
 from nautobot.apps.api import CustomFieldModelViewSet

@@ -1,1 +1,1 @@
-"""REST API module for circuit maintenance app."""
+"""REST API module for nautobot_circuit_maintenance app."""

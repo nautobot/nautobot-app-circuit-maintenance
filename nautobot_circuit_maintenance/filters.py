@@ -3,10 +3,8 @@
 import logging
 
 import django_filters
-from django.db.models import Q
+from nautobot.apps.filters import NaturalKeyOrPKMultipleChoiceFilter, NautobotFilterSet, SearchFilter
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.core.filters import NaturalKeyOrPKMultipleChoiceFilter
-from nautobot.extras.filters import NautobotFilterSet
 
 from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, ParsedNotification, RawNotification
 
@@ -16,9 +14,8 @@ logger = logging.getLogger(__name__)
 class CircuitMaintenanceFilterSet(NautobotFilterSet):
     """Filter capabilities for CircuitMaintenance instances."""
 
-    q = django_filters.CharFilter(
-        method="search",
-        label="Search",
+    q = SearchFilter(
+        filter_predicates={"name": "icontains"},
     )
 
     provider = NaturalKeyOrPKMultipleChoiceFilter(
@@ -42,13 +39,6 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
 
         model = CircuitMaintenance
         fields = "__all__"
-
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(name__icontains=value)
-        return queryset.filter(qs_filter)
 
 
 class CircuitImpactFilterSet(NautobotFilterSet):
@@ -77,6 +67,10 @@ class CircuitImpactFilterSet(NautobotFilterSet):
 class NoteFilterSet(NautobotFilterSet):
     """Filter capabilities for Note instances."""
 
+    q = SearchFilter(
+        filter_predicates={"title": "icontains"},
+    )
+
     maintenance = NaturalKeyOrPKMultipleChoiceFilter(
         field_name="maintenance",
         queryset=CircuitMaintenance.objects.all(),
@@ -90,20 +84,12 @@ class NoteFilterSet(NautobotFilterSet):
         model = Note
         fields = "__all__"
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(title__icontains=value)
-        return queryset.filter(qs_filter)
-
 
 class RawNotificationFilterSet(NautobotFilterSet):
     """Filter capabilities for Raw Notification instances."""
 
-    q = django_filters.CharFilter(
-        method="search",
-        label="Search",
+    q = SearchFilter(
+        filter_predicates={"subject": "icontains"},
     )
 
     since = django_filters.DateTimeFilter(field_name="stamp", lookup_expr="gte")
@@ -126,20 +112,12 @@ class RawNotificationFilterSet(NautobotFilterSet):
         model = RawNotification
         exclude = ["raw"]
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(subject__icontains=value)
-        return queryset.filter(qs_filter)
-
 
 class ParsedNotificationFilterSet(NautobotFilterSet):
     """Filter capabilities for Notification Source."""
 
-    q = django_filters.CharFilter(
-        method="search",
-        label="Search",
+    q = SearchFilter(
+        filter_predicates={"raw_notification": "icontains"},
     )
 
     maintenance = NaturalKeyOrPKMultipleChoiceFilter(
@@ -155,20 +133,12 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
         model = ParsedNotification
         fields = "__all__"
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(raw_notification__icontains=value)
-        return queryset.filter(qs_filter)
-
 
 class NotificationSourceFilterSet(NautobotFilterSet):
     """Filter capabilities for Notification Source."""
 
-    q = django_filters.CharFilter(
-        method="search",
-        label="Search",
+    q = SearchFilter(
+        filter_predicates={"name": "icontains"},
     )
 
     class Meta:
@@ -176,10 +146,3 @@ class NotificationSourceFilterSet(NautobotFilterSet):
 
         model = NotificationSource
         exclude = ["_token"]
-
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument
-        """Perform the filtered search."""
-        if not value.strip():
-            return queryset
-        qs_filter = Q(name__icontains=value)
-        return queryset.filter(qs_filter)
