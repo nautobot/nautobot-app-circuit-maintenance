@@ -8,4 +8,5 @@ router = OrderedDefaultRouter()
 # add the name of your api endpoint, usually hyphenated model name in plural, e.g. "my-model-classes"
 router.register("circuitmaintenance", views.CircuitMaintenanceViewSet)
 
+app_name = "nautobot_circuit_maintenance-api"
 urlpatterns = router.urls

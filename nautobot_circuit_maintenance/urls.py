@@ -9,6 +9,7 @@ from nautobot.apps.urls import NautobotUIViewSetRouter
 from nautobot_circuit_maintenance import views
 
 
+app_name = "nautobot_circuit_maintenance"
 router = NautobotUIViewSetRouter()
 
 router.register("circuitmaintenance", views.CircuitMaintenanceUIViewSet)
