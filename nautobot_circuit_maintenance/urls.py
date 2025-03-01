@@ -3,20 +3,12 @@
 from django.templatetags.static import static
 from django.urls import path
 from django.views.generic import RedirectView
-from nautobot.apps.urls import NautobotUIViewSetRouter
-
-
-from nautobot_circuit_maintenance import views
-
-
-app_name = "nautobot_circuit_maintenance"
-router = NautobotUIViewSetRouter()
-
-router.register("circuitmaintenance", views.CircuitMaintenanceUIViewSet)
+from nautobot.extras.views import ObjectChangeLogView
 
 from . import views
 from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 
+app_name = "nautobot_circuit_maintenance"
 urlpatterns = [
     # Overview
     path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
