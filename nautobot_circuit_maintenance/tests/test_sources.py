@@ -205,6 +205,15 @@ class TestIMAPSource(TestCase):
         self.notification_source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
         self.source = Source.init(name=SOURCE_IMAP["name"])
 
+    def test_imap_restricted_password(self):
+        """Test successful omit of password in output."""
+
+        source = IMAP(
+            name="whatever", url="imap://localhost", account="account", password="pass", imap_server="localhost"
+        )
+        assert "pass" not in repr(source)
+        assert "account" in repr(source)
+
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
         source_instance = Source.init(name=SOURCE_IMAP["name"])
@@ -723,6 +732,10 @@ class TestExchangeWebService(TestCase):
                 credentials=credentials_mock.return_value,
             )
 
+        with self.subTest("Check omitted password in `repr`"):
+            assert "pass" not in repr(ews_source)
+            assert "domain\\\\user" in repr(ews_source)
+
     def test_close_session(self):
         """Test EWS close_session method."""
         session_mock = MagicMock()
@@ -743,7 +756,7 @@ class TestExchangeWebService(TestCase):
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.close_session")
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.ExchangeWebService.open_session")
-    def test__authentication_logic(self, open_session_mock, close_session_mock):
+    def test_authentication_logic(self, open_session_mock, close_session_mock):
         """Test EWS _authentication_logic method."""
         ews_source = self._get_ews_source_instance()
         ews_source._authentication_logic()  # pylint: disable=protected-access
