@@ -27,7 +27,7 @@ from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
-from pydantic import BaseModel, Field, StrictStr, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
@@ -328,7 +328,7 @@ class EmailSource(Source):  # pylint: disable=abstract-method
 class IMAP(EmailSource):
     """IMAP class, extending Source class."""
 
-    password: StrictStr = Field(..., repr=False)
+    password: str = Field(..., repr=False)
     imap_server: str
     imap_port: int = 993
 
@@ -431,7 +431,7 @@ class ExchangeWebService(EmailSource):
 
     access_type: str
     authentication_user: str
-    password: StrictStr = Field(..., repr=False)
+    password: str = Field(..., repr=False)
     server: str
     folder: Optional[str] = None
     session: Optional["exchangelib.Account"] = None
