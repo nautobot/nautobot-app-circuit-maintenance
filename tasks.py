@@ -51,7 +51,7 @@ namespace = Collection("nautobot_circuit_maintenance")
 namespace.configure(
     {
         "nautobot_circuit_maintenance": {
-            "nautobot_ver": "2.3.1",
+            "nautobot_ver": "next",  # TODO: Change to 3.0.0 after v3.0.0 is released
             "project_name": "nautobot-circuit-maintenance",
             "python_ver": "3.11",
             "local": False,

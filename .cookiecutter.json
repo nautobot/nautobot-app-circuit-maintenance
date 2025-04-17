@@ -10,8 +10,8 @@
         "project_slug": "nautobot-app-circuit-maintenance",
         "repo_url": "https://github.com/nautobot/nautobot-app-circuit-maintenance",
         "base_url": "circuit-maintenance",
-        "min_nautobot_version": "2.0.0",
-        "max_nautobot_version": "2.9999",
+        "min_nautobot_version": "3.0.0",
+        "max_nautobot_version": "3.9999",
         "camel_name": "NautobotCircuitMaintenance",
         "project_short_description": "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices",
         "model_class_name": "CircuitMaintenance",
@@ -34,4 +34,3 @@
         }
     }
 }
-
