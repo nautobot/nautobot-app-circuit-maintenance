@@ -5,7 +5,7 @@ from nautobot.apps.filters import NameSearchFilterSet, NautobotFilterSet
 from nautobot_circuit_maintenance import models
 
 
-class CircuitMaintenanceFilterSet(NautobotFilterSet, NameSearchFilterSet):  # pylint: disable=too-many-ancestors
+class CircuitMaintenanceFilterSet(NameSearchFilterSet, NautobotFilterSet):  # pylint: disable=too-many-ancestors
     """Filter for CircuitMaintenance."""
 
     class Meta:
@@ -14,4 +14,4 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet, NameSearchFilterSet):  # py
         model = models.CircuitMaintenance
 
         # add any fields from the model that you would like to filter your searches by using those
-        fields = ["id", "name", "description"]
+        fields = "__all__"

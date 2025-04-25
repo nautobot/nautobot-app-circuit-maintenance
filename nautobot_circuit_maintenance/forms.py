@@ -13,10 +13,7 @@ class CircuitMaintenanceForm(NautobotModelForm):  # pylint: disable=too-many-anc
         """Meta attributes."""
 
         model = models.CircuitMaintenance
-        fields = [
-            "name",
-            "description",
-        ]
+        fields = "__all__"
 
 
 class CircuitMaintenanceBulkEditForm(TagsBulkEditFormMixin, NautobotBulkEditForm):  # pylint: disable=too-many-ancestors
@@ -42,6 +39,6 @@ class CircuitMaintenanceFilterForm(NautobotFilterForm):
     q = forms.CharField(
         required=False,
         label="Search",
-        help_text="Search within Name or Slug.",
+        help_text="Search within Name.",
     )
     name = forms.CharField(required=False, label="Name")

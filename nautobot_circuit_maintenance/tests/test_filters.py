@@ -1,16 +1,22 @@
 """Test CircuitMaintenance Filter."""
 
-from django.test import TestCase
+from nautobot.apps.testing import FilterTestCases
 
 from nautobot_circuit_maintenance import filters, models
 from nautobot_circuit_maintenance.tests import fixtures
 
 
-class CircuitMaintenanceFilterTestCase(TestCase):
+class CircuitMaintenanceFilterTestCase(FilterTestCases.FilterTestCase):
     """CircuitMaintenance Filter Test Case."""
 
     queryset = models.CircuitMaintenance.objects.all()
     filterset = filters.CircuitMaintenanceFilterSet
+    generic_filter_tests = (
+        ("id",),
+        ("created",),
+        ("last_updated",),
+        ("name",),
+    )
 
     @classmethod
     def setUpTestData(cls):

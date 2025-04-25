@@ -12,7 +12,9 @@ from nautobot_circuit_maintenance import views
 app_name = "nautobot_circuit_maintenance"
 router = NautobotUIViewSetRouter()
 
-router.register("circuitmaintenance", views.CircuitMaintenanceUIViewSet)
+# The standard is for the route to be the hyphenated version of the model class name plural.
+# for example, ExampleModel would be example-models.
+router.register("circuit-maintenances", views.CircuitMaintenanceUIViewSet)
 
 
 urlpatterns = [
