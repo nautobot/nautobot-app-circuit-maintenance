@@ -14,31 +14,16 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import OrganizationalModel, PrimaryModel
 from nautobot.extras.utils import extras_features
 
-from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
+# Nautobot imports
+from nautobot.apps.models import PrimaryModel, extras_features
 
-logger = logging.getLogger(__name__)
-
-PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
-
-MAX_MAINTENANCE_NAME_LENGTH = 100
-MAX_NOTIFICATION_SENDER_LENGTH = 200
-MAX_NOTIFICATION_SUBJECT_LENGTH = 200
-MAX_NOTIFICATION_TOTAL_LENGTH = 16384
-MAX_NOTE_TITLE_LENGTH = 200
-
-
-@extras_features(
-    "custom_fields",
-    "custom_links",
-    "custom_validators",
-    "export_templates",
-    "graphql",
-    "relationships",
-    "statuses",
-    "webhooks",
-)
-class CircuitMaintenance(PrimaryModel):
-    """Model for circuit maintenances."""
+# If you want to choose a specific model to overload in your class declaration, please reference the following documentation:
+# how to chose a database model: https://docs.nautobot.com/projects/core/en/stable/plugins/development/#database-models
+# If you want to use the extras_features decorator please reference the following documentation
+# https://docs.nautobot.com/projects/core/en/stable/development/core/model-checklist/#extras-features
+@extras_features("custom_links", "custom_validators", "export_templates", "graphql", "webhooks")
+class CircuitMaintenance(PrimaryModel):  # pylint: disable=too-many-ancestors
+    """Base model for Circuit Maintenance app."""
 
     name = models.CharField(max_length=MAX_MAINTENANCE_NAME_LENGTH, default="", unique=True, blank=False)
     start_time = models.DateTimeField()

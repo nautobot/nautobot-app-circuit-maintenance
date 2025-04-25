@@ -9,6 +9,13 @@ from . import views
 from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 
 app_name = "nautobot_circuit_maintenance"
+router = NautobotUIViewSetRouter()
+
+# The standard is for the route to be the hyphenated version of the model class name plural.
+# for example, ExampleModel would be example-models.
+router.register("circuit-maintenances", views.CircuitMaintenanceUIViewSet)
+
+
 urlpatterns = [
     # Overview
     path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),

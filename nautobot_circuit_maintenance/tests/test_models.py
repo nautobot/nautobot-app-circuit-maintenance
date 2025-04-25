@@ -1,90 +1,32 @@
-"""Unit tests for nautobot_circuit_maintenance models."""
+"""Test CircuitMaintenance."""
 
-import datetime
+from nautobot.apps.testing import ModelTestCases
 
-from django.test import TestCase
-from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot.extras.models import Status
-
-from nautobot_circuit_maintenance.choices import CircuitImpactChoices
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, NotificationSource, RawNotification
+from nautobot_circuit_maintenance import models
+from nautobot_circuit_maintenance.tests import fixtures
 
 
-class CircuitMaintenanceModelTestCase(TestCase):
-    """Test the Circuit Maintenance models."""
+class TestCircuitMaintenance(ModelTestCases.BaseModelTestCase):
+    """Test CircuitMaintenance."""
 
-    def setUp(self):
-        """Setup objects for Circuit Maintenance Model tests."""
-        providers = Provider.objects.bulk_create(
-            (
-                Provider(name="Provider 3"),
-                Provider(name="Provider 4"),
-            )
-        )
+    model = models.CircuitMaintenance
 
-        circuit_types = CircuitType.objects.bulk_create(
-            (
-                CircuitType(name="Circuit Type 3"),
-                CircuitType(name="Circuit Type 4"),
-            )
-        )
+    @classmethod
+    def setUpTestData(cls):
+        """Create test data for CircuitMaintenance Model."""
+        super().setUpTestData()
+        # Create 3 objects for the model test cases.
+        fixtures.create_circuitmaintenance()
 
-        status = Status.objects.get(name="Active")
+    def test_create_circuitmaintenance_only_required(self):
+        """Create with only required fields, and validate null description and __str__."""
+        circuitmaintenance = models.CircuitMaintenance.objects.create(name="Development")
+        self.assertEqual(circuitmaintenance.name, "Development")
+        self.assertEqual(circuitmaintenance.description, "")
+        self.assertEqual(str(circuitmaintenance), "Development")
 
-        circuits = Circuit.objects.bulk_create(
-            (
-                Circuit(cid="Circuit 4", provider=providers[0], circuit_type=circuit_types[0], status=status),
-                Circuit(cid="Circuit 5", provider=providers[1], circuit_type=circuit_types[1], status=status),
-                Circuit(cid="Circuit 6", provider=providers[1], circuit_type=circuit_types[0], status=status),
-            )
-        )
-
-        maintenances = CircuitMaintenance.objects.bulk_create(
-            (
-                CircuitMaintenance(
-                    name="UT-TEST-3", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
-                ),
-                CircuitMaintenance(
-                    name="UT-TEST-4", start_time="2020-10-05 10:00:00Z", end_time="2020-10-05 12:00:00Z"
-                ),
-            )
-        )
-
-        CircuitImpact.objects.bulk_create(
-            (
-                CircuitImpact(maintenance=maintenances[0], circuit=circuits[0]),
-                CircuitImpact(maintenance=maintenances[1], circuit=circuits[0]),
-            )
-        )
-
-    def test_default_impact(self):
-        """Verify default impact is default to OUTAGE."""
-        circuit_impacts = CircuitImpact.objects.all()
-        for circuit_impact in circuit_impacts:
-            self.assertEqual(circuit_impact.impact, CircuitImpactChoices.OUTAGE)
-
-
-class RawNotificationModelTestCase(TestCase):
-    """Test the RawNotification model."""
-
-    def setUp(self):
-        """Setup objects for Circuit Maintenance Model tests."""
-        self.provider = Provider.objects.create(name="Provider 1")
-        self.source = NotificationSource.objects.create(name="Source 1")
-
-    def test_future_stamp_validation(self):
-        """Validate that a stamp reference in the future raises a ValidationError."""
-        stamp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
-        raw_notification = RawNotification(
-            raw=b"",
-            subject="something",
-            provider=self.provider,
-            source=self.source,
-            stamp=stamp,
-        )
-        with self.assertLogs(logger="nautobot_circuit_maintenance.models", level="WARNING") as log_res:
-            raw_notification.full_clean()
-            self.assertIn(
-                f"WARNING:nautobot_circuit_maintenance.models:Stamp time {stamp} is not consistent, it's in the future.",
-                log_res.output,
-            )
+    def test_create_circuitmaintenance_all_fields_success(self):
+        """Create CircuitMaintenance with all fields."""
+        circuitmaintenance = models.CircuitMaintenance.objects.create(name="Development", description="Development Test")
+        self.assertEqual(circuitmaintenance.name, "Development")
+        self.assertEqual(circuitmaintenance.description, "Development Test")
