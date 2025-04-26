@@ -18,15 +18,15 @@ from pydantic import ValidationError
 
 from nautobot_circuit_maintenance.handle_notifications.sources import (
     IMAP,
-    EmailSource,
     ExchangeWebService,
-    GmailAPI,
     GmailAPIOauth,
     GmailAPIServiceAccount,
     MaintenanceNotification,
     Source,
     get_notifications,
 )
+from nautobot_circuit_maintenance.handle_notifications.sources.email import EmailSource
+from nautobot_circuit_maintenance.handle_notifications.sources.gmail import GmailAPI
 from nautobot_circuit_maintenance.models import NotificationSource
 
 from .test_handler import generate_email_notification, get_base_notification_data
@@ -275,7 +275,7 @@ class TestIMAPSource(TestCase):
             f"Notification Source {SOURCE_IMAP['name']} is not matching class expectations: 1 validation error for IMAP\naccount",
         )
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.IMAP.receive_notifications")
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications."""
         notification_data = get_base_notification_data()
@@ -289,7 +289,7 @@ class TestIMAPSource(TestCase):
         self.assertEqual(1, len(res))
         job.logger.warning.assert_not_called()
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.IMAP.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
         """Test get_notifications multiple."""
         notification_data = get_base_notification_data()
@@ -362,7 +362,7 @@ class TestIMAPSource(TestCase):
         )
 
         self.assertIsNone(imap_source.session)
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.imaplib.IMAP4_SSL") as mock_session:
             # First time we don't have a session and when the session is created starts with NONAUTH state
             mock_session.return_value.state = "NONAUTH"
             imap_source.open_session()
@@ -370,7 +370,7 @@ class TestIMAPSource(TestCase):
             self.assertIsNotNone(imap_source.session)
             mock_session.return_value.login.assert_called_once()
 
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.imaplib.IMAP4_SSL") as mock_session:
             # Now, we assume the login succeeded, and state changed to SELECTED
             mock_session.return_value.state = "SELECTED"
             imap_source.open_session()
@@ -384,12 +384,12 @@ class TestIMAPSource(TestCase):
         )
 
         self.assertIsNone(imap_source.session)
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.imaplib.IMAP4_SSL") as mock_session:
             imap_source.close_session()
             mock_session.return_value.close.assert_not_called()
             mock_session.return_value.logout.assert_not_called()
 
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.imaplib.IMAP4_SSL") as mock_session:
             # Now we create the session manually
             imap_source.session = mock_session()
             mock_session.return_value.state = "SELECTED"
@@ -397,7 +397,7 @@ class TestIMAPSource(TestCase):
             mock_session.return_value.close.assert_called_once()
             mock_session.return_value.logout.assert_not_called()
 
-        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imaplib.IMAP4_SSL") as mock_session:
+        with patch("nautobot_circuit_maintenance.handle_notifications.sources.imap.imaplib.IMAP4_SSL") as mock_session:
             # Now we create the session manually
             imap_source.session = mock_session()
             mock_session.return_value.state = "AUTH"
@@ -515,7 +515,7 @@ class TestGmailAPISource(TestCase):
             f"Notification Source {SOURCE_GMAIL_API_SERVICE_ACCOUNT['name']} is not matching class expectations: 1 validation error for GmailAPIServiceAccount\naccount",
         )
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.gmail.GmailAPI.receive_notifications")
     def test_get_notifications(self, mock_receive_notifications):
         """Test get_notifications."""
         notification_data = get_base_notification_data()
@@ -528,7 +528,7 @@ class TestGmailAPISource(TestCase):
         self.assertEqual(1, len(res))
         self.job.logger.warning.assert_not_called()
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.receive_notifications")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.gmail.GmailAPI.receive_notifications")
     def test_get_notifications_multiple(self, mock_receive_notifications):
         """Test get_notifications multiple."""
         notification_data = get_base_notification_data()
@@ -567,7 +567,7 @@ class TestGmailAPISource(TestCase):
         else:
             GmailAPI(**kwargs)
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.load_credentials")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.gmail.GmailAPI.load_credentials")
     def test_gmail_api_test_authentication_ok(self, mock_credentials):  # pylint: disable=unused-argument
         source = GmailAPI(
             name="whatever",
@@ -579,7 +579,7 @@ class TestGmailAPISource(TestCase):
         self.assertEqual(res, True)
         self.assertEqual(message, "Test OK")
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.GmailAPI.load_credentials")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.gmail.GmailAPI.load_credentials")
     def test_gmail_api_test_authentication_ko(self, mock_credentials):  # pylint: disable=unused-argument
         mock_credentials.side_effect = Exception("error message")
         source = GmailAPI(
@@ -696,9 +696,9 @@ class TestExchangeWebService(TestCase):
         )
         return ews_source
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Account")
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Configuration")
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.exchangelib.Credentials")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ews.exchangelib.Account")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ews.exchangelib.Configuration")
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.ews.exchangelib.Credentials")
     def test_open_session(self, credentials_mock, configuration_mock, account_mock):
         """Test EWS open_session method."""
         ews_source = self._get_ews_source_instance()
