@@ -433,7 +433,9 @@ class HandleCircuitMaintenanceNotifications(Job):
 
         raw_notification_ids = []
         for notification in notifications:
-            self.logger.info(f"Processing notification `{notification.subject}`.", extra={"object": notification})
+            self.logger.info(
+                f"Processing notification `{notification.subject}` with ID `{notification.msg_id}` from source `{notification.source.name}`."
+            )
             try:
                 with transaction.atomic():
                     raw_id = process_raw_notification(self, notification)

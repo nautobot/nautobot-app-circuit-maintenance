@@ -8,6 +8,7 @@ from nautobot.extras.views import ObjectChangeLogView
 from . import views
 from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource
 
+app_name = "nautobot_circuit_maintenance"
 urlpatterns = [
     # Overview
     path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
