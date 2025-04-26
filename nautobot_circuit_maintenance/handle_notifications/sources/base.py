@@ -120,7 +120,7 @@ class Source(BaseModel):
         url_components = urlparse(url)
         scheme = url_components.scheme.lower()
         if scheme == "imap":
-            from .imap import IMAP
+            from .imap import IMAP  # pylint: disable=import-outside-toplevel
 
             return IMAP(
                 name=name,
@@ -134,7 +134,7 @@ class Source(BaseModel):
         if scheme == "ews":
             if not EXCHANGELIB_PRESENT:
                 raise ValueError("You must install 'exchangelib' to use the 'ews' scheme.")
-            from .ews import ExchangeWebService
+            from .ews import ExchangeWebService  # pylint: disable=import-outside-toplevel
 
             return ExchangeWebService(
                 name=name,
@@ -157,11 +157,11 @@ class Source(BaseModel):
             with open(creds_filename, encoding="utf-8") as credentials_file:
                 credentials = json.load(credentials_file)
                 if credentials.get("type") == "service_account":
-                    from .gmail import GmailAPIServiceAccount
+                    from .gmail import GmailAPIServiceAccount  # pylint: disable=import-outside-toplevel
 
                     gmail_api_class = GmailAPIServiceAccount
                 elif "web" in credentials:
-                    from .gmail import GmailAPIOauth
+                    from .gmail import GmailAPIOauth  # pylint: disable=import-outside-toplevel
 
                     gmail_api_class = GmailAPIOauth
                 else:

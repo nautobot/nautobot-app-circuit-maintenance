@@ -6,12 +6,12 @@ from .gmail import GmailAPIOauth, GmailAPIServiceAccount
 from .imap import IMAP
 
 __all__ = [
-    get_notifications,
-    RedirectAuthorize,
-    Source,
-    MaintenanceNotification,
-    ExchangeWebService,
-    IMAP,
-    GmailAPIOauth,
-    GmailAPIServiceAccount,
+    "get_notifications",
+    "RedirectAuthorize",
+    "Source",
+    "MaintenanceNotification",
+    "ExchangeWebService",
+    "IMAP",
+    "GmailAPIOauth",
+    "GmailAPIServiceAccount",
 ]
