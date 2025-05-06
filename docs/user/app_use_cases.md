@@ -113,8 +113,8 @@ To create a [Service Account](https://support.google.com/a/answer/7378726?hl=en)
 4. With Admin rights, edit the newly created Service Account and expand the **Show Domain-Wide Delegation** section. Enable Google Workspace Domain-wide Delegation and save the changes. Copy the Client ID shown.
 5. With Super Admin rights, open the [Google Workspace admin console](https://admin.google.com). Navigate to **Security**, **API controls**, and select the **Manage Domain Wide Delegation** at the bottom of the page.
 6. Add a new API client and paste in the Client ID copied earlier. In the **OAuth scopes** field add the appropriate scopes:
-   - `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com` are mandatory
-   - `https://www.googleapis.com/auth/gmail.modify` is additionally required if you want to use the automatic message labeling feature.
+    - `https://www.googleapis.com/auth/gmail.readonly` and `https://mail.google.com` are mandatory
+    - `https://www.googleapis.com/auth/gmail.modify` is additionally required if you want to use the automatic message labeling feature.
 7. Save the new client configuration by clicking _Authorize_.
 
 ##### OAuth
