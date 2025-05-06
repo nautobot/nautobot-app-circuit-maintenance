@@ -41,8 +41,9 @@ class CircuitImpactForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipM
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         """Metaclass attributes for CircuitMaintenanceCircuitImpactAddForm."""
 
-        model = models.CircuitMaintenance
-        fields = "__all__"
+        model = CircuitImpact
+        fields = ["maintenance", "circuit", "impact"]
+        widgets = {"maintenance": forms.HiddenInput()}
 
 
 class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
@@ -63,8 +64,6 @@ class CircuitImpactFilterForm(BootstrapMixin, CustomFieldModelFilterFormMixin):
         queryset=CircuitMaintenance.objects.all(),
         to_field_name="pk",
         required=False,
-        label="Search",
-        help_text="Search within Name.",
     )
     circuit = DynamicModelMultipleChoiceField(
         queryset=Circuit.objects.all(),
