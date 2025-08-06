@@ -15,7 +15,7 @@ from .maintenance_notification import MaintenanceNotification
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
-    """Abstract class that shares some methods and attributes accross email based sources."""
+    """Abstract class that shares some methods and attributes across email based sources."""
 
     account: str
     emails_to_fetch: List[str] = []
