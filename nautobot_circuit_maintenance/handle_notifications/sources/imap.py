@@ -7,7 +7,7 @@ from typing import Iterable, Optional
 
 from nautobot.extras.jobs import Job
 
-from .base import MaintenanceNotification
+from .maintenance_notification import MaintenanceNotification
 from .email import EmailSource
 
 
@@ -82,7 +82,10 @@ class IMAP(EmailSource):
                 if self.source_header == "From":
                     search_items = (f'FROM "{sender}"', since_date)
                 else:
-                    search_items = (f'HEADER {self.source_header} "{sender}"', since_date)
+                    search_items = (
+                        f'HEADER {self.source_header} "{sender}"',
+                        since_date,
+                    )
                 search_text = " ".join(search_items).strip()
                 search_criteria = f"({search_text})"
                 messages = self.session.search(None, search_criteria)[1][0]
@@ -106,7 +109,9 @@ class IMAP(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
+        job.logger.debug(
+            f"Raw notifications created {len(received_notifications)} from {self.name}."
+        )
 
         self.close_session()
         return received_notifications

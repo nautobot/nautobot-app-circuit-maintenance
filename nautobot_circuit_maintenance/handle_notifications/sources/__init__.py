@@ -1,6 +1,8 @@
 """Source module."""
 
-from .base import MaintenanceNotification, RedirectAuthorize, Source, get_notifications
+from .base import Source, get_notifications
+from .exceptions import RedirectAuthorize
+from .maintenance_notification import MaintenanceNotification
 from .ews import ExchangeWebService
 from .gmail import GmailAPIOauth, GmailAPIServiceAccount
 from .imap import IMAP

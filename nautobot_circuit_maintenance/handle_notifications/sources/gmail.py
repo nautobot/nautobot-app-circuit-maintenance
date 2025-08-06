@@ -18,8 +18,9 @@ from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
 
-from .base import MaintenanceNotification, RedirectAuthorize
+from .maintenance_notification import MaintenanceNotification
 from .email import EmailSource
+from .exceptions import RedirectAuthorize
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,9 @@ class GmailAPI(EmailSource):
 
         received_email = self._execute_with_retries(request, job)
 
-        raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
+        raw_email_string = base64.urlsafe_b64decode(
+            received_email["raw"].encode("utf8")
+        )
         email_message = email.message_from_bytes(raw_email_string)
         return self.process_email(job, email_message, msg_id)
 
@@ -149,12 +152,16 @@ class GmailAPI(EmailSource):
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
         elif self.emails_to_fetch and self.limit_emails_with_not_header_from:
-            emails_with_from = [f"from:{email}" for email in self.limit_emails_with_not_header_from]
+            emails_with_from = [
+                f"from:{email}" for email in self.limit_emails_with_not_header_from
+            ]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         return search_criteria
 
-    def tag_message(self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus):
+    def tag_message(
+        self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus
+    ):
         """Apply the given Gmail label to the given message."""
         # Do we have a configured label ID corresponding to the given tag?
         if tag.value not in self.labels:
@@ -166,7 +173,9 @@ class GmailAPI(EmailSource):
 
         try:
             self.service.users().messages().modify(  # pylint: disable=no-member
-                userId=self.account, id=msg_id, body={"addLabelIds": [self.labels[tag.value]]}
+                userId=self.account,
+                id=msg_id,
+                body={"addLabelIds": [self.labels[tag.value]]},
             ).execute()
         except HttpError:
             job.logger.warning(
@@ -186,13 +195,19 @@ class GmailAPI(EmailSource):
         # messages.list() returns 100 emails at a time;
         # we need to loop with list_next() until we have all relevant messages
         request = (
-            self.service.users().messages().list(userId=self.account, q=search_criteria)  # pylint: disable=no-member
+            self.service.users()  # pylint: disable=no-member
+            .messages()
+            .list(userId=self.account, q=search_criteria)
         )
         msg_ids = []
         while request is not None:
             response = request.execute()
             msg_ids.extend(msg["id"] for msg in response.get("messages", []))
-            request = self.service.users().messages().list_next(request, response)  # pylint: disable=no-member
+            request = (
+                self.service.users()  # pylint: disable=no-member
+                .messages()
+                .list_next(request, response)
+            )
 
         job.logger.debug(
             f"Fetched {len(msg_ids)} emails from {self.name} source using search pattern: {search_criteria}."
@@ -204,7 +219,9 @@ class GmailAPI(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
+        job.logger.debug(
+            f"Raw notifications created {len(received_notifications)} from {self.name}."
+        )
         job.logger.debug(f"Raw notifications: {received_notifications}")
 
         self.close_service()
@@ -226,7 +243,11 @@ class GmailAPIOauth(GmailAPI):
             logger.debug("Google OAuth Token has not been initialized yet.")
 
         if force_refresh or not self.credentials or not self.credentials.valid:
-            if self.credentials and self.credentials.refresh_token and (self.credentials.expired or force_refresh):
+            if (
+                self.credentials
+                and self.credentials.refresh_token
+                and (self.credentials.expired or force_refresh)
+            ):
                 try:
                     self.credentials.refresh(Request())
                 except RefreshError:
@@ -238,7 +259,9 @@ class GmailAPIOauth(GmailAPI):
                 notification_source.token = self.credentials
                 notification_source.save()
             else:
-                raise RedirectAuthorize(url_name="google_authorize", source_name=self.name)
+                raise RedirectAuthorize(
+                    url_name="google_authorize", source_name=self.name
+                )
 
 
 class GmailAPIServiceAccount(GmailAPI):
@@ -247,7 +270,11 @@ class GmailAPIServiceAccount(GmailAPI):
     def load_credentials(self, force_refresh=False):
         """Load Gmail API Service Account credentials."""
         if force_refresh or not self.credentials:
-            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
-            self.credentials = self.credentials.with_scopes(self.SCOPES + self.extra_scopes)
+            self.credentials = service_account.Credentials.from_service_account_file(
+                self.credentials_file
+            )
+            self.credentials = self.credentials.with_scopes(
+                self.SCOPES + self.extra_scopes
+            )
             self.credentials = self.credentials.with_subject(self.account)
             self.credentials.refresh(Request())

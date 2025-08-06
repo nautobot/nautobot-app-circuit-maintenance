@@ -3,7 +3,7 @@
 import datetime
 import json
 import os
-from typing import Iterable, Tuple, Type, TypeVar, Union
+from typing import Iterable, Tuple, Union
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -19,20 +19,11 @@ except ImportError:
 
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
+from .exceptions import RedirectAuthorize
+
+from .maintenance_notification import MaintenanceNotification
 
 # pylint: disable=broad-except
-
-T = TypeVar("T", bound="Source")  # pylint: disable=invalid-name
-
-
-class RedirectAuthorize(Exception):
-    """Custom class to signal a redirect to trigger OAuth autorization workflow for a specific source_name."""
-
-    def __init__(self, url_name, source_name):
-        """Init for RedirectAuthorize."""
-        self.url_name = url_name
-        self.source_name = source_name
-        super().__init__()
 
 
 class Source(BaseModel):
@@ -47,7 +38,7 @@ class Source(BaseModel):
 
     def receive_notifications(
         self, job: Job, since_timestamp: datetime.datetime = None
-    ) -> Iterable["MaintenanceNotification"]:
+    ) -> Iterable[MaintenanceNotification]:
         """Function to retrieve notifications since one moment in time.
 
         The `MaintenanceNotification` attributes will contains these attributes:
@@ -61,7 +52,9 @@ class Source(BaseModel):
         # Notification Source.
         raise NotImplementedError
 
-    def validate_providers(self, job: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(
+        self, job: Job, notification_source: NotificationSource, since_txt: str
+    ) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
@@ -101,12 +94,12 @@ class Source(BaseModel):
 
         return is_authenticated, message
 
-    @classmethod
-    def init(cls: Type[T], name: str) -> T:  # pylint: disable=too-many-branches
+    @staticmethod
+    def init(name: str) -> "Source":  # pylint: disable=too-many-branches
         """Factory Pattern to get the specific Source Class depending on the scheme."""
-        for notification_source in settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
-            "notification_sources", []
-        ):
+        for notification_source in settings.PLUGINS_CONFIG.get(
+            "nautobot_circuit_maintenance", {}
+        ).get("notification_sources", []):
             if notification_source.get("name", "") == name:
                 config = notification_source
                 break
@@ -133,8 +126,12 @@ class Source(BaseModel):
             )
         if scheme == "ews":
             if not EXCHANGELIB_PRESENT:
-                raise ValueError("You must install 'exchangelib' to use the 'ews' scheme.")
-            from .ews import ExchangeWebService  # pylint: disable=import-outside-toplevel
+                raise ValueError(
+                    "You must install 'exchangelib' to use the 'ews' scheme."
+                )
+            from .ews import (  # pylint: disable=import-outside-toplevel
+                ExchangeWebService,
+            )
 
             return ExchangeWebService(
                 name=name,
@@ -146,33 +143,48 @@ class Source(BaseModel):
                 folder=config.get("folder"),
                 server=url_components.netloc.split(":")[0],
             )
-        if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
+        if (
+            scheme == "https"
+            and url_components.netloc.split(":")[0] == "accounts.google.com"
+        ):
             creds_filename = config.get("credentials_file")
             if not creds_filename:
-                raise ValueError(f"Credentials_file for {name} not found in PLUGINS_CONFIG.")
+                raise ValueError(
+                    f"Credentials_file for {name} not found in PLUGINS_CONFIG."
+                )
 
             if not os.path.isfile(creds_filename):
-                raise ValueError(f"Credentials_file {creds_filename} for {name} is not available.")
+                raise ValueError(
+                    f"Credentials_file {creds_filename} for {name} is not available."
+                )
 
             with open(creds_filename, encoding="utf-8") as credentials_file:
                 credentials = json.load(credentials_file)
                 if credentials.get("type") == "service_account":
-                    from .gmail import GmailAPIServiceAccount  # pylint: disable=import-outside-toplevel
+                    from .gmail import (  # pylint: disable=import-outside-toplevel
+                        GmailAPIServiceAccount,
+                    )
 
                     gmail_api_class = GmailAPIServiceAccount
                 elif "web" in credentials:
-                    from .gmail import GmailAPIOauth  # pylint: disable=import-outside-toplevel
+                    from .gmail import (  # pylint: disable=import-outside-toplevel
+                        GmailAPIOauth,
+                    )
 
                     gmail_api_class = GmailAPIOauth
                 else:
-                    raise NotImplementedError(f"File {creds_filename} doens't contain any supported credentials.")
+                    raise NotImplementedError(
+                        f"File {creds_filename} doens't contain any supported credentials."
+                    )
                 return gmail_api_class(
                     name=name,
                     url=url,
                     account=config.get("account"),
                     credentials_file=creds_filename,
                     source_header=config.get("source_header", "From"),
-                    limit_emails_with_not_header_from=config.get("limit_emails_with_not_header_from", []),
+                    limit_emails_with_not_header_from=config.get(
+                        "limit_emails_with_not_header_from", []
+                    ),
                     extra_scopes=config.get("extra_scopes", []),
                     labels=config.get("labels", {}),
                 )
@@ -181,23 +193,13 @@ class Source(BaseModel):
             f"Scheme {scheme} not supported as Notification Source (only IMAP or HTTPS to accounts.google.com)."
         )
 
-    def tag_message(self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus):
+    def tag_message(
+        self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus
+    ):
         """If supported, apply the given tag to the given message for future reference and categorization.
 
         The default implementation of this method is a no-op but specific Source subclasses may implement it.
         """
-
-
-class MaintenanceNotification(BaseModel):
-    """Representation of all the data related to a Maintenance Notification."""
-
-    msg_id: bytes
-    source: Source
-    sender: str
-    subject: str
-    provider_type: str
-    raw_payload: bytes
-    date: str
 
 
 def get_notifications(

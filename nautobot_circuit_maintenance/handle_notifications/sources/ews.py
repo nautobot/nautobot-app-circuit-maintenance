@@ -14,7 +14,7 @@ from nautobot.extras.jobs import Job
 
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 
-from .base import MaintenanceNotification
+from .maintenance_notification import MaintenanceNotification
 from .email import EmailSource
 
 
@@ -80,13 +80,21 @@ class ExchangeWebService(EmailSource):
         # Filter emails by timestamp.
         if since_timestamp:
             epoch = int(since_timestamp.strftime("%s"))
-            since_time = exchangelib.EWSDateTime.fromtimestamp(epoch, tz=exchangelib.UTC)
+            since_time = exchangelib.EWSDateTime.fromtimestamp(
+                epoch, tz=exchangelib.UTC
+            )
             mailbox = mailbox.filter(datetime_received__gte=since_time)
 
-        job.logger.debug(message=f"Fetched {mailbox.count()} emails from {self.name} source.")
+        job.logger.debug(
+            message=f"Fetched {mailbox.count()} emails from {self.name} source."
+        )
 
-        received_notifications = [self.get_notification_from_item(job, item) for item in mailbox]
-        job.logger.debug(message=f"Raw notifications created {len(received_notifications)} from {self.name}.")
+        received_notifications = [
+            self.get_notification_from_item(job, item) for item in mailbox
+        ]
+        job.logger.debug(
+            message=f"Raw notifications created {len(received_notifications)} from {self.name}."
+        )
 
         self.close_session()
         return received_notifications

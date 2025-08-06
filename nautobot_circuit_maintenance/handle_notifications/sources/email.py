@@ -10,7 +10,8 @@ from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
 
-from .base import MaintenanceNotification, Source
+from .base import Source
+from .maintenance_notification import MaintenanceNotification
 
 
 class EmailSource(Source):  # pylint: disable=abstract-method
@@ -24,7 +25,9 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         """Method to get an identifier of the related account."""
         return self.account
 
-    def validate_providers(self, job: Job, notification_source: NotificationSource, since_txt: str) -> bool:
+    def validate_providers(
+        self, job: Job, notification_source: NotificationSource, since_txt: str
+    ) -> bool:
         """Method to validate that the NotificationSource has attached Providers.
 
         Args:
@@ -47,7 +50,9 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         for provider in notification_source.providers.all():
             provider_emails = provider.cf.get("emails_circuit_maintenances")
             if provider_emails:
-                self.emails_to_fetch.extend([src.strip().lower() for src in provider_emails.split(",")])
+                self.emails_to_fetch.extend(
+                    [src.strip().lower() for src in provider_emails.split(",")]
+                )
                 providers_with_email.append(provider.name)
             else:
                 providers_without_email.append(provider.name)
@@ -103,7 +108,10 @@ class EmailSource(Source):  # pylint: disable=abstract-method
         return None
 
     def process_email(
-        self, job: Job, email_message: email.message.EmailMessage, msg_id: Union[str, bytes]
+        self,
+        job: Job,
+        email_message: email.message.EmailMessage,
+        msg_id: Union[str, bytes],
     ) -> Optional[MaintenanceNotification]:
         """Process an EmailMessage to create the MaintenanceNotification."""
         email_source = None
