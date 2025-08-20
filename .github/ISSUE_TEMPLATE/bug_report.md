@@ -1,6 +1,8 @@
 ---
 name: 🐛 Bug Report
 about: Report a reproducible bug in the current release of nautobot-circuit-maintenance
+labels:
+  - "type: bug"
 ---
 
 ### Environment
