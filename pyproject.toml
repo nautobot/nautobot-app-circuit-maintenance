@@ -43,7 +43,8 @@ pydantic = ">=1.10.4,<3"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "*"
-django-debug-toolbar = "*"
+# Currently pinned to 5.2.0 due to https://github.com/django-commons/django-debug-toolbar/issues/2168
+django-debug-toolbar = "~5.2.0"
 invoke = "*"
 ipython = "*"
 pylint = "*"

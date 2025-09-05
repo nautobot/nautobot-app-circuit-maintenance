@@ -1,11 +1,8 @@
 ---
 name: ✨ Feature Request
 about: Propose a new feature or enhancement
-<<<<<<< HEAD
-=======
 labels:
   - "type: feature"
->>>>>>> 8811715 (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 ---
 
 ### Environment
