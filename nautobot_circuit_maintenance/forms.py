@@ -5,13 +5,16 @@
 """Forms for Circuit Maintenance."""
 
 from django import forms
-from django_filters.widgets import BooleanWidget
 from nautobot.apps.forms import (
     BootstrapMixin,
+    BulkEditNullBooleanSelect,
     CustomFieldModelBulkEditFormMixin,
     CustomFieldModelFilterFormMixin,
     CustomFieldModelFormMixin,
+    NautobotBulkEditForm,
     RelationshipModelFormMixin,
+    TagsBulkEditFormMixin,
+    add_blank_choice,
 )
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.forms import (
@@ -107,16 +110,18 @@ class CircuitMaintenanceFilterForm(BootstrapMixin, CustomFieldModelFilterFormMix
     end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
 
 
-class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
+class CircuitMaintenanceBulkEditForm(TagsBulkEditFormMixin, NautobotBulkEditForm):
     """Form for bulk editing Circuit Maintenances."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitMaintenance.objects.all(), widget=forms.MultipleHiddenInput)
-    status = forms.CharField(max_length=200, required=False)
-    ack = forms.BooleanField(required=False, widget=BooleanWidget())
+    status = forms.ChoiceField(
+        required=False, choices=add_blank_choice(CircuitMaintenanceStatusChoices), widget=StaticSelect2
+    )
+    ack = forms.NullBooleanField(required=False, widget=BulkEditNullBooleanSelect())
     description = forms.CharField(max_length=200, required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        nullable_fields = ["status", "ack", "description"]
+        nullable_fields = ["description"]
 
 
 class NoteForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
