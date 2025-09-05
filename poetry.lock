@@ -5143,4 +5143,4 @@ ews = ["exchangelib"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.2,<3.13"
-content-hash = "54fa44ba6fa2058470aa0e8dec0508301d9cef172d387f452a85c5ac385a4ab6"
+content-hash = "9169bd53a8ecbf27b82eb54d4f2dc3589b72dd4efbe8cdc93ef23c23416fde13"
