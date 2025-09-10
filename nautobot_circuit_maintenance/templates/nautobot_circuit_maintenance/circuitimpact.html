@@ -1,27 +1,2 @@
-{% extends 'generic/object_detail.html' %}
-
-{% block content_left_page %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <strong>Info</strong>
-        </div>
-        <table class="table table-hover panel-body attr-table">
-            <tr>
-                <td>Maintenance</td>
-                <td>
-                    <a href="{{ object.maintenance.get_absolute_url }}">{{ object.maintenance.name }}</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Circuit</td>
-                <td>
-                    <a href="{{ object.circuit.get_absolute_url }}">{{ object.circuit.cid }}</a>
-                </td>
-            </tr>
-            <tr>
-                <td>Impact</td>
-                <td>{{ object.impact }}</td>
-            </tr>
-        </table>
-    </div>
-{% endblock %}
+{% extends 'nautobot_circuit_maintenance/circuitimpact_retrieve.html' %}
+{% comment %}3.0 TODO: remove this template, which only exists for backward compatibility with 2.4 and earlier{% endcomment %}

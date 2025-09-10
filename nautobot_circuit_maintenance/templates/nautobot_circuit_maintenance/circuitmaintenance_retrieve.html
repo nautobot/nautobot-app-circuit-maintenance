@@ -1,0 +1,221 @@
+{% extends 'generic/object_detail.html' %}
+{% load helpers %}
+
+{% block masthead %}
+    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock %}</h1>
+{% endblock masthead %}
+
+{% block content_left_page %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Info</strong>
+        </div>
+        <table class="table table-hover panel-body attr-table">
+            <tr>
+                <td>Name</td>
+                <td>
+                    <span class="">{{ object.name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Description</td>
+                <td>{{ object.description }}</td>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>{{ object.status }}</td>
+            </tr>
+            <tr>
+                <td>Start Time</td>
+                <td>{{ object.start_time }}</td>
+            </tr>
+            <tr>
+                <td>End Time</td>
+                <td>{{ object.end_time }}</td>
+            </tr>
+            <tr>
+                <td>Acknowledged</td>
+                <td>{{ object.ack }}</td>
+            </tr>
+            <tr>
+                <td>Notifying Provider</td>
+                {% with object.parsednotification_set.first.raw_notification.provider as provider %}
+                    {% if provider %}
+                        <td><a href="{{ provider.get_absolute_url }}">{{ provider }}</a></td>
+                    {% else %}
+                        <td>{{ provider | placeholder }}</td>
+                    {% endif %}
+                {% endwith %}
+        </table>
+    </div>
+{% endblock %}
+
+{% block content_full_width_page %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Circuits</strong>
+            <div class="pull-right noprint">
+            {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+                <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_add' %}?maintenance={{ object.id }}&return_url={{ object.get_absolute_url }}" >
+                    <span class="mdi mdi-plus" aria-hidden="true"></span> Add
+                </a>
+            {% endif %}
+            </div>
+        </div>
+        {% if not circuits %}
+        <div class="panel-body">
+            <span class="text-muted">None</span>
+        </div>
+        {% else %}
+        <table class="table table-hover panel-body">
+            <tbody>
+                <tr>
+                    <th>ID</th>
+                    <th>Impact</th>
+                    <th>Provider</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>A Side</th>
+                    <th>Z Side</th>
+                    <th>Description</th>
+                </tr>
+                {% for circuit in circuits %}
+                <tr>
+                    <td>
+                        <a href="{{ circuit.circuit.get_absolute_url }}">{{ circuit.circuit.cid }}</a>
+                    </td>
+                    <td>
+                        {{ circuit.impact }}
+                    </td>
+                    <td>
+                        <a href="{{ circuit.circuit.provider.get_absolute_url }}">{{ circuit.circuit.provider }}</a>
+                    </td>
+                    <td>
+                        <a href="{{ circuit.circuit.circuit_type.get_absolute_url }}">{{ circuit.circuit.circuit_type }}</a>
+                    </td>
+                    <td>
+                        {% if circuit.circuit.status %}
+                            <span class="label" style="color: {{circuit.circuit.get_status_color}}; background-color: #{{circuit.circuit.get_status_color}}">{{ circuit.circuit.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                    {% if circuit.circuit.circuit_termination_a.location %}
+                        <a href="{{ circuit.circuit.circuit_termination_a.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.location }}</a>
+                    {% elif circuit.circuit.circuit_termination_a.provider_network %}
+                        <a href="{{ circuit.circuit.circuit_termination_a.provider_network.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.provider_network }}</a>
+                    {% else %}
+                        <a href="{{ circuit.circuit.circuit_termination_a.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_a.location }}</a>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {% if circuit.circuit.circuit_termination_z.location %}
+                        <a href="{{ circuit.circuit.circuit_termination_z.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.location }}</a>
+                    {% elif circuit.circuit.circuit_termination_z.provider_network %}
+                        <a href="{{ circuit.circuit.circuit_termination_z.provider_network.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.provider_network }}</a>
+                    {% else %}
+                        <a href="{{ circuit.circuit.circuit_termination_z.location.get_absolute_url }}">{{ circuit.circuit.circuit_termination_z.location }}</a>
+                    {% endif %}
+                    </td>
+                    <td>
+                        {{ circuit.circuit.description }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Notes</strong>
+            <div class="pull-right noprint">
+            {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+                <a href="{% url 'plugins:nautobot_circuit_maintenance:note_add' %}?maintenance={{ object.id }}&return_url={{ object.get_absolute_url }}" >
+                    <span class="mdi mdi-plus" aria-hidden="true"></span> Add
+                </a>
+            {% endif %}
+            </div>
+        </div>
+        {% if not maintenance_note %}
+        <div class="panel-body">
+            <span class="text-muted">None</span>
+        </div>
+        {% else %}
+        <table class="table table-hover panel-body">
+            <tbody>
+                <tr>
+                    <th>Level</th>
+                    <th>Title</th>
+                    <th>Last Updated</th>
+                    <th>Comment</th>
+                    <th></th>
+                </tr>
+                {% for note in maintenance_note %}
+                <tr>
+                    <td>
+                        {{ note.level }}
+                    </td>
+                    <td>
+                        <a href="{{ note.get_absolute_url }}">{{ note.title }}</a>
+                    </td>
+                    <td>
+                        {{ note.last_updated }}
+                    </td>
+                    <td>
+                        {{ note.comment }}
+                    </td>
+                    <td class="text-right text-nowrap noprint">
+                        {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_edit' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-warning btn-xs">
+                                <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                        {% if perms.nautobot_circuit_maintenance.delete_circuitmaintenance %}
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_delete' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-danger btn-xs">
+                                <i class="glyphicon glyphicon-trash" aria-hidden="true"></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Notifications</strong>
+        </div>
+        {% if not parsednotification %}
+        <div class="panel-body">
+            <span class="text-muted">None</span>
+        </div>
+        {% else %}
+        <table class="table table-hover panel-body">
+            <tbody>
+                <tr>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>JSON</th>
+                    <th></th>
+                </tr>
+                {% for parsed_notification in parsednotification %}
+                <tr>
+                    <td>
+                        <a href="{{ parsed_notification.raw_notification.get_absolute_url }}">{{ parsed_notification.raw_notification.subject }}</a>
+                    </td>
+                    <td>
+                        {{ parsed_notification.raw_notification.stamp }}
+                    </td>
+                    <td>
+                        <pre>{{ parsed_notification.json | render_json }}</pre>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+{% endblock %}
