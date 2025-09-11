@@ -212,7 +212,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     table_class = tables.CircuitMaintenanceTable
     action_buttons = ("add", "export")
 
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for Circuit Maintenance."""
         maintenance_note = models.Note.objects.filter(maintenance=instance)
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
@@ -274,12 +274,13 @@ class RawNotificationUIViewSet(
     """UIViewSet for RawNotification."""
 
     filterset_class = filters.RawNotificationFilterSet
+    filterset_form_class = forms.RawNotificationFilterSetForm
     queryset = models.RawNotification.objects.all()
     serializer_class = serializers.RawNotificationSerializer
     table_class = tables.RawNotificationTable
     action_buttons = ("export",)
 
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for RawNotification."""
         context = super().get_extra_context(request, instance)
         if self.action == "retrieve":
@@ -300,6 +301,15 @@ class RawNotificationUIViewSet(
 
         return context
 
+    def _process_bulk_create_form(self, form):
+        pass
+
+    def _process_bulk_update_form(self, form):
+        pass
+
+    def _process_create_or_update_form(self, form):
+        pass
+
 
 class ParsedNotificationView(generic.ObjectView):
     """Detail view for parsed notifications."""
@@ -312,13 +322,14 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
 
     bulk_update_form_class = forms.NotificationSourceBulkEditForm
     filterset_class = filters.NotificationSourceFilterSet
+    filterset_form_class = forms.NotificationSourceFilterSetForm
     form_class = forms.NotificationSourceForm
     queryset = models.NotificationSource.objects.all()
     serializer_class = serializers.NotificationSourceSerializer
     table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
-    def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
+    def get_extra_context(self, request, instance=None):  # pylint: disable=unused-argument
         """Extend content of detailed view for NotificationSource."""
         context = super().get_extra_context(request, instance)
         if self.action == "retrieve":
@@ -346,8 +357,8 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                 )
         return context
 
-    @action(detail=True, methods=["get"], url_path="validate", url_name="validate")
-    def validate_source(self, request, pk=None):
+    @action(detail=True, methods=["get"], url_path="validate", url_name="validate", custom_view_base_action="view")
+    def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
         """View for validate NotificationSource authenticate."""
         instance = self.get_object()
         try:
