@@ -357,7 +357,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                 )
         return context
 
-    @action(detail=True, methods=["get"], url_path="validate", url_name="validate", custom_view_base_action="view")
+    @action(detail=True, methods=["get"], url_path="validate", url_name="validate")
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
         """View for validate NotificationSource authenticate."""
         instance = self.get_object()
