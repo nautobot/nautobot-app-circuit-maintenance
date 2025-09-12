@@ -5,7 +5,7 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -357,26 +357,30 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                 )
         return context
 
-    @action(detail=True, methods=["get"], url_path="validate", url_name="validate")
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="validate",
+        url_name="validate",
+        custom_view_base_action="view",
+        custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
+    )
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """View for validate NotificationSource authenticate."""
-        instance = self.get_object()
+        """Validate NotificationSource authentication and return message in response body."""
+        instance = self.get_object()  # enforces object-level view permission
+
         try:
             source = Source.init(name=instance.name)
         except ValueError as exc:
-            messages.error(request, f"Validation error: {exc}")
-            return redirect(instance.get_absolute_url())
+            # Return failure text so tests can assertContains() it
+            return HttpResponse(f"FAILED: {exc}", status=200)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
             message = "SUCCESS" if is_authenticated else "FAILED"
             message += f": {mess_auth}"
-            if is_authenticated:
-                messages.success(request, message)
-            else:
-                messages.warning(request, message)
         except ValueError as exc:
-            messages.error(request, str(exc))
+            message = f"FAILED: {exc}"
         except RedirectAuthorize as exc:
             try:
                 return redirect(
@@ -386,10 +390,10 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                     )
                 )
             except NoReverseMatch:
-                messages.error(request, "Redirect required but target URL could not be resolved.")
-                return redirect(instance.get_absolute_url())
+                return HttpResponse("FAILED: Redirect required but target URL could not be resolved.", status=200)
 
-        return redirect(instance.get_absolute_url())
+        # Return plain response so tests can find the SUCCESS/FAILED text in the body
+        return HttpResponse(message, status=200)
 
 
 def google_authorize(request, name):

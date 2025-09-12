@@ -116,7 +116,9 @@ class CircuitMaintenanceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFi
     description = forms.CharField(max_length=200, required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
-        nullable_fields = ["status", "ack", "description"]
+        # Only description is nullable in the model.
+        # status and ack were removed from nullable_fields because tests were failing.
+        nullable_fields = ["description"]
 
 
 class NoteForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipModelFormMixin):
