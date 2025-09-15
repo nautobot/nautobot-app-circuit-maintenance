@@ -28,9 +28,9 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.9.2,<3.13"
 # Used for local development
-nautobot = "^2.4.2"
+nautobot = "^2.4.16"
 circuit-maintenance-parser = "^2.0.0"
 django-cryptography = "^1.1"
 exchangelib = { version = ">=5.1.0", optional = true }
