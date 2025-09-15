@@ -341,7 +341,7 @@ class TestIMAPSource(TestCase):
             ["name_1", "url1", "user_1", "password_1", "imap_server", None, False],
         ]
     )
-    # pylint: disable-next=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def test_imap_init(self, name, url, account, password, imap_server, imap_port, exception):
         """Test IMAP class init."""
         kwargs = {}
@@ -557,7 +557,7 @@ class TestGmailAPISource(TestCase):
             ["name_1", "url1", "user_1", None, True],
         ]
     )
-    # pylint: disable-next=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def test_gmail_api_service_account_init(self, name, url, account, credentials_file, exception):
         """Test Gmail API class init."""
         kwargs = {}
@@ -652,7 +652,7 @@ class TestGmailAPISource(TestCase):
             ],
         ]
     )
-    # pylint: disable-next=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def test_get_search_criteria(
         self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result
     ):
