@@ -408,7 +408,7 @@ namespace.configure(
     {
         "nautobot_circuit_maintenance": {
             ...
-            "nautobot_ver": "2.0.0",
+            "nautobot_ver": "2.4.2",
 	    ...
         }
     }
