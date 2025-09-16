@@ -10,6 +10,14 @@ from nautobot.core.settings_funcs import is_truthy
 #
 # Debug
 #
+# Ensure debug_toolbar app is registered if the package is installed on disk
+try:
+    import debug_toolbar  # noqa: F401
+except ImportError:
+    pass
+else:
+    if "debug_toolbar" not in INSTALLED_APPS:  # noqa: F405
+        INSTALLED_APPS.append("debug_toolbar")  # noqa: F405
 
 DEBUG = is_truthy(os.getenv("NAUTOBOT_DEBUG", "false"))
 _TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
