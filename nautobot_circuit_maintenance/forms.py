@@ -5,6 +5,7 @@
 """Forms for Circuit Maintenance."""
 
 from django import forms
+<<<<<<< HEAD
 from nautobot.apps.forms import (
     BootstrapMixin,
     BulkEditNullBooleanSelect,
@@ -25,6 +26,10 @@ from nautobot.core.forms import (
 )
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 from nautobot.extras.forms import AddRemoveTagsForm
+=======
+from nautobot.apps.constants import CHARFIELD_MAX_LENGTH
+from nautobot.apps.forms import NautobotBulkEditForm, NautobotFilterForm, NautobotModelForm, TagsBulkEditFormMixin
+>>>>>>> a641bda (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
@@ -52,7 +57,12 @@ class CircuitImpactForm(BootstrapMixin, CustomFieldModelFormMixin, RelationshipM
 class CircuitImpactBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldModelBulkEditFormMixin):
     """Form for bulk editing Circuit Impact."""
 
+<<<<<<< HEAD
     pk = forms.ModelMultipleChoiceField(queryset=CircuitImpact.objects.all(), widget=forms.MultipleHiddenInput)
+=======
+    pk = forms.ModelMultipleChoiceField(queryset=models.CircuitMaintenance.objects.all(), widget=forms.MultipleHiddenInput)
+    description = forms.CharField(required=False, max_length=CHARFIELD_MAX_LENGTH)
+>>>>>>> a641bda (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         nullable_fields = ["impact"]
