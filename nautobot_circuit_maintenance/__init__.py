@@ -18,11 +18,10 @@ class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
     required_settings = []
-    min_version = "2.0.0"
-    max_version = "2.9999"
     default_settings = {}
     caching_config = {}
     docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
+    searchable_models = ["circuitmaintenance"]
 
 
 config = NautobotCircuitMaintenanceConfig  # pylint:disable=invalid-name
