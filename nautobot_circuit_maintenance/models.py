@@ -14,23 +14,11 @@ from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.models.generics import OrganizationalModel, PrimaryModel
 from nautobot.extras.utils import extras_features
 
-<<<<<<< HEAD
 from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
-=======
-# Nautobot imports
-from nautobot.apps.constants import CHARFIELD_MAX_LENGTH
-from nautobot.apps.models import PrimaryModel, extras_features
->>>>>>> a641bda (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< HEAD
 PLUGIN_SETTINGS = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {})
-=======
-    name = models.CharField(max_length=CHARFIELD_MAX_LENGTH, unique=True)
-    description = models.CharField(max_length=CHARFIELD_MAX_LENGTH, blank=True)
-    # additional model fields
->>>>>>> a641bda (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 
 MAX_MAINTENANCE_NAME_LENGTH = 100
 MAX_NOTIFICATION_SENDER_LENGTH = 200

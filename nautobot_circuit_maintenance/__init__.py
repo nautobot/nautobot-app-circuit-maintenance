@@ -78,9 +78,6 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
     author = "Network to Code, LLC"
     description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices."
     base_url = "circuit-maintenance"
-<<<<<<< HEAD
-    min_version = "2.0.0"
-    max_version = "2.99"
     required_settings = []
     default_settings = {
         "raw_notification_initial_days_since": 7,
@@ -88,10 +85,6 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
         "dashboard_n_days": 30,
         "overlap_job_exclude_no_impact": False,
     }
-=======
-    required_settings = []
-    default_settings = {}
->>>>>>> a641bda (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
     caching_config = {}
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
     docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
