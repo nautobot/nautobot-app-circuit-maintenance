@@ -274,7 +274,7 @@ class RawNotificationUIViewSet(
     """UIViewSet for RawNotification."""
 
     filterset_class = filters.RawNotificationFilterSet
-    filterset_form_class = forms.RawNotificationFilterSetForm
+    filterset_form_class = forms.RawNotificationFilterForm
     queryset = models.RawNotification.objects.all()
     serializer_class = serializers.RawNotificationSerializer
     table_class = tables.RawNotificationTable

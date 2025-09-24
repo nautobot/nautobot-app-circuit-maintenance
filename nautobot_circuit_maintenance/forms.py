@@ -38,7 +38,7 @@ class CircuitImpactForm(NautobotModelForm):
         """Metaclass attributes for CircuitMaintenanceCircuitImpactAddForm."""
 
         model = CircuitImpact
-        fields = ["maintenance", "circuit", "impact"]
+        fields = "__all__"
         widgets = {"maintenance": forms.HiddenInput()}
 
 
@@ -76,7 +76,7 @@ class CircuitMaintenanceForm(NautobotModelForm):
         """Metaclass attributes for CircuitMaintenanceAddForm."""
 
         model = CircuitMaintenance
-        fields = ["name", "start_time", "end_time", "description", "status", "ack"]
+        fields = "__all__"
         widgets = {"start_time": DateTimePicker(), "end_time": DateTimePicker()}
 
 
@@ -124,7 +124,7 @@ class NoteForm(NautobotModelForm):
         """Metaclass attributes for NoteForm."""
 
         model = Note
-        fields = ["maintenance", "title", "comment", "level"]
+        fields = "__all__"
         widgets = {"maintenance": forms.HiddenInput()}
 
 
@@ -155,7 +155,7 @@ class NoteFilterForm(NautobotFilterForm):
     comment = forms.CharField(max_length=200)
 
 
-class RawNotificationFilterSetForm(NautobotFilterForm):
+class RawNotificationFilterForm(NautobotFilterForm):
     """Form for filtering Raw Notification instances."""
 
     model = RawNotification
