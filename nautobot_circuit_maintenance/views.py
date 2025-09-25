@@ -273,6 +273,8 @@ class RawNotificationUIViewSet(
 ):
     """UIViewSet for RawNotification."""
 
+    # pylint: disable=abstract-method
+
     filterset_class = filters.RawNotificationFilterSet
     filterset_form_class = forms.RawNotificationFilterForm
     queryset = models.RawNotification.objects.all()
