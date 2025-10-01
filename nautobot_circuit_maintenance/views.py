@@ -5,12 +5,12 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.http import HttpResponse
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from nautobot.apps.views import NautobotUIViewSet
-from nautobot.circuits.models import Circuit, Provider
+from nautobot.circuits.models import Circuit
 from nautobot.core.views import generic
 from nautobot.core.views.mixins import (
     ObjectBulkDestroyViewMixin,
@@ -19,6 +19,7 @@ from nautobot.core.views.mixins import (
     ObjectListViewMixin,
 )
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
@@ -303,15 +304,6 @@ class RawNotificationUIViewSet(
 
         return context
 
-    def _process_bulk_create_form(self, form):
-        pass
-
-    def _process_bulk_update_form(self, form):
-        pass
-
-    def _process_create_or_update_form(self, form):
-        pass
-
 
 class ParsedNotificationView(generic.ObjectView):
     """Detail view for parsed notifications."""
@@ -331,30 +323,32 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
     table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
-    def get_extra_context(self, request, instance=None):  # pylint: disable=unused-argument
+    def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for NotificationSource."""
         context = super().get_extra_context(request, instance)
+
         if self.action == "retrieve":
+            providers_qs = instance.providers.all()
             try:
                 source = Source.init(name=instance.name)
                 context.update(
                     {
-                        "providers": Provider.objects.filter(
-                            pk__in=[provider.pk for provider in instance.providers.all()]
-                        ),
+                        "providers": providers_qs,
                         "account": source.get_account_id(),
                         "source_type": source.__class__.__name__,
+                        "authentication_message": None,
                     }
                 )
 
-            except ValueError as error:
+            except ValueError as exc:
+                msg = f"Failed to initialize source: {exc}"
+                logger.warning(msg, exc_info=True, extra={"object": instance})
                 context.update(
                     {
-                        "providers": Provider.objects.filter(
-                            pk__in=[provider.pk for provider in instance.providers.all()]
-                        ),
-                        "account": str(error),
-                        "source_type": str(error),
+                        "providers": providers_qs,
+                        "account": None,
+                        "source_type": None,
+                        "authentication_message": msg,
                     }
                 )
         return context
@@ -368,14 +362,20 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     )
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """Validate NotificationSource authentication and return message in response body."""
-        instance = self.get_object()  # enforces object-level view permission
+        """Validate NotificationSource authentication."""
+        instance = self.get_object()
+        context = super().get_extra_context(request, instance)
+        return_url = request.GET.get("return_url")
 
         try:
             source = Source.init(name=instance.name)
         except ValueError as exc:
-            # Return failure text so tests can assertContains() it
-            return HttpResponse(f"FAILED: {exc}", status=200)
+            message = f"FAILED: {exc}"
+            if return_url:
+                messages.error(request, message)
+                return redirect(return_url)
+            context["authentication_message"] = message
+            return Response(context, status=200)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
@@ -392,10 +392,25 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                     )
                 )
             except NoReverseMatch:
-                return HttpResponse("FAILED: Redirect required but target URL could not be resolved.", status=200)
+                message = "FAILED: Redirect required but target URL could not be resolved."
 
-        # Return plain response so tests can find the SUCCESS/FAILED text in the body
-        return HttpResponse(message, status=200)
+        if return_url:
+            if message.startswith("SUCCESS"):
+                messages.success(request, message)
+            else:
+                messages.error(request, message)
+            return redirect(return_url)
+
+        context.update(
+            {
+                "authentication_message": message,
+                "providers": instance.providers.all(),
+                "account": source.get_account_id(),
+                "source_type": source.__class__.__name__,
+                "active_tab": "main",
+            }
+        )
+        return Response(context, status=200)
 
 
 def google_authorize(request, name):
