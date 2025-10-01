@@ -9,8 +9,8 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
-from nautobot.apps.views import NautobotUIViewSet
-from nautobot.apps.views.mixins import (
+from nautobot.apps.views import (
+    NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
     ObjectDestroyViewMixin,
     ObjectDetailViewMixin,
