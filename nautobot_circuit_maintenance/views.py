@@ -22,10 +22,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.api import serializers
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
-from nautobot_circuit_maintenance.models import CircuitMaintenance
-
-from .api import serializers
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +64,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             duration = ckt_maint.end_time - ckt_maint.start_time
             total_duration_in_minutes += round(duration.total_seconds() / 60.0, 0)
 
-        circuit_maint_count = CircuitMaintenance.objects.count()
+        circuit_maint_count = models.CircuitMaintenance.objects.count()
 
         # Check for a greater than 0 number of maintenance objects
         if circuit_maint_count > 0:
@@ -188,7 +186,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         Returns:
             float: Average maintenances per month
         """
-        ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
+        ordered_ckt_maintenance = models.CircuitMaintenance.objects.order_by("start_time")
         if ordered_ckt_maintenance.count() < 2:
             return 0
 
