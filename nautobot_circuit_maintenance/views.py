@@ -10,14 +10,14 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from nautobot.apps.views import NautobotUIViewSet
-from nautobot.circuits.models import Circuit
-from nautobot.core.views import generic
-from nautobot.core.views.mixins import (
+from nautobot.apps.views.mixins import (
     ObjectBulkDestroyViewMixin,
     ObjectDestroyViewMixin,
     ObjectDetailViewMixin,
     ObjectListViewMixin,
 )
+from nautobot.circuits.models import Circuit
+from nautobot.core.views import generic
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
