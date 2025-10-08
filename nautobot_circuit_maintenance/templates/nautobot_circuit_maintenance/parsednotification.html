@@ -1,4 +1,4 @@
-{% extends 'generic/object_detail.html' %}
+{% extends "generic/object_detail.html" %}
 {% load custom_links %}
 
 {% block header %}
@@ -16,7 +16,7 @@
 <h1>{{ object }}</h1>
 <div class="pull-right noprint">{% custom_links object %}</div>
 
-{% endblock %}
+{% endblock header %}
 
 {% block content_left_page %}
     <div class="panel panel-default">
@@ -42,4 +42,4 @@
             </tr>
         </table>
     </div>
-{% endblock %}
+{% endblock content_left_page %}

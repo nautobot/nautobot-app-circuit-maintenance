@@ -68,30 +68,30 @@ class GraphQLTestCase(TestCase):
     def test_execute_query_circuit_maintenance(self):
         "Test basic query for Circuit Maintenances."
         query = "{ query: circuit_maintenances {name} }"
-        resp = execute_query(query, user=self.user).to_dict()
-        self.assertFalse(resp["data"].get("errors"))
-        self.assertEqual(len(resp["data"]["query"]), 2)
+        resp = execute_query(query, user=self.user)
+        self.assertFalse(resp.errors)
+        self.assertEqual(len(resp.data["query"]), 2)
 
     @override_settings(EXEMPT_VIEW_PERMISSIONS=["*"])
     def test_execute_query_with_variable_circuit_maintenance(self):
         "Test filtered query for Circuit Maintenances."
         query = "query ($name: [String!]) { circuit_maintenances(name:$name) {name} }"
-        resp = execute_query(query, user=self.user, variables={"name": "UT-TEST-3"}).to_dict()
-        self.assertFalse(resp.get("errors"))
-        self.assertEqual(len(resp["data"]["circuit_maintenances"]), 1)
+        resp = execute_query(query, user=self.user, variables={"name": "UT-TEST-3"})
+        self.assertFalse(resp.errors)
+        self.assertEqual(len(resp.data["circuit_maintenances"]), 1)
 
     @override_settings(EXEMPT_VIEW_PERMISSIONS=["*"])
     def test_execute_query_circuit_impact(self):
         "Test basic query for Circuit Impacts."
         query = "{ query: circuit_impacts {impact} }"
-        resp = execute_query(query, user=self.user).to_dict()
-        self.assertFalse(resp["data"].get("errors"))
-        self.assertEqual(len(resp["data"]["query"]), 2)
+        resp = execute_query(query, user=self.user)
+        self.assertFalse(resp.errors)
+        self.assertEqual(len(resp.data["query"]), 2)
 
     @override_settings(EXEMPT_VIEW_PERMISSIONS=["*"])
     def test_execute_query_with_variable_circuit_impact(self):
         "Test filtered query for Circuit Impacts."
         query = "query ($impact: String) { circuit_impacts(impact:[$impact]) {impact} }"
-        resp = execute_query(query, user=self.user, variables={"impact": "OUTAGE"}).to_dict()
-        self.assertFalse(resp.get("errors"))
-        self.assertEqual(len(resp["data"]["circuit_impacts"]), 1)
+        resp = execute_query(query, user=self.user, variables={"impact": "OUTAGE"})
+        self.assertFalse(resp.errors)
+        self.assertEqual(len(resp.data["circuit_impacts"]), 1)

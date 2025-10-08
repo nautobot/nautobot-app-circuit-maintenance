@@ -107,7 +107,7 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.11"]
-        nautobot-version: ["next"]  # TODO: Change to 3.0.0 after v3.0.0 is released
+        nautobot-version: ["next"]  # TODO: Change to stable after v3.0.0 is released
     env:
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_PYTHON_VER: "${{ matrix.python-version }}"
       INVOKE_NAUTOBOT_CIRCUIT_MAINTENANCE_NAUTOBOT_VER: "${{ matrix.nautobot-version }}"
@@ -209,7 +209,7 @@ jobs:
       matrix:
         python-version: ["3.13"]
         db-backend: ["postgresql"]
-        nautobot-version: ["next"]
+        nautobot-version: ["next"]  # TODO: Change to stable after v3.0.0 is released
     runs-on: "ubuntu-latest"
     permissions:
       pull-requests: "write"
