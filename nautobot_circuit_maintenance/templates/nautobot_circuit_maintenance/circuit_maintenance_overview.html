@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load buttons %}
 {% load static %}
 {% load custom_links %}
@@ -6,10 +6,10 @@
 {% load plugins %}
 
 {% block header %}
-{% endblock %}
+{% endblock header %}
 {% block content %}
 
-<h1>{% block title %}Circuit Maintenance Dashboard{% endblock %}</h1>
+<h1>{% block title %}Circuit Maintenance Dashboard{% endblock title %}</h1>
 <div class="col-md-3">
     <!-- Visual block -->
     <div class="card">
@@ -37,7 +37,7 @@
                                         {% comment %}Fix up this line after if move to Jinja templating. Unable to shrink due to whitespace {% endcomment %}
                                             <a href="{{ circuit_term_a_location.get_absolute_url }}">{{ circuit_term_a_location.name }}</a>
                                             {% if circuit.circuit_termination_z.connected_endpoint and circuit_term_a_location != circuit.circuit_termination_z.connected_endpoint.parent.location %}
-                                            | <a href="{{ circuit.circuit_termination_z.connected_endpoint.parent.location.get_absolute_url }}">{{ circuit.circuit_termination_z.connected_endpoint.parent.location.name}}</a>
+                                            | <a href="{{ circuit.circuit_termination_z.connected_endpoint.parent.location.get_absolute_url }}">{{ circuit.circuit_termination_z.connected_endpoint.parent.location.name }}</a>
                                             {% endif %}
                                         {% endwith %}
                                     {% endif %}
@@ -122,4 +122,4 @@
     </div>
 </div>
 
-{% endblock %}
+{% endblock content %}
