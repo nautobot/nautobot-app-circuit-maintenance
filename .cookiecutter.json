@@ -10,8 +10,6 @@
         "project_slug": "nautobot-app-circuit-maintenance",
         "repo_url": "https://github.com/nautobot/nautobot-app-circuit-maintenance",
         "base_url": "circuit-maintenance",
-        "min_nautobot_version": "2.0.0",
-        "max_nautobot_version": "2.9999",
         "camel_name": "NautobotCircuitMaintenance",
         "project_short_description": "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices",
         "model_class_name": "CircuitMaintenance",
@@ -21,17 +19,13 @@
         "_drift_manager": {
             "template": "https://github.com/nautobot/cookiecutter-nautobot-app.git",
             "template_dir": "nautobot-app",
-            "template_ref": "refs/tags/nautobot-app-v2.5.0",
+            "template_ref": "nautobot-app-v2.6.0",
             "cookie_dir": "",
             "branch_prefix": "drift-manager",
-            "pull_request_strategy": "create",
-            "post_actions": [
-                "ruff",
-                "poetry"
-            ],
+            "pull_request_strategy": "update-or-create",
+            "post_actions": [],
             "draft": false,
-            "baked_commit_ref": "63ba3b83d43a4c5b940818d3aa2468dffdf1a103"
+            "baked_commit_ref": "52102c1dac20bd5792c4b9229cbc33a7154634be"
         }
     }
 }
-
