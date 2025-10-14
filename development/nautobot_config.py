@@ -143,7 +143,7 @@ PLUGINS_CONFIG = {
                 "name": "my imap source",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
-                "url": os.environ.get("CM_NS_1_URL", ""),
+                "url": os.environ.get("CM_NS_1_URL", "https"),
                 # "attach_all_providers": True,
             },
             {
