@@ -342,7 +342,7 @@ class TestIMAPSource(TestCase):
         ]
     )
     # pylint: disable-next=too-many-arguments
-    def test_imap_init(self, name, url, account, password, imap_server, imap_port, exception):    # pylint: disable=too-many-positional-arguments
+    def test_imap_init(self, name, url, account, password, imap_server, imap_port, exception):  # pylint: disable=too-many-positional-arguments
         """Test IMAP class init."""
         kwargs = {}
         if name:
@@ -557,8 +557,8 @@ class TestGmailAPISource(TestCase):
             ["name_1", "url1", "user_1", None, True],
         ]
     )
-    #pylint: disable-next=too-many-arguments
-    def test_gmail_api_service_account_init(self, name, url, account, credentials_file, exception):#pylint: disable=too-many-positional-arguments
+    # pylint: disable-next=too-many-arguments
+    def test_gmail_api_service_account_init(self, name, url, account, credentials_file, exception):  # pylint: disable=too-many-positional-arguments
         """Test Gmail API class init."""
         kwargs = {}
         if name:
@@ -653,7 +653,9 @@ class TestGmailAPISource(TestCase):
         ]
     )
     # pylint: disable-next=too-many-arguments
-    def test_get_search_criteria(self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result):#pylint: disable=too-many-positional-arguments
+    def test_get_search_criteria(
+        self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result
+    ):  # pylint: disable=too-many-positional-arguments
         """Test the get_search_criteria method."""
         source = GmailAPI(
             name="whatever",

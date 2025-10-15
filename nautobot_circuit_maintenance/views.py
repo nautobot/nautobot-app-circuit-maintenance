@@ -391,26 +391,24 @@ class NotificationObjectFieldsPanel(ObjectFieldsPanel):
     """Panel for displaying notification source fields."""
 
     def get_data(self, context):
-        """Add dynamic fields for account and providers."""
+        """Render providers as a list of hyperlinks."""
         instance = context.get("object") or context.get(self.context_object_key)
         try:
             source = Source.init(name=instance.name)
             setattr(instance, "account", source.get_account_id())
             setattr(instance, "source_type", source.__class__.__name__)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError, ValueError):
             setattr(instance, "account", None)
             setattr(instance, "source_type", None)
 
         try:
             setattr(instance, "providers_display", instance.providers.all())
-        except AttributeError:
-            setattr(instance, "providers_display", [])
-
+        except (AttributeError, TypeError):
             setattr(instance, "providers_display", [])
         return super().get_data(context)
 
     def render_value(self, key, value, context):
-        """Render providers as a list of hyperlinks."""
+        """Add dynamic fields for account and providers."""
         if key == "providers_display":
             if not value:
                 return helpers.HTML_NONE
