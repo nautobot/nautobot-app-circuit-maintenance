@@ -8,19 +8,18 @@ from django import forms
 from nautobot.apps.forms import (
     BootstrapMixin,
     BulkEditNullBooleanSelect,
+    DateTimePicker,
+    DynamicModelMultipleChoiceField,
     NautobotBulkEditForm,
+    NautobotFilterForm,
+    NautobotModelForm,
+    StaticSelect2,
+    StaticSelect2Multiple,
     TagsBulkEditFormMixin,
     add_blank_choice,
 )
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.core.forms import (
-    DateTimePicker,
-    DynamicModelMultipleChoiceField,
-    StaticSelect2,
-    StaticSelect2Multiple,
-)
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
-from nautobot.extras.forms import AddRemoveTagsForm, NautobotFilterForm, NautobotModelForm
 
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
@@ -45,7 +44,7 @@ class CircuitImpactForm(NautobotModelForm):
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class CircuitImpactBulkEditForm(NautobotBulkEditForm, AddRemoveTagsForm):
+class CircuitImpactBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Circuit Impact."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitImpact.objects.all(), widget=forms.MultipleHiddenInput)
@@ -131,7 +130,7 @@ class NoteForm(NautobotModelForm):
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class NoteBulkEditForm(NautobotBulkEditForm, AddRemoveTagsForm):
+class NoteBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Notes."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
@@ -183,7 +182,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
         fields = ["providers"]
 
 
-class NotificationSourceBulkEditForm(NautobotBulkEditForm, AddRemoveTagsForm):
+class NotificationSourceBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing NotificationSources."""
 
     pk = forms.ModelMultipleChoiceField(queryset=NotificationSource.objects.all(), widget=forms.MultipleHiddenInput)
