@@ -75,12 +75,11 @@ class CircuitImpactTable(BaseTable):
     """Table to display Circuit Impact model."""
 
     pk = ToggleColumn()
-    # maintenance = tables.Column(linkify=True)
-    # circuit = tables.Column(linkify=True)
-    # impact = tables.Column(linkify=True)
+    maintenance = tables.Column(linkify=True)
+    circuit = tables.Column(linkify=True)
+    impact = tables.Column(linkify=True)
 
     cid = tables.Column(accessor="circuit.cid", verbose_name="ID", linkify=True)
-    impact = tables.Column(verbose_name="Impact")
     provider = tables.Column(accessor="circuit.provider", verbose_name="Provider", linkify=True)
     circuit_type = tables.Column(accessor="circuit.circuit_type", verbose_name="Type", linkify=True)
     status = tables.Column(accessor="circuit.status", verbose_name="Status")
@@ -144,7 +143,7 @@ class NoteTable(BaseTable):
 
 
 class NotificationSourceTable(BaseTable):
-    """Table to display CircuitImpact model."""
+    """Table to display NotificationSource model."""
 
     pk = ToggleColumn()
     name = tables.Column(linkify=True)
