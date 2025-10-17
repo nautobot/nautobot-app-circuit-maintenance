@@ -14,10 +14,11 @@ from nautobot.apps.views import (
     ObjectBulkDestroyViewMixin,
     ObjectDestroyViewMixin,
     ObjectDetailViewMixin,
+    ObjectListView,
     ObjectListViewMixin,
+    ObjectView,
 )
 from nautobot.circuits.models import Circuit
-from nautobot.core.views import generic
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -28,7 +29,7 @@ from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAu
 logger = logging.getLogger(__name__)
 
 
-class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too-many-locals
+class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-locals
     """View for an overview dashboard of summary view.
 
     This view provides a summary about the environment of circuit maintenances that have been recorded. Getting stats
@@ -306,7 +307,7 @@ class RawNotificationUIViewSet(
         return context
 
 
-class ParsedNotificationView(generic.ObjectView):
+class ParsedNotificationView(ObjectView):
     """Detail view for parsed notifications."""
 
     queryset = models.ParsedNotification.objects.all()
