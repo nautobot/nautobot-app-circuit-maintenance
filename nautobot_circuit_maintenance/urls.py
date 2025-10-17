@@ -3,7 +3,7 @@
 from django.templatetags.static import static
 from django.urls import path
 from django.views.generic import RedirectView
-from nautobot.core.views.routers import NautobotUIViewSetRouter
+from nautobot.apps.urls import NautobotUIViewSetRouter
 
 from . import views
 
@@ -19,10 +19,6 @@ router.register("source", views.NotificationSourceUIViewSet)
 urlpatterns = [
     # Overview
     path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
-    #  Maintenance
-    path(
-        "maintenance/job/", views.CircuitMaintenanceUIViewSet.as_view({"get": "run_job"}), name="circuitmaintenance_job"
-    ),
     # Parsed Notification
     path(
         "parsednotification/<uuid:pk>/",

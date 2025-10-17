@@ -10,7 +10,6 @@ from nautobot.core.settings_funcs import is_truthy
 #
 # Debug
 #
-# Ensure debug_toolbar app is registered if the package is installed on disk
 
 DEBUG = is_truthy(os.getenv("NAUTOBOT_DEBUG", "false"))
 _TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
@@ -144,7 +143,7 @@ PLUGINS_CONFIG = {
                 "name": "my imap source",
                 "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
                 "secret": os.environ.get("CM_NS_1_SECRET", ""),
-                "url": os.environ.get("CM_NS_1_URL", "https"),
+                "url": os.environ.get("CM_NS_1_URL", ""),
                 # "attach_all_providers": True,
             },
             {
@@ -167,13 +166,6 @@ PLUGINS_CONFIG = {
                 "url": os.environ.get("CM_NS_4_URL", ""),
                 "account": os.environ.get("CM_NS_4_ACCOUNT", ""),
                 "credentials_file": os.environ.get("CM_NS_4_CREDENTIALS_FILE", ""),
-                # "attach_all_providers": True,
-            },
-            {
-                "name": "aws",
-                "account": os.environ.get("CM_NS_1_ACCOUNT", ""),
-                "secret": os.environ.get("CM_NS_1_SECRET", ""),
-                "url": os.environ.get("CM_NS_1_URL", "https"),
                 # "attach_all_providers": True,
             },
         ],

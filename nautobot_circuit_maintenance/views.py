@@ -213,6 +213,9 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
 
     def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for Circuit Maintenance."""
+        if instance is None:
+            return {}
+
         maintenance_note = models.Note.objects.filter(maintenance=instance)
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
