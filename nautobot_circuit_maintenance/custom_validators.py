@@ -1,12 +1,12 @@
 """Custom Validators definition."""
 
 from circuit_maintenance_parser import SUPPORTED_PROVIDER_NAMES
+from nautobot.apps.models import CustomValidator
 from nautobot.circuits.models import Provider
 from nautobot.extras.models import CustomField
-from nautobot.extras.plugins import PluginCustomValidator
 
 
-class ProviderEmailValidator(PluginCustomValidator):
+class ProviderEmailValidator(CustomValidator):
     """Custom validator to validate that Providers don't repeat source emails."""
 
     model = "circuits.provider"
@@ -29,7 +29,7 @@ class ProviderEmailValidator(PluginCustomValidator):
                         )
 
 
-class ProviderParserValidator(PluginCustomValidator):
+class ProviderParserValidator(CustomValidator):
     """Custom validator to validate that Provider's parser exists in the Parser library."""
 
     model = "circuits.provider"
