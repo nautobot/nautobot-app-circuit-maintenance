@@ -337,9 +337,16 @@ class RawObjectFieldsPanel(ObjectFieldsPanel):
             except (TypeError, ValueError):
                 value = b""
 
-        text = value.decode("utf-8", errors="replace") if value else ""
-        return helpers.pre_tag(text)
+        text = ""
+        if value:
+            try:
+                text = value.decode("utf-8", "strict")
+            except UnicodeDecodeError as exc:
+                # Log warning as requested
+                logger.warning("Raw content was not able to be decoded with utf-8: %s", exc)
+                text = value.decode("utf-8", "replace")
 
+        return helpers.pre_tag(text)
 
 class RawNotificationUIViewSet(
     ObjectDetailViewMixin,
