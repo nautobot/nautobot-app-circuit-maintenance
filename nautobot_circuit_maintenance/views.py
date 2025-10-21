@@ -229,7 +229,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
             "parsednotification": parsednotification,
         }
 
-    @action(detail=False, methods=["get"], url_path="job", url_name="circuitmaintenance_job")
+    @action(detail=False, methods=["get"], url_path="job", url_name="job")
     def run_job(self, request):
         """Trigger the Job to look for new Circuit Maintenances."""
         return redirect(
