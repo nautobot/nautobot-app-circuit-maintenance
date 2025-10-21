@@ -19,10 +19,6 @@ router.register("source", views.NotificationSourceUIViewSet)
 urlpatterns = [
     # Overview
     path("maintenance/overview/", views.CircuitMaintenanceOverview.as_view(), name="circuitmaintenance_overview"),
-    #  Maintenance
-    path(
-        "maintenance/job/", views.CircuitMaintenanceUIViewSet.as_view({"get": "run_job"}), name="circuitmaintenance_job"
-    ),
     # Parsed Notification
     path(
         "parsednotification/<uuid:pk>/",

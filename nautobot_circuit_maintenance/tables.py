@@ -1,10 +1,7 @@
 """Tables for Circuit Maintenance."""
 
 import django_tables2 as tables
-from nautobot.core.tables import (
-    BaseTable,
-    ToggleColumn,
-)
+from nautobot.core.tables import BaseTable, ToggleColumn
 
 from .models import CircuitImpact, CircuitMaintenance, Note, NotificationSource, ParsedNotification, RawNotification
 

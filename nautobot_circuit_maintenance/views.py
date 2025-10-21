@@ -275,6 +275,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
                 table_class=tables.ParsedNotificationTable,
                 table_filter="maintenance",
                 select_related_fields=["raw_notification", "maintenance"],
+                order_by_fields=["-raw_notification__stamp"],
                 table_title="Notifications",
                 show_table_config_button=None,
                 paginate=None,
@@ -282,7 +283,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
         ),
     )
 
-    @action(detail=False, methods=["get"], url_path="job", url_name="circuitmaintenance_job")
+    @action(detail=False, methods=["get"], url_path="job", url_name="job")
     def run_job(self, request):
         """Trigger the Job to look for new Circuit Maintenances."""
         return redirect(
