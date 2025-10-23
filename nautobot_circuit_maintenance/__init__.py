@@ -19,7 +19,6 @@ class NautobotCircuitMaintenanceConfig(NautobotAppConfig):
     base_url = "circuit-maintenance"
     required_settings = []
     default_settings = {}
-    caching_config = {}
     docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
     searchable_models = ["circuitmaintenance"]
 
