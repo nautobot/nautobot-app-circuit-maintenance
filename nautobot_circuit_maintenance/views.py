@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils.html import format_html, format_html_join
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -19,6 +20,14 @@ from nautobot.apps.views import (
     ObjectView,
 )
 from nautobot.circuits.models import Circuit
+from nautobot.core.templatetags import helpers
+from nautobot.core.ui.choices import SectionChoices
+from nautobot.core.ui.object_detail import (
+    ObjectDetailContent,
+    ObjectFieldsPanel,
+    ObjectsTablePanel,
+)
+from nautobot.core.views.utils import get_obj_from_context
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -200,6 +209,26 @@ class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-lo
         return self.queryset.count() / delta_months
 
 
+class CustomMaintenanceFieldsPanel(ObjectFieldsPanel):
+    """Panel to display maintenance details including notification provider."""
+
+    def get_data(self, context):
+        """Populate panel data with the notification provider if available."""
+        data = super().get_data(context)
+        instance = get_obj_from_context(context, self.context_object_key)
+        notification_provider = None
+        notification = getattr(instance, "parsednotification_set", None)
+        if notification:
+            first_notification = notification.first()
+            raw_notification = getattr(first_notification, "raw_notification", None) if first_notification else None
+            provider = getattr(raw_notification, "provider", None) if raw_notification else None
+            if provider:
+                notification_provider = provider
+
+        data["notification_provider"] = notification_provider
+        return data
+
+
 class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     """UIViewSet for CircuitMaintenance."""
 
@@ -212,22 +241,47 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     table_class = tables.CircuitMaintenanceTable
     action_buttons = ("add", "export")
 
-    def get_extra_context(self, request, instance=None):
-        """Extend content of detailed view for Circuit Maintenance."""
-        if instance is None:
-            return {}
-
-        maintenance_note = models.Note.objects.filter(maintenance=instance)
-        circuits = models.CircuitImpact.objects.filter(maintenance=instance)
-        parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
-            "-raw_notification__stamp"
-        )
-
-        return {
-            "circuits": circuits,
-            "maintenance_note": maintenance_note,
-            "parsednotification": parsednotification,
-        }
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            CustomMaintenanceFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+            ObjectsTablePanel(
+                weight=200,
+                section=SectionChoices.FULL_WIDTH,
+                table_class=tables.CircuitImpactTable,
+                table_attribute="circuitimpact_set",
+                related_field_name="maintenance",
+                table_title="Circuits",
+                exclude_columns=["actions", "dynamic_groups"],
+                paginate=None,
+                show_table_config_button=None,
+            ),
+            ObjectsTablePanel(
+                weight=300,
+                section=SectionChoices.FULL_WIDTH,
+                table_class=tables.NoteTable,
+                table_attribute="note_set",
+                related_field_name="maintenance",
+                exclude_columns=["actions", "dynamic_groups"],
+                paginate=None,
+                show_table_config_button=None,
+            ),
+            ObjectsTablePanel(
+                section=SectionChoices.FULL_WIDTH,
+                weight=400,
+                table_class=tables.ParsedNotificationTable,
+                table_filter="maintenance",
+                select_related_fields=["raw_notification", "maintenance"],
+                order_by_fields=["-raw_notification__stamp"],
+                table_title="Notifications",
+                show_table_config_button=None,
+                paginate=None,
+            ),
+        ),
+    )
 
     @action(detail=False, methods=["get"], url_path="job", url_name="job")
     def run_job(self, request):
@@ -268,6 +322,34 @@ class NoteUIViewSet(NautobotUIViewSet):
     action_buttons = ("add", "export")
 
 
+class RawObjectFieldsPanel(ObjectFieldsPanel):
+    """Panel for displaying decoded raw binary fields."""
+
+    def render_value(self, key, value, context):
+        """Render raw field as preformatted text."""
+        if key != "raw":
+            return super().render_value(key, value, context)
+        # Normalize to bytes
+        if isinstance(value, memoryview):
+            value = value.tobytes()
+        elif not isinstance(value, (bytes, bytearray)):
+            try:
+                value = bytes(value or b"")
+            except (TypeError, ValueError):
+                value = b""
+
+        text = ""
+        if value:
+            try:
+                text = value.decode("utf-8", "strict")
+            except UnicodeDecodeError as exc:
+                # Log warning as requested
+                logger.warning("Raw content was not able to be decoded with utf-8: %s", exc)
+                text = value.decode("utf-8", "replace")
+
+        return helpers.pre_tag(text)
+
+
 class RawNotificationUIViewSet(
     ObjectDetailViewMixin,
     ObjectListViewMixin,
@@ -281,6 +363,29 @@ class RawNotificationUIViewSet(
     filterset_class = filters.RawNotificationFilterSet
     filterset_form_class = forms.RawNotificationFilterForm
     queryset = models.RawNotification.objects.all()
+    serializer_class = serializers.RawNotificationSerializer
+    table_class = tables.RawNotificationTable
+    action_buttons = ("export",)
+
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            RawObjectFieldsPanel(
+                section=SectionChoices.LEFT_HALF,
+                label="Raw Notification",
+                weight=100,
+                fields=(
+                    "subject",
+                    "provider",
+                    "sender",
+                    "source",
+                    "parsed",
+                    "stamp",
+                    "last_updated",
+                    "raw",
+                ),
+            ),
+        )
+    )
     serializer_class = serializers.RawNotificationSerializer
     table_class = tables.RawNotificationTable
     action_buttons = ("export",)
@@ -313,6 +418,43 @@ class ParsedNotificationView(ObjectView):
     queryset = models.ParsedNotification.objects.all()
 
 
+class NotificationObjectFieldsPanel(ObjectFieldsPanel):
+    """Panel for displaying notification source fields."""
+
+    def get_data(self, context):
+        """Render providers as a list of hyperlinks."""
+        instance = context.get("object") or context.get(self.context_object_key)
+        try:
+            source = Source.init(name=instance.name)
+            setattr(instance, "account", source.get_account_id())
+            setattr(instance, "source_type", source.__class__.__name__)
+        except (AttributeError, TypeError, ValueError):
+            setattr(instance, "account", None)
+            setattr(instance, "source_type", None)
+
+        try:
+            setattr(instance, "providers_display", instance.providers.all())
+        except (AttributeError, TypeError):
+            setattr(instance, "providers_display", [])
+        return super().get_data(context)
+
+    def render_value(self, key, value, context):
+        """Add dynamic fields for account and providers."""
+        if key == "providers_display":
+            if not value:
+                return helpers.HTML_NONE
+            items = []
+            for val in value:
+                items.append(helpers.hyperlinked_object(val))
+            if not items:
+                return helpers.HTML_NONE
+            return format_html(
+                "<ul>{}</ul>",
+                format_html_join("", "<li>{}</li>", ((item,) for item in items)),
+            )
+        return super().render_value(key, value, context)
+
+
 class NotificationSourceUIViewSet(NautobotUIViewSet):
     """UIViewSet for NotificationSource."""
 
@@ -325,35 +467,22 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
     table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
-    def get_extra_context(self, request, instance=None):
-        """Extend content of detailed view for NotificationSource."""
-        context = super().get_extra_context(request, instance)
-
-        if self.action == "retrieve":
-            providers_qs = instance.providers.all()
-            try:
-                source = Source.init(name=instance.name)
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": source.get_account_id(),
-                        "source_type": source.__class__.__name__,
-                        "authentication_message": None,
-                    }
-                )
-
-            except ValueError as exc:
-                msg = f"Failed to initialize source: {exc}"
-                logger.warning(msg, exc_info=True, extra={"object": instance})
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": None,
-                        "source_type": None,
-                        "authentication_message": msg,
-                    }
-                )
-        return context
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            NotificationObjectFieldsPanel(
+                section=SectionChoices.LEFT_HALF,
+                label="Info",
+                weight=100,
+                fields=(
+                    "name",
+                    "account",
+                    "source_type",
+                    "providers_display",
+                    "attach_all_providers",
+                ),
+            ),
+        )
+    )
 
     @action(
         detail=True,

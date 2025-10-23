@@ -655,7 +655,7 @@ class TestGmailAPISource(TestCase):
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     def test_get_search_criteria(
         self, since_timestamp, source_header, emails_to_fetch, limit_emails_with_not_header_from, result
-    ):
+    ):  # pylint: disable=too-many-positional-arguments
         """Test the get_search_criteria method."""
         source = GmailAPI(
             name="whatever",

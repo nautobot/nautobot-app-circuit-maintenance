@@ -105,7 +105,7 @@ class CircuitMaintenanceFilterForm(NautobotFilterForm):
     end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
 
 
-class CircuitMaintenanceBulkEditForm(TagsBulkEditFormMixin, NautobotBulkEditForm):
+class CircuitMaintenanceBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Circuit Maintenances."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitMaintenance.objects.all(), widget=forms.MultipleHiddenInput)
