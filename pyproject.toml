@@ -13,7 +13,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -27,8 +26,9 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.9.2,<3.13"
+python = ">=3.10,<3.13"
 # Used for local development
+<<<<<<< HEAD
 nautobot = ">=2.4.16,<3.0.0"
 circuit-maintenance-parser = "^2.0.0"
 django-cryptography = "^1.1"
@@ -40,6 +40,9 @@ google-auth-oauthlib = "^0.5.0"
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
 nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
 pydantic = ">=1.10.4,<3"
+=======
+nautobot = ">=2.4.20,<3.0.0"
+>>>>>>> 1133700 (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
 
 [tool.poetry.group.dev.dependencies]
 coverage = "*"
@@ -48,8 +51,8 @@ django-debug-toolbar = "<6.0.0"
 invoke = "*"
 ipython = "*"
 pylint = "*"
-pylint-django = "*"
-pylint-nautobot = "*"
+pylint-django = ">=2.5.4"
+pylint-nautobot = ">=0.3.1"
 ruff = "0.5.5"
 yamllint = "*"
 toml = "*"
@@ -62,6 +65,7 @@ to-json-schema = "*"
 jsonschema = "*"
 djlint = ">=1.36.4,<2.0.0"
 djhtml = ">=3.0.8,<4.0.0"
+tomli = { version = "*", markers = "python_version < '3.11'" }  # tomli is included in the stdlib as of Python 3.11
 
 [tool.poetry.group.docs.dependencies]
 # Render custom markdown for version added/changed/remove notes
@@ -116,11 +120,6 @@ notes = """,
     FIXME,
     XXX,
     """
-
-[tool.pylint-nautobot]
-supported_nautobot_versions = [
-    "2"
-]
 
 [tool.ruff]
 line-length = 120
@@ -192,6 +191,11 @@ filename = "docs/admin/release_notes/version_2.3.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/{issue})"
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Breaking Changes"
+showcontent = true
 
 [[tool.towncrier.type]]
 directory = "security"
