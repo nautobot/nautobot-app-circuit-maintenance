@@ -10,6 +10,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
+from nautobot.apps.ui import Button, ButtonColorChoices
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -308,6 +309,16 @@ class CircuitImpactUIViewSet(NautobotUIViewSet):
     table_class = tables.CircuitImpactTable
     action_buttons = ("add", "export")
 
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+        )
+    )
+
 
 class NoteUIViewSet(NautobotUIViewSet):
     """UIViewSet for Note."""
@@ -320,6 +331,16 @@ class NoteUIViewSet(NautobotUIViewSet):
     serializer_class = serializers.NoteSerializer
     table_class = tables.NoteTable
     action_buttons = ("add", "export")
+
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+        )
+    )
 
 
 class RawObjectFieldsPanel(ObjectFieldsPanel):
@@ -481,7 +502,15 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                     "attach_all_providers",
                 ),
             ),
-        )
+        ),
+        extra_buttons=[
+            Button(
+                weight=100,
+                label="Validate Authentication",
+                color=ButtonColorChoices.BLUE,
+                link_name="plugins:nautobot_circuit_maintenance:notificationsource_validate",
+            ),
+        ],
     )
 
     @action(
@@ -500,10 +529,10 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
 
         try:
             source = Source.init(name=instance.name)
-        except ValueError as exc:
+        except (AttributeError, TypeError, ValueError) as exc:
             message = f"FAILED: {exc}"
+            messages.error(request, message)
             if return_url:
-                messages.error(request, message)
                 return redirect(return_url)
             context["authentication_message"] = message
             return Response(context, status=200)
@@ -512,8 +541,9 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             is_authenticated, mess_auth = source.test_authentication()
             message = "SUCCESS" if is_authenticated else "FAILED"
             message += f": {mess_auth}"
-        except ValueError as exc:
+        except (AttributeError, TypeError, ValueError) as exc:
             message = f"FAILED: {exc}"
+            messages.error(request, message)
         except RedirectAuthorize as exc:
             try:
                 return redirect(
@@ -524,7 +554,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                 )
             except NoReverseMatch:
                 message = "FAILED: Redirect required but target URL could not be resolved."
-
+                messages.error(request, message)  # Add error message for the UI
         if return_url:
             if message.startswith("SUCCESS"):
                 messages.success(request, message)
