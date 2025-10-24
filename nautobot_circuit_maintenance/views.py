@@ -533,9 +533,11 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             message = f"FAILED: {exc}"
             messages.error(request, message)
             if return_url:
+                if message.startswith("SUCCESS"):
+                    messages.success(request, message)
+                else:
+                    messages.error(request, message)
                 return redirect(return_url)
-            context["authentication_message"] = message
-            return Response(context, status=200)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
