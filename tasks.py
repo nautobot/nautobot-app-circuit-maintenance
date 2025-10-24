@@ -52,11 +52,7 @@ namespace = Collection("nautobot_circuit_maintenance")
 namespace.configure(
     {
         "nautobot_circuit_maintenance": {
-<<<<<<< HEAD
-            "nautobot_ver": "2.4.16",
-=======
             "nautobot_ver": "2.4.20",
->>>>>>> 1133700 (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
             "project_name": "nautobot-circuit-maintenance",
             "python_ver": "3.12",
             "local": False,

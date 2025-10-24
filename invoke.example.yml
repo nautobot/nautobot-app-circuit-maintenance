@@ -1,10 +1,6 @@
 ---
 nautobot_circuit_maintenance:
-<<<<<<< HEAD
-  nautobot_ver: "2.4.16"
-=======
   nautobot_ver: "2.4.20"
->>>>>>> 1133700 (Cookie updated by NetworkToCode Cookie Drift Manager Tool)
   python_ver: "3.12"
   # local: false
   # compose_dir: "/full/path/to/nautobot-app-circuit-maintenance/development"
