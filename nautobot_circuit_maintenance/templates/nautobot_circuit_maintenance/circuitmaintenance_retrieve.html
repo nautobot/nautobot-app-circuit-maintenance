@@ -1,7 +1,7 @@
-{% extends 'generic/object_detail.html' %}
+{% extends "generic/object_detail.html" %}
 {% load helpers %}
 
 {% block masthead %}
-    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock %}</h1>
+    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock title %}</h1>
 {% endblock masthead %}
 {% comment %}3.0 TODO: remove this template, which only exists for backward compatibility with 2.4 and earlier{% endcomment %}
