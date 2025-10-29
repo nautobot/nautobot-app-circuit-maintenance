@@ -85,7 +85,6 @@ class CircuitMaintenanceConfig(NautobotAppConfig):
         "dashboard_n_days": 30,
         "overlap_job_exclude_no_impact": False,
     }
-    caching_config = {}
     home_view_name = "plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"
     docs_view_name = "plugins:nautobot_circuit_maintenance:docs"
     searchable_models = ["circuitmaintenance"]
