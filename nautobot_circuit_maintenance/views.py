@@ -10,7 +10,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
-from nautobot.apps.ui import Button, ButtonColorChoices
+from nautobot.apps.ui import Button
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -21,6 +21,7 @@ from nautobot.apps.views import (
     ObjectView,
 )
 from nautobot.circuits.models import Circuit
+from nautobot.core.choices import ButtonActionColorChoices
 from nautobot.core.templatetags import helpers
 from nautobot.core.ui.choices import SectionChoices
 from nautobot.core.ui.object_detail import (
@@ -507,7 +508,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             Button(
                 weight=100,
                 label="Validate Authentication",
-                color=ButtonColorChoices.SUBMIT,
+                color=ButtonActionColorChoices.SUBMIT,
                 link_name="plugins:nautobot_circuit_maintenance:notificationsource_validate",
             ),
         ],
