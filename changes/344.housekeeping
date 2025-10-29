@@ -1,0 +1,1 @@
+Refactored CircuitMaintenance, CircuitImpact, Note, NotificationSource model related UI views to use `NautobotUIViewSet`.

@@ -1,8 +1,8 @@
-{% extends "generic/object_retrieve.html" %}
+{% extends 'generic/object_detail.html' %}
 {% load helpers %}
 
 {% block masthead %}
-    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock title %}</h1>
+    <h1>Maintenance ID: {% block title %}{{ object }}{% endblock %}</h1>
 {% endblock masthead %}
 
 {% block content_left_page %}
@@ -48,7 +48,7 @@
                 {% endwith %}
         </table>
     </div>
-{% endblock content_left_page %}
+{% endblock %}
 
 {% block content_full_width_page %}
     <div class="panel panel-default">
@@ -95,7 +95,7 @@
                     </td>
                     <td>
                         {% if circuit.circuit.status %}
-                            <span class="label" style="color: {{ circuit.circuit.get_status_color }}; background-color: #{{ circuit.circuit.get_status_color }}">{{ circuit.circuit.get_status_display }}</span>
+                            <span class="label" style="color: {{circuit.circuit.get_status_color}}; background-color: #{{circuit.circuit.get_status_color}}">{{ circuit.circuit.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td>
@@ -218,4 +218,4 @@
         </table>
         {% endif %}
     </div>
-{% endblock content_full_width_page %}
+{% endblock %}

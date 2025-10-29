@@ -5,20 +5,31 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
-from nautobot.circuits.models import Circuit, Provider
-from nautobot.core.views import generic
+from nautobot.apps.views import (
+    NautobotUIViewSet,
+    ObjectBulkDestroyViewMixin,
+    ObjectDestroyViewMixin,
+    ObjectDetailViewMixin,
+    ObjectListView,
+    ObjectListViewMixin,
+    ObjectView,
+)
+from nautobot.circuits.models import Circuit
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.api import serializers
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
-from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 logger = logging.getLogger(__name__)
 
 
-class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too-many-locals
+class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-locals
     """View for an overview dashboard of summary view.
 
     This view provides a summary about the environment of circuit maintenances that have been recorded. Getting stats
@@ -54,7 +65,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
             duration = ckt_maint.end_time - ckt_maint.start_time
             total_duration_in_minutes += round(duration.total_seconds() / 60.0, 0)
 
-        circuit_maint_count = CircuitMaintenance.objects.count()
+        circuit_maint_count = models.CircuitMaintenance.objects.count()
 
         # Check for a greater than 0 number of maintenance objects
         if circuit_maint_count > 0:
@@ -176,7 +187,7 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         Returns:
             float: Average maintenances per month
         """
-        ordered_ckt_maintenance = CircuitMaintenance.objects.order_by("start_time")
+        ordered_ckt_maintenance = models.CircuitMaintenance.objects.order_by("start_time")
         if ordered_ckt_maintenance.count() < 2:
             return 0
 
@@ -189,23 +200,23 @@ class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too
         return self.queryset.count() / delta_months
 
 
-class CircuitMaintenanceListView(generic.ObjectListView):
-    """View for listing the config circuitmaintenance feature definition."""
+class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
+    """UIViewSet for CircuitMaintenance."""
 
+    bulk_update_form_class = forms.CircuitMaintenanceBulkEditForm
+    filterset_class = filters.CircuitMaintenanceFilterSet
+    filterset_form_class = forms.CircuitMaintenanceFilterForm
+    form_class = forms.CircuitMaintenanceForm
     queryset = models.CircuitMaintenance.objects.order_by("-start_time")
-    table = tables.CircuitMaintenanceTable
-    filterset = filters.CircuitMaintenanceFilterSet
-    filterset_form = forms.CircuitMaintenanceFilterForm
+    serializer_class = serializers.CircuitMaintenanceSerializer
+    table_class = tables.CircuitMaintenanceTable
     action_buttons = ("add", "export")
 
-
-class CircuitMaintenanceView(generic.ObjectView):
-    """Detail view for specific circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for Circuit Maintenance."""
+        if instance is None:
+            return {}
+
         maintenance_note = models.Note.objects.filter(maintenance=instance)
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
         parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
@@ -218,51 +229,9 @@ class CircuitMaintenanceView(generic.ObjectView):
             "parsednotification": parsednotification,
         }
 
-
-class CircuitMaintenanceEditView(generic.ObjectEditView):
-    """View for editting circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    model_form = forms.CircuitMaintenanceForm
-
-
-class CircuitMaintenanceDeleteView(generic.ObjectDeleteView):
-    """View for deleting circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-
-
-class CircuitMaintenanceBulkImportView(generic.BulkImportView):
-    """View for bulk of circuit maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    table = tables.CircuitMaintenanceTable
-
-
-class CircuitMaintenanceBulkEditView(generic.BulkEditView):
-    """View for bulk editing circuitmaintenance features."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    filterset = filters.CircuitMaintenanceFilterSet
-    table = tables.CircuitMaintenanceTable
-    form = forms.CircuitMaintenanceBulkEditForm
-
-
-class CircuitMaintenanceBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting circuitmaintenance features."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-    filterset = filters.CircuitMaintenanceFilterSet
-    table = tables.CircuitMaintenanceTable
-
-
-class CircuitMaintenanceJobView(generic.ObjectView):
-    """Special View to trigger the Job to look for new Circuit Maintenances."""
-
-    queryset = models.CircuitMaintenance.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        """Custom GET to run a the Job."""
+    @action(detail=False, methods=["get"], url_path="job", url_name="job")
+    def run_job(self, request):
+        """Trigger the Job to look for new Circuit Maintenances."""
         return redirect(
             reverse(
                 "extras:job_run_by_class_path",
@@ -273,241 +242,177 @@ class CircuitMaintenanceJobView(generic.ObjectView):
         )
 
 
-class CircuitImpactListView(generic.ObjectListView):
-    """View for listing all circuit impact."""
+class CircuitImpactUIViewSet(NautobotUIViewSet):
+    """UIViewSet for CircuitImpact."""
 
-    table = tables.CircuitImpactTable
-    filterset = filters.CircuitImpactFilterSet
-    filterset_form = forms.CircuitImpactFilterForm
+    bulk_update_form_class = forms.CircuitImpactBulkEditForm
+    filterset_class = filters.CircuitImpactFilterSet
+    filterset_form_class = forms.CircuitImpactFilterForm
+    form_class = forms.CircuitImpactForm
     queryset = models.CircuitImpact.objects.all()
+    serializer_class = serializers.CircuitImpactSerializer
+    table_class = tables.CircuitImpactTable
     action_buttons = ("add", "export")
 
 
-class CircuitImpactView(generic.ObjectView):
-    """Detail view for specific Circuit Impact windows."""
+class NoteUIViewSet(NautobotUIViewSet):
+    """UIViewSet for Note."""
 
-    queryset = models.CircuitImpact.objects.all()
-
-
-class CircuitImpactEditView(generic.ObjectEditView):
-    """View for editting Circuit Impact."""
-
-    queryset = models.CircuitImpact.objects.all()
-    model_form = forms.CircuitImpactForm
-
-
-class CircuitImpactDeleteView(generic.ObjectDeleteView):
-    """View for deleting Circuit Impact."""
-
-    queryset = models.CircuitImpact.objects.all()
-
-
-class CircuitImpactBulkImportView(generic.BulkImportView):
-    """View for bulk of circuit Impact."""
-
-    queryset = models.CircuitImpact.objects.all()
-    table = tables.CircuitImpactTable
-
-
-class CircuitImpactBulkEditView(generic.BulkEditView):
-    """View for bulk editing circuit impact features."""
-
-    queryset = models.CircuitImpact.objects.all()
-    table = tables.CircuitImpactTable
-    form = forms.CircuitImpactBulkEditForm
-
-
-class CircuitImpactBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting circuit impact features."""
-
-    queryset = models.CircuitImpact.objects.all()
-    filterset = filters.CircuitImpactFilterSet
-    table = tables.CircuitImpactTable
-
-
-class NoteListView(generic.ObjectListView):
-    """View for listing all notes."""
-
-    table = tables.NoteTable
+    bulk_update_form_class = forms.NoteBulkEditForm
+    filterset_class = filters.NoteFilterSet
+    filterset_form_class = forms.NoteFilterForm
+    form_class = forms.NoteForm
     queryset = models.Note.objects.all()
-    filterset = filters.NoteFilterSet
-    filterset_form = forms.NoteFilterForm
+    serializer_class = serializers.NoteSerializer
+    table_class = tables.NoteTable
     action_buttons = ("add", "export")
 
 
-class NoteEditView(generic.ObjectEditView):
-    """View for editing a maintenance note."""
+class RawNotificationUIViewSet(
+    ObjectDetailViewMixin,
+    ObjectListViewMixin,
+    ObjectDestroyViewMixin,
+    ObjectBulkDestroyViewMixin,
+):
+    """UIViewSet for RawNotification."""
 
-    queryset = models.Note.objects.all()
-    model_form = forms.NoteForm
+    # pylint: disable=abstract-method
 
-
-class NoteView(generic.ObjectView):
-    """View for maintenance note."""
-
-    queryset = models.Note.objects.all()
-
-
-class NoteDeleteView(generic.ObjectDeleteView):
-    """View for deleting maintenance note."""
-
-    queryset = models.Note.objects.all()
-
-
-class NoteBulkImportView(generic.BulkImportView):
-    """View for bulk of Notes."""
-
-    queryset = models.Note.objects.all()
-    table = tables.NoteTable
-
-
-class NoteBulkEditView(generic.BulkEditView):
-    """View for bulk editing Notes."""
-
-    queryset = models.Note.objects.all()
-    table = tables.NoteTable
-    form = forms.NoteBulkEditForm
-
-
-class NoteBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting Notes."""
-
-    queryset = models.Note.objects.all()
-    filterset = filters.NoteFilterSet
-    table = tables.NoteTable
-
-
-class RawNotificationView(generic.ObjectView):
-    """Detail view for raw notifications."""
-
+    filterset_class = filters.RawNotificationFilterSet
+    filterset_form_class = forms.RawNotificationFilterForm
     queryset = models.RawNotification.objects.all()
-
-    def get_extra_context(self, request, instance):
-        """Extend content of detailed view for RawNotification."""
-        if instance.parsed:
-            parsed_notification = models.ParsedNotification.objects.filter(raw_notification=instance).last()
-        else:
-            parsed_notification = None
-        try:
-            if isinstance(instance.raw, bytes):
-                raw_repr = instance.raw.decode("utf-8", "strict")
-            else:
-                raw_repr = instance.raw.tobytes().decode("utf-8", "strict")
-        except UnicodeDecodeError as exc:
-            raw_repr = "Raw content was not able to be decoded with utf-8"
-            logger.warning("%s: %s", raw_repr, exc)
-
-        return {"parsed_notification": parsed_notification, "raw_repr": raw_repr}
-
-
-class RawNotificationListView(generic.ObjectListView):
-    """View for listing all raw notifications."""
-
-    table = tables.RawNotificationTable
-    queryset = models.RawNotification.objects.order_by("-stamp")
-    filterset = filters.RawNotificationFilterSet
-    filterset_form = forms.RawNotificationFilterSetForm
+    serializer_class = serializers.RawNotificationSerializer
+    table_class = tables.RawNotificationTable
     action_buttons = ("export",)
 
+    def get_extra_context(self, request, instance=None):
+        """Extend content of detailed view for RawNotification."""
+        context = super().get_extra_context(request, instance)
+        if self.action == "retrieve":
+            if instance.parsed:
+                parsed_notification = models.ParsedNotification.objects.filter(raw_notification=instance).last()
+            else:
+                parsed_notification = None
+            try:
+                if isinstance(instance.raw, bytes):
+                    raw_repr = instance.raw.decode("utf-8", "strict")
+                else:
+                    raw_repr = instance.raw.tobytes().decode("utf-8", "strict")
+            except UnicodeDecodeError as exc:
+                raw_repr = "Raw content was not able to be decoded with utf-8"
+                logger.warning("%s: %s", raw_repr, exc)
 
-class RawNotificationBulkDeleteView(generic.BulkDeleteView):
-    """View for bulk deleting Circuit Maintenance Notifications entries."""
+            context.update({"parsed_notification": parsed_notification, "raw_repr": raw_repr})
 
-    queryset = models.RawNotification.objects.all()
-    filterset = filters.RawNotificationFilterSet
-    table = tables.RawNotificationTable
+        return context
 
 
-class RawNotificationDeleteView(generic.ObjectDeleteView):
-    """View for deleting Raw Notification."""
-
-    model = models.RawNotification
-    queryset = models.RawNotification.objects.all()
-
-
-class ParsedNotificationView(generic.ObjectView):
+class ParsedNotificationView(ObjectView):
     """Detail view for parsed notifications."""
 
     queryset = models.ParsedNotification.objects.all()
 
 
-class NotificationSourceListView(generic.ObjectListView):
-    """View for Notification Source."""
+class NotificationSourceUIViewSet(NautobotUIViewSet):
+    """UIViewSet for NotificationSource."""
 
-    table = tables.NotificationSourceTable
+    bulk_update_form_class = forms.NotificationSourceBulkEditForm
+    filterset_class = filters.NotificationSourceFilterSet
+    filterset_form_class = forms.NotificationSourceFilterSetForm
+    form_class = forms.NotificationSourceForm
     queryset = models.NotificationSource.objects.all()
-    filterset = filters.NotificationSourceFilterSet
-    filterset_form = forms.NotificationSourceFilterSetForm
+    serializer_class = serializers.NotificationSourceSerializer
+    table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
-
-class NotificationSourceView(generic.ObjectView):
-    """View for NotificationSource."""
-
-    queryset = models.NotificationSource.objects.all()
-
-    def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
+    def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for NotificationSource."""
-        source = Source.init(name=instance.name)
-        return {
-            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
-            "account": source.get_account_id(),
-            "source_type": source.__class__.__name__,
-        }
+        context = super().get_extra_context(request, instance)
 
+        if self.action == "retrieve":
+            providers_qs = instance.providers.all()
+            try:
+                source = Source.init(name=instance.name)
+                context.update(
+                    {
+                        "providers": providers_qs,
+                        "account": source.get_account_id(),
+                        "source_type": source.__class__.__name__,
+                        "authentication_message": None,
+                    }
+                )
 
-class NotificationSourceEditView(generic.ObjectEditView):
-    """View for editing NotificationSource."""
+            except ValueError as exc:
+                msg = f"Failed to initialize source: {exc}"
+                logger.warning(msg, exc_info=True, extra={"object": instance})
+                context.update(
+                    {
+                        "providers": providers_qs,
+                        "account": None,
+                        "source_type": None,
+                        "authentication_message": msg,
+                    }
+                )
+        return context
 
-    model = models.NotificationSource
-    queryset = models.NotificationSource.objects.all()
-    model_form = forms.NotificationSourceForm
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="validate",
+        url_name="validate",
+        custom_view_base_action="view",
+        custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
+    )
+    def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
+        """Validate NotificationSource authentication."""
+        instance = self.get_object()
+        context = super().get_extra_context(request, instance)
+        return_url = request.GET.get("return_url")
 
-
-class NotificationSourceBulkEditView(generic.BulkEditView):
-    """View for bulk editing NotificationSource."""
-
-    queryset = models.NotificationSource.objects.all()
-    table = tables.NotificationSourceTable
-    form = forms.NotificationSourceBulkEditForm
-
-
-class NotificationSourceValidate(generic.ObjectView):
-    """View for validate NotificationSource authenticate."""
-
-    queryset = models.NotificationSource.objects.all()
-
-    def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
-        """Extend content of detailed view for NotificationSource."""
-        source = Source.init(name=instance.name)
+        try:
+            source = Source.init(name=instance.name)
+        except ValueError as exc:
+            message = f"FAILED: {exc}"
+            if return_url:
+                messages.error(request, message)
+                return redirect(return_url)
+            context["authentication_message"] = message
+            return Response(context, status=200)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
-
             message = "SUCCESS" if is_authenticated else "FAILED"
             message += f": {mess_auth}"
         except ValueError as exc:
-            message = str(exc)
+            message = f"FAILED: {exc}"
         except RedirectAuthorize as exc:
             try:
                 return redirect(
                     reverse(
                         f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
-                        kwargs={
-                            "name": exc.source_name,
-                        },
+                        kwargs={"name": exc.source_name},
                     )
                 )
             except NoReverseMatch:
-                pass
+                message = "FAILED: Redirect required but target URL could not be resolved."
 
-        return {
-            "authentication_message": message,
-            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
-            "account": source.get_account_id(),
-            "source_type": source.__class__.__name__,
-            "active_tab": "main",
-        }
+        if return_url:
+            if message.startswith("SUCCESS"):
+                messages.success(request, message)
+            else:
+                messages.error(request, message)
+            return redirect(return_url)
+
+        context.update(
+            {
+                "authentication_message": message,
+                "providers": instance.providers.all(),
+                "account": source.get_account_id(),
+                "source_type": source.__class__.__name__,
+                "active_tab": "main",
+            }
+        )
+        return Response(context, status=200)
 
 
 def google_authorize(request, name):
