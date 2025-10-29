@@ -507,7 +507,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             Button(
                 weight=100,
                 label="Validate Authentication",
-                color=ButtonColorChoices.BLUE,
+                color=ButtonColorChoices.SUBMIT,
                 link_name="plugins:nautobot_circuit_maintenance:notificationsource_validate",
             ),
         ],
@@ -529,15 +529,14 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
 
         try:
             source = Source.init(name=instance.name)
-        except (AttributeError, TypeError, ValueError) as exc:
+        except ValueError as exc:
             message = f"FAILED: {exc}"
-            messages.error(request, message)
+
             if return_url:
-                if message.startswith("SUCCESS"):
-                    messages.success(request, message)
-                else:
-                    messages.error(request, message)
+                messages.error(request, message)
                 return redirect(return_url)
+            context["authentication_message"] = message
+            return Response(context, status=200)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
@@ -545,7 +544,6 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             message += f": {mess_auth}"
         except (AttributeError, TypeError, ValueError) as exc:
             message = f"FAILED: {exc}"
-            messages.error(request, message)
         except RedirectAuthorize as exc:
             try:
                 return redirect(
@@ -556,7 +554,6 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                 )
             except NoReverseMatch:
                 message = "FAILED: Redirect required but target URL could not be resolved."
-                messages.error(request, message)  # Add error message for the UI
         if return_url:
             if message.startswith("SUCCESS"):
                 messages.success(request, message)
