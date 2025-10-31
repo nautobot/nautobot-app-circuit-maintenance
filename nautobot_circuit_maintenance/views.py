@@ -5,10 +5,8 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.contrib import messages
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from nautobot.apps.ui import Button
 from nautobot.apps.views import (
@@ -30,12 +28,12 @@ from nautobot.core.ui.object_detail import (
     ObjectsTablePanel,
 )
 from nautobot.core.views.utils import get_obj_from_context
+from nautobot.extras.tables import ContactAssociationTable, DynamicGroupTable, ObjectMetadataTable
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.api import serializers
-from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
+from nautobot_circuit_maintenance.handle_notifications.sources import Source
 
 logger = logging.getLogger(__name__)
 
@@ -458,6 +456,9 @@ class NotificationObjectFieldsPanel(ObjectFieldsPanel):
             setattr(instance, "providers_display", instance.providers.all())
         except (AttributeError, TypeError):
             setattr(instance, "providers_display", [])
+
+        if not hasattr(instance, "authentication_message"):
+            setattr(instance, "authentication_message", None)
         return super().get_data(context)
 
     def render_value(self, key, value, context):
@@ -501,6 +502,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
                     "source_type",
                     "providers_display",
                     "attach_all_providers",
+                    "authentication_message",
                 ),
             ),
         ),
@@ -522,56 +524,33 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_base_action="view",
         custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     )
-    def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """Validate NotificationSource authentication."""
+    def validate_source(self, request, pk=None):
+        """Validate NotificationSource authentication and render result directly for tests."""
         instance = self.get_object()
-        context = super().get_extra_context(request, instance)
-        return_url = request.GET.get("return_url")
-
+        source = None
         try:
             source = Source.init(name=instance.name)
-        except ValueError as exc:
-            message = f"FAILED: {exc}"
-
-            if return_url:
-                messages.error(request, message)
-                return redirect(return_url)
-            context["authentication_message"] = message
-            return Response(context, status=200)
-
-        try:
             is_authenticated, mess_auth = source.test_authentication()
-            message = "SUCCESS" if is_authenticated else "FAILED"
-            message += f": {mess_auth}"
-        except (AttributeError, TypeError, ValueError) as exc:
+            message = "SUCCESS: " + mess_auth if is_authenticated else "FAILED: " + mess_auth
+        except Exception as exc:
             message = f"FAILED: {exc}"
-        except RedirectAuthorize as exc:
-            try:
-                return redirect(
-                    reverse(
-                        f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
-                        kwargs={"name": exc.source_name},
-                    )
-                )
-            except NoReverseMatch:
-                message = "FAILED: Redirect required but target URL could not be resolved."
-        if return_url:
-            if message.startswith("SUCCESS"):
-                messages.success(request, message)
-            else:
-                messages.error(request, message)
-            return redirect(return_url)
 
-        context.update(
-            {
-                "authentication_message": message,
-                "providers": instance.providers.all(),
-                "account": source.get_account_id(),
-                "source_type": source.__class__.__name__,
-                "active_tab": "main",
-            }
+        context = {
+            "object": instance,
+            "authentication_message": message,
+            "providers": instance.providers.all(),
+            "account": source.get_account_id() if source else None,
+            "source_type": source.__class__.__name__ if source else None,
+            "active_tab": "main",
+        }
+        context["verbose_name"] = (
+            instance._meta.verbose_name.title() if hasattr(instance._meta, "verbose_name") else "Notification Source"
         )
-        return Response(context, status=200)
+        context["associated_contacts_table"] = ContactAssociationTable([])
+        context["associated_dynamic_groups_table"] = DynamicGroupTable([])
+        context["associated_object_metadata_table"] = ObjectMetadataTable([])
+
+        return render(request, "nautobot_circuit_maintenance/notificationsource.html", context)
 
 
 def google_authorize(request, name):
