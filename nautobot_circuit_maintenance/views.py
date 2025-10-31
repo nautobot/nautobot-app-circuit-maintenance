@@ -524,7 +524,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_base_action="view",
         custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     )
-    def validate_source(self, request):
+    def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
         """Validate NotificationSource authentication and render result directly for tests."""
         instance = self.get_object()
         source = None
