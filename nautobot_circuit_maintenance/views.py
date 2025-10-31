@@ -524,7 +524,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_base_action="view",
         custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     )
-    def validate_source(self, request, pk=None):
+    def validate_source(self, request):
         """Validate NotificationSource authentication and render result directly for tests."""
         instance = self.get_object()
         source = None
@@ -532,7 +532,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             source = Source.init(name=instance.name)
             is_authenticated, mess_auth = source.test_authentication()
             message = "SUCCESS: " + mess_auth if is_authenticated else "FAILED: " + mess_auth
-        except Exception as exc:
+        except (AttributeError, TypeError, ValueError) as exc:
             message = f"FAILED: {exc}"
 
         context = {
