@@ -29,8 +29,7 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14"
 # Used for local development
-nautobot = {git = "https://github.com/nautobot/nautobot.git", rev = "next"}
-# nautobot = ">=3.0.0,<4.0.0"  # TODO: Uncomment after v3.0.0 is released
+nautobot = ">=3.0.0,<4.0.0"
 circuit-maintenance-parser = "^2.0.0"
 django-cryptography = "^1.1"
 exchangelib = { version = ">=5.1.0", optional = true }
@@ -39,8 +38,7 @@ google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
-nautobot-capacity-metrics = {git = "https://github.com/nautobot/nautobot-app-capacity-metrics.git", rev = "next-3.0", optional = true }
-# nautobot-capacity-metrics = {version = ">=4.0.0", optional = true }  # TODO: Uncomment after v4.0.0 is released
+nautobot-capacity-metrics = {version = ">=4.0.0", optional = true }
 pydantic = ">=1.10.4,<3"
 
 [tool.poetry.group.dev.dependencies]
