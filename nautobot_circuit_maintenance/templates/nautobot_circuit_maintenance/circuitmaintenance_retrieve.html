@@ -6,15 +6,15 @@
 {% endblock masthead %}
 
 {% block content_left_page %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-header">
             <strong>Info</strong>
         </div>
-        <table class="table table-hover panel-body attr-table">
+        <table class="table table-hover card-body attr-table">
             <tr>
                 <td>Name</td>
                 <td>
-                    <span class="">{{ object.name }}</span>
+                    <span>{{ object.name }}</span>
                 </td>
             </tr>
             <tr>
@@ -51,10 +51,10 @@
 {% endblock content_left_page %}
 
 {% block content_full_width_page %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-header">
             <strong>Circuits</strong>
-            <div class="pull-right noprint">
+            <div class="float-end d-print-none">
             {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
                 <a href="{% url 'plugins:nautobot_circuit_maintenance:circuitimpact_add' %}?maintenance={{ object.id }}&return_url={{ object.get_absolute_url }}" >
                     <span class="mdi mdi-plus" aria-hidden="true"></span> Add
@@ -63,11 +63,11 @@
             </div>
         </div>
         {% if not circuits %}
-        <div class="panel-body">
-            <span class="text-muted">None</span>
+        <div class="card-body">
+            <span class="text-secondary">None</span>
         </div>
         {% else %}
-        <table class="table table-hover panel-body">
+        <table class="table table-hover card-body">
             <tbody>
                 <tr>
                     <th>ID</th>
@@ -126,10 +126,10 @@
         {% endif %}
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-header">
             <strong>Notes</strong>
-            <div class="pull-right noprint">
+            <div class="float-end d-print-none">
             {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
                 <a href="{% url 'plugins:nautobot_circuit_maintenance:note_add' %}?maintenance={{ object.id }}&return_url={{ object.get_absolute_url }}" >
                     <span class="mdi mdi-plus" aria-hidden="true"></span> Add
@@ -138,11 +138,11 @@
             </div>
         </div>
         {% if not maintenance_note %}
-        <div class="panel-body">
-            <span class="text-muted">None</span>
+        <div class="card-body">
+            <span class="text-secondary">None</span>
         </div>
         {% else %}
-        <table class="table table-hover panel-body">
+        <table class="table table-hover card-body">
             <tbody>
                 <tr>
                     <th>Level</th>
@@ -165,14 +165,14 @@
                     <td>
                         {{ note.comment }}
                     </td>
-                    <td class="text-right text-nowrap noprint">
+                    <td class="text-end text-nowrap d-print-none">
                         {% if perms.nautobot_circuit_maintenance.add_circuitmaintenance %}
-                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_edit' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-warning btn-xs">
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_edit' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-warning btn-sm">
                                 <i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>
                             </a>
                         {% endif %}
                         {% if perms.nautobot_circuit_maintenance.delete_circuitmaintenance %}
-                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_delete' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-danger btn-xs">
+                            <a href="{% url 'plugins:nautobot_circuit_maintenance:note_delete' pk=note.id %}?return_url={{ object.get_absolute_url }}" class="btn btn-danger btn-sm">
                                 <i class="glyphicon glyphicon-trash" aria-hidden="true"></i>
                             </a>
                         {% endif %}
@@ -184,16 +184,16 @@
         {% endif %}
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-header">
             <strong>Notifications</strong>
         </div>
         {% if not parsednotification %}
-        <div class="panel-body">
-            <span class="text-muted">None</span>
+        <div class="card-body">
+            <span class="text-secondary">None</span>
         </div>
         {% else %}
-        <table class="table table-hover panel-body">
+        <table class="table table-hover card-body">
             <tbody>
                 <tr>
                     <th>Subject</th>
