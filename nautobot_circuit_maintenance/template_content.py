@@ -7,7 +7,7 @@ from .models import CircuitImpact
 
 # pylint: disable=abstract-method
 class CircuitMaintenanceContent(TemplateExtension):
-    """Add circuit information to the Device view."""
+    """Add circuit maintance information to the Circuit detail view."""
 
     model = "circuits.circuit"
 
