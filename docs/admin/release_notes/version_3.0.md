@@ -4,13 +4,15 @@ This document describes all new features and changes in the release. The format 
 
 ## Release Overview
 
-- Minimum Nautobot version supported is 3.0.
-- Added support for Python 3.13 and removed support for 3.9.
-- Updated UI framework to use latest Bootstrap 5.3.
+This major release marks the compatibility of the Circuit Maintenance App with Nautobot 3.0.0. Check out the [full details](https://docs.nautobot.com/projects/core/en/stable/release-notes/version-3.0/) of the changes included in this new major release of Nautobot. Highlights:
+
+* Minimum Nautobot version supported is 3.0.
+* Added support for Python 3.13 and removed support for 3.9.
+* Updated UI framework to use latest Bootstrap 5.3.
+
+We will continue to support the previous major release for users of Nautobot LTM 2.4 only with critical bug and security fixes as per the [Software Lifecycle Policy](https://networktocode.com/company/legal/software-lifecycle-policy/).
 
 <!-- towncrier release notes start -->
-
-
 ## [v3.0.0 (2025-11-21)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v3.0.0)
 
 - Minimum Nautobot version supported is 3.0.
