@@ -1,2 +1,0 @@
-Removed the password and credentials from the serialization of the Source object.
-Simplified the log message for a notification to only relevant data.
