@@ -9,7 +9,7 @@ This document describes all new features and changes in the release. The format 
 - Dropped support for Python versions 3.8 and 3.9.
 
 <!-- towncrier release notes start -->
-## [v2.4.0 (2025-12-05)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.4.0)
+## [v2.4.0 (2025-12-09)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v2.4.0)
 
 ### Security
 
