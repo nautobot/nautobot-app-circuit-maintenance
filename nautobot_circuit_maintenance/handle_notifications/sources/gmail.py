@@ -18,9 +18,9 @@ from nautobot.extras.jobs import Job
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
 from nautobot_circuit_maintenance.models import NotificationSource
 
-from .maintenance_notification import MaintenanceNotification
 from .email import EmailSource
 from .exceptions import RedirectAuthorize
+from .maintenance_notification import MaintenanceNotification
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +132,7 @@ class GmailAPI(EmailSource):
 
         received_email = self._execute_with_retries(request, job)
 
-        raw_email_string = base64.urlsafe_b64decode(
-            received_email["raw"].encode("utf8")
-        )
+        raw_email_string = base64.urlsafe_b64decode(received_email["raw"].encode("utf8"))
         email_message = email.message_from_bytes(raw_email_string)
         return self.process_email(job, email_message, msg_id)
 
@@ -152,16 +150,12 @@ class GmailAPI(EmailSource):
             emails_with_from = [f"from:{email}" for email in self.emails_to_fetch]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
         elif self.emails_to_fetch and self.limit_emails_with_not_header_from:
-            emails_with_from = [
-                f"from:{email}" for email in self.limit_emails_with_not_header_from
-            ]
+            emails_with_from = [f"from:{email}" for email in self.limit_emails_with_not_header_from]
             search_criteria += " {" + f'{" ".join(emails_with_from)}' + "}"
 
         return search_criteria
 
-    def tag_message(
-        self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus
-    ):
+    def tag_message(self, job: Job, msg_id: Union[str, bytes], tag: MessageProcessingStatus):
         """Apply the given Gmail label to the given message."""
         # Do we have a configured label ID corresponding to the given tag?
         if tag.value not in self.labels:
@@ -219,9 +213,7 @@ class GmailAPI(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        job.logger.debug(
-            f"Raw notifications created {len(received_notifications)} from {self.name}."
-        )
+        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
         job.logger.debug(f"Raw notifications: {received_notifications}")
 
         self.close_service()
@@ -243,11 +235,7 @@ class GmailAPIOauth(GmailAPI):
             logger.debug("Google OAuth Token has not been initialized yet.")
 
         if force_refresh or not self.credentials or not self.credentials.valid:
-            if (
-                self.credentials
-                and self.credentials.refresh_token
-                and (self.credentials.expired or force_refresh)
-            ):
+            if self.credentials and self.credentials.refresh_token and (self.credentials.expired or force_refresh):
                 try:
                     self.credentials.refresh(Request())
                 except RefreshError:
@@ -259,9 +247,7 @@ class GmailAPIOauth(GmailAPI):
                 notification_source.token = self.credentials
                 notification_source.save()
             else:
-                raise RedirectAuthorize(
-                    url_name="google_authorize", source_name=self.name
-                )
+                raise RedirectAuthorize(url_name="google_authorize", source_name=self.name)
 
 
 class GmailAPIServiceAccount(GmailAPI):
@@ -270,11 +256,7 @@ class GmailAPIServiceAccount(GmailAPI):
     def load_credentials(self, force_refresh=False):
         """Load Gmail API Service Account credentials."""
         if force_refresh or not self.credentials:
-            self.credentials = service_account.Credentials.from_service_account_file(
-                self.credentials_file
-            )
-            self.credentials = self.credentials.with_scopes(
-                self.SCOPES + self.extra_scopes
-            )
+            self.credentials = service_account.Credentials.from_service_account_file(self.credentials_file)
+            self.credentials = self.credentials.with_scopes(self.SCOPES + self.extra_scopes)
             self.credentials = self.credentials.with_subject(self.account)
             self.credentials.refresh(Request())

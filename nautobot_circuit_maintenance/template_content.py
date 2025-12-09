@@ -1,12 +1,12 @@
 """Additions to existing Nautobot page content."""
 
-from nautobot.extras.plugins import PluginTemplateExtension
+from nautobot.apps.ui import TemplateExtension
 
 from .models import CircuitImpact
 
 
 # pylint: disable=abstract-method
-class CircuitMaintenanceContent(PluginTemplateExtension):
+class CircuitMaintenanceContent(TemplateExtension):
     """Add circuit information to the Device view."""
 
     model = "circuits.circuit"

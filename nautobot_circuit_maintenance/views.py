@@ -14,16 +14,14 @@ from nautobot.core.views import generic
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.handle_notifications.sources import (
     RedirectAuthorize,
-    Source,
+    init_source,
 )
 from nautobot_circuit_maintenance.models import CircuitMaintenance
 
 logger = logging.getLogger(__name__)
 
 
-class CircuitMaintenanceOverview(
-    generic.ObjectListView
-):  # pylint: disable=too-many-locals
+class CircuitMaintenanceOverview(generic.ObjectListView):  # pylint: disable=too-many-locals
     """View for an overview dashboard of summary view.
 
     This view provides a summary about the environment of circuit maintenances that have been recorded. Getting stats
@@ -37,21 +35,15 @@ class CircuitMaintenanceOverview(
     filterset_form = forms.CircuitMaintenanceFilterForm
     table = tables.CircuitMaintenanceTable
     template_name = "nautobot_circuit_maintenance/circuit_maintenance_overview.html"
-    queryset = (
-        models.CircuitMaintenance.objects.all()
-    )  # Needs to remain all objects, otherwise other calcs will fail.
+    queryset = models.CircuitMaintenance.objects.all()  # Needs to remain all objects, otherwise other calcs will fail.
     today = datetime.date.today()
     extra_content = None
 
     def extra_context(self):
         """Extra content method on."""
         # add global aggregations to extra context.
-        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get(
-            "dashboard_n_days"
-        )
-        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(
-            start_date=self.today, n_days=n_days
-        )
+        n_days = settings.PLUGINS_CONFIG.get("nautobot_circuit_maintenance", {}).get("dashboard_n_days")
+        maintenance_in_upcoming_days = self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)
 
         # Get historical matrix for number of maintenances, includes calculating the average number per month
         historical_matrix = self._get_historical_matrix(start_date=self.today)
@@ -69,27 +61,17 @@ class CircuitMaintenanceOverview(
 
         # Check for a greater than 0 number of maintenance objects
         if circuit_maint_count > 0:
-            average_maintenance_duration = (
-                str(round(total_duration_in_minutes / circuit_maint_count, 2))
-                + " minutes"
-            )
+            average_maintenance_duration = str(round(total_duration_in_minutes / circuit_maint_count, 2)) + " minutes"
         else:
             average_maintenance_duration = "No maintenances found."
 
         # Get count of upcoming maintenances
-        future_maintenance_count = self.calculate_future_maintenances(
-            start_date=self.today
-        )
+        future_maintenance_count = self.calculate_future_maintenances(start_date=self.today)
 
         circuit_object_count = Circuit.objects.count()
         if circuit_object_count > 0:
             circuit_count_ratio = round(
-                len(
-                    self.get_maintenances_next_n_days(
-                        start_date=self.today, n_days=n_days
-                    )
-                )
-                / circuit_object_count,
+                len(self.get_maintenances_next_n_days(start_date=self.today, n_days=n_days)) / circuit_object_count,
                 2,
             )
         else:
@@ -100,14 +82,10 @@ class CircuitMaintenanceOverview(
             "Upcoming Maintenances": len(maintenance_in_upcoming_days),
             "Historical - 7 Day": len(historical_matrix["past_7_days_maintenance"]),
             "Historical - 30 Days": len(historical_matrix["past_30_days_maintenance"]),
-            "Historical - 365 Days": len(
-                historical_matrix["past_365_days_maintenance"]
-            ),
+            "Historical - 365 Days": len(historical_matrix["past_365_days_maintenance"]),
             "Average Duration of Maintenances": average_maintenance_duration,
             "Future Maintenances": future_maintenance_count,
-            "Average Number of Maintenances Per Month": round(
-                self.get_maintenances_per_month(), 1
-            ),
+            "Average Number of Maintenances Per Month": round(self.get_maintenances_per_month(), 1),
             "Future Maintenance to Circuit Ratio": circuit_count_ratio,
         }
 
@@ -132,13 +110,9 @@ class CircuitMaintenanceOverview(
         Returns:
             List: List of maintenances that are up coming
         """
-        start_date_midnight = datetime.datetime.combine(
-            start_date, datetime.datetime.min.time()
-        )
+        start_date_midnight = datetime.datetime.combine(start_date, datetime.datetime.min.time())
         end_date_midnight = start_date_midnight + datetime.timedelta(days=n_days)
-        maintenances = self.queryset.filter(
-            start_time__gte=start_date_midnight, start_time__lte=end_date_midnight
-        )
+        maintenances = self.queryset.filter(start_time__gte=start_date_midnight, start_time__lte=end_date_midnight)
 
         return list(maintenances)
 
@@ -149,13 +123,9 @@ class CircuitMaintenanceOverview(
             start_date (datetime.date): Date to start the search.
             n_days (int): Should be a negative number for the number of days.
         """
-        start_date_midnight = datetime.datetime.combine(
-            start_date, datetime.datetime.min.time()
-        )
+        start_date_midnight = datetime.datetime.combine(start_date, datetime.datetime.min.time())
         end_date_midnight = start_date_midnight + datetime.timedelta(days=n_days)
-        maintenances = self.queryset.filter(
-            start_time__gte=end_date_midnight, start_time__lte=start_date_midnight
-        )
+        maintenances = self.queryset.filter(start_time__gte=end_date_midnight, start_time__lte=start_date_midnight)
 
         return list(maintenances)
 
@@ -177,15 +147,9 @@ class CircuitMaintenanceOverview(
         # TODO: Move to a generic function set up, since this is something that should be exposed via the Capacity
         #       Metrics app when enabled.
         return_dict = {
-            "past_7_days_maintenance": self.get_maintenance_past_n_days(
-                start_date=start_date, n_days=-7
-            ),
-            "past_30_days_maintenance": self.get_maintenance_past_n_days(
-                start_date=start_date, n_days=-30
-            ),
-            "past_365_days_maintenance": self.get_maintenance_past_n_days(
-                start_date=start_date, n_days=-365
-            ),
+            "past_7_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-7),
+            "past_30_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-30),
+            "past_365_days_maintenance": self.get_maintenance_past_n_days(start_date=start_date, n_days=-365),
         }
         return return_dict
 
@@ -199,9 +163,7 @@ class CircuitMaintenanceOverview(
             int: Count of future maintenances
         """
         count = self.queryset.filter(
-            start_time__gte=datetime.datetime.combine(
-                start_date, datetime.datetime.min.time()
-            )
+            start_time__gte=datetime.datetime.combine(start_date, datetime.datetime.min.time())
         ).count()
 
         return count
@@ -249,9 +211,9 @@ class CircuitMaintenanceView(generic.ObjectView):
         """Extend content of detailed view for Circuit Maintenance."""
         maintenance_note = models.Note.objects.filter(maintenance=instance)
         circuits = models.CircuitImpact.objects.filter(maintenance=instance)
-        parsednotification = models.ParsedNotification.objects.filter(
-            maintenance=instance
-        ).order_by("-raw_notification__stamp")
+        parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
+            "-raw_notification__stamp"
+        )
 
         return {
             "circuits": circuits,
@@ -426,9 +388,7 @@ class RawNotificationView(generic.ObjectView):
     def get_extra_context(self, request, instance):
         """Extend content of detailed view for RawNotification."""
         if instance.parsed:
-            parsed_notification = models.ParsedNotification.objects.filter(
-                raw_notification=instance
-            ).last()
+            parsed_notification = models.ParsedNotification.objects.filter(raw_notification=instance).last()
         else:
             parsed_notification = None
         try:
@@ -491,11 +451,9 @@ class NotificationSourceView(generic.ObjectView):
 
     def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
         """Extend content of detailed view for NotificationSource."""
-        source = Source.init(name=instance.name)
+        source = init_source(name=instance.name)
         return {
-            "providers": Provider.objects.filter(
-                pk__in=[provider.pk for provider in instance.providers.all()]
-            ),
+            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
             "account": source.get_account_id(),
             "source_type": source.__class__.__name__,
         }
@@ -524,7 +482,7 @@ class NotificationSourceValidate(generic.ObjectView):
 
     def get_extra_context(self, request, instance):  # pylint: disable=unused-argument
         """Extend content of detailed view for NotificationSource."""
-        source = Source.init(name=instance.name)
+        source = init_source(name=instance.name)
 
         try:
             is_authenticated, mess_auth = source.test_authentication()
@@ -548,9 +506,7 @@ class NotificationSourceValidate(generic.ObjectView):
 
         return {
             "authentication_message": message,
-            "providers": Provider.objects.filter(
-                pk__in=[provider.pk for provider in instance.providers.all()]
-            ),
+            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
             "account": source.get_account_id(),
             "source_type": source.__class__.__name__,
             "active_tab": "main",
@@ -561,7 +517,7 @@ def google_authorize(request, name):
     """View to start the Google OAuth authorization flow."""
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     notification_source = models.NotificationSource.objects.get(name=name)
-    source = Source.init(name=notification_source.name)
+    source = init_source(name=notification_source.name)
     request.session["CLIENT_SECRETS_FILE"] = source.credentials_file
     request.session["SCOPES"] = source.SCOPES + source.extra_scopes
     request.session["SOURCE_NAME"] = name

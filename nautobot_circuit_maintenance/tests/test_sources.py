@@ -22,8 +22,8 @@ from nautobot_circuit_maintenance.handle_notifications.sources import (
     GmailAPIOauth,
     GmailAPIServiceAccount,
     MaintenanceNotification,
-    Source,
     get_notifications,
+    init_source,
 )
 from nautobot_circuit_maintenance.handle_notifications.sources.email import EmailSource
 from nautobot_circuit_maintenance.handle_notifications.sources.gmail import GmailAPI
@@ -74,13 +74,13 @@ class TestSource(TestCase):
         """Validate Factory pattern for non existent name."""
         non_existent_name = "abc"
         with self.assertRaisesMessage(ValueError, f"Name {non_existent_name} not found in PLUGINS_CONFIG."):
-            Source.init(name=non_existent_name)
+            init_source(name=non_existent_name)
 
     def test_source_factory_nonexistent_url(self):
         """Validate Factory pattern for non existent url."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["url"]
         with self.assertRaisesMessage(ValueError, f"URL for {SOURCE_IMAP['name']} not found in PLUGINS_CONFIG"):
-            Source.init(name=SOURCE_IMAP["name"])
+            init_source(name=SOURCE_IMAP["name"])
 
     def test_source_factory_url_scheme_not_supported(self):
         """Validate Factory pattern for non existent url scheme."""
@@ -89,7 +89,7 @@ class TestSource(TestCase):
             ValueError,
             "Scheme ftp not supported as Notification Source (only IMAP or HTTPS to accounts.google.com).",
         ):
-            Source.init(name=SOURCE_IMAP["name"])
+            init_source(name=SOURCE_IMAP["name"])
 
     def test_source_factory_url_malformed(self):
         """Validate Factory pattern for malformed url."""
@@ -98,7 +98,7 @@ class TestSource(TestCase):
             ValueError,
             "Scheme  not supported as Notification Source (only IMAP or HTTPS to accounts.google.com).",
         ):
-            Source.init(name=SOURCE_IMAP["name"])
+            init_source(name=SOURCE_IMAP["name"])
 
 
 class TestEmailSource(TestCase):
@@ -203,7 +203,7 @@ class TestIMAPSource(TestCase):
         # Deleting other NotificationSource to define a reliable state.
         NotificationSource.objects.exclude(name__in=[SOURCE_IMAP["name"]]).delete()
         self.notification_source = NotificationSource.objects.get(name=SOURCE_IMAP["name"])
-        self.source = Source.init(name=SOURCE_IMAP["name"])
+        self.source = init_source(name=SOURCE_IMAP["name"])
 
     def test_imap_restricted_password(self):
         """Test successful omit of password in output."""
@@ -216,7 +216,7 @@ class TestIMAPSource(TestCase):
 
     def test_source_factory(self):
         """Validate Factory pattern for Source class."""
-        source_instance = Source.init(name=SOURCE_IMAP["name"])
+        source_instance = init_source(name=SOURCE_IMAP["name"])
         self.assertIsInstance(source_instance, IMAP)
         self.assertEqual(source_instance.name, SOURCE_IMAP["name"])
         self.assertEqual(source_instance.url, SOURCE_IMAP["url"])
@@ -229,13 +229,13 @@ class TestIMAPSource(TestCase):
         """Validate Factory pattern IMAP without account settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         with self.assertRaises(ValidationError):
-            Source.init(name=SOURCE_IMAP["name"])
+            init_source(name=SOURCE_IMAP["name"])
 
     def test_source_factory_imap_no_secret(self):
         """Validate Factory pattern IMAP without secret settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["secret"]
         with self.assertRaises(ValidationError):
-            Source.init(name=SOURCE_IMAP["name"])
+            init_source(name=SOURCE_IMAP["name"])
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""
@@ -436,7 +436,7 @@ class TestGmailAPISource(TestCase):
         with open(SOURCE_GMAIL_API_OAUTH["credentials_file"], "w", encoding="utf-8") as credentials_file:
             json.dump({"web": {}}, credentials_file)
 
-        self.source = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+        self.source = init_source(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         self.job = MockedJob()
 
     def tearDown(self):
@@ -446,7 +446,7 @@ class TestGmailAPISource(TestCase):
 
     def test_source_factory_service_account(self):
         """Validate Factory pattern for Source class."""
-        source_instance = Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+        source_instance = init_source(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         self.assertIsInstance(source_instance, GmailAPIServiceAccount)
         self.assertEqual(source_instance.name, SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
         self.assertEqual(source_instance.url, SOURCE_GMAIL_API_SERVICE_ACCOUNT["url"])
@@ -455,7 +455,7 @@ class TestGmailAPISource(TestCase):
 
     def test_source_factory_oauth(self):
         """Validate Factory pattern for Source class."""
-        source_instance = Source.init(name=SOURCE_GMAIL_API_OAUTH["name"])
+        source_instance = init_source(name=SOURCE_GMAIL_API_OAUTH["name"])
         self.assertIsInstance(source_instance, GmailAPIOauth)
         self.assertEqual(source_instance.name, SOURCE_GMAIL_API_OAUTH["name"])
         self.assertEqual(source_instance.url, SOURCE_GMAIL_API_OAUTH["url"])
@@ -466,19 +466,19 @@ class TestGmailAPISource(TestCase):
         """Validate Factory pattern Gmail API without account settings."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["account"]
         with self.assertRaises(ValidationError):
-            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+            init_source(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
     def test_source_factory_no_credentials(self):
         """Validate Factory pattern Gmail API without credentials_file."""
         del settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["credentials_file"]
         with self.assertRaises(ValueError):
-            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+            init_source(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
     def test_source_factory_credentials_file_non_existent(self):
         """Validate Factory pattern Gmail API with credentials_file unexistent."""
         settings.PLUGINS_CONFIG["nautobot_circuit_maintenance"]["notification_sources"][0]["credentials_file"] = "fake"
         with self.assertRaises(ValueError):
-            Source.init(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
+            init_source(name=SOURCE_GMAIL_API_SERVICE_ACCOUNT["name"])
 
     def test_get_notifications_without_providers(self):
         """Test get_notifications when there are no Providers defined."""

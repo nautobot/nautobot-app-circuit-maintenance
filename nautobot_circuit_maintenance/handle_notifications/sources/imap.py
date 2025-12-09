@@ -6,15 +6,16 @@ import imaplib
 from typing import Iterable, Optional
 
 from nautobot.extras.jobs import Job
+from pydantic import Field
 
-from .maintenance_notification import MaintenanceNotification
 from .email import EmailSource
+from .maintenance_notification import MaintenanceNotification
 
 
 class IMAP(EmailSource):
     """IMAP class, extending Source class."""
 
-    password: str
+    password: str = Field(repr=False)
     imap_server: str
     imap_port: int = 993
 
@@ -109,9 +110,7 @@ class IMAP(EmailSource):
             if raw_notification:
                 received_notifications.append(raw_notification)
 
-        job.logger.debug(
-            f"Raw notifications created {len(received_notifications)} from {self.name}."
-        )
+        job.logger.debug(f"Raw notifications created {len(received_notifications)} from {self.name}.")
 
         self.close_session()
         return received_notifications

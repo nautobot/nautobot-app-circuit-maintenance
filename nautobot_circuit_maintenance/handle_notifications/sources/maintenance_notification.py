@@ -1,8 +1,8 @@
 """Manteinance Notification Models."""
 
 from typing import TYPE_CHECKING
-from pydantic import BaseModel
 
+from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from nautobot_circuit_maintenance.handle_notifications.sources.base import Source
