@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
-version = "2.3.1"
+version = "3.0.1a0"
 description = "Nautobot app to automatically handle Circuit Maintenances Notifications"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -13,24 +13,23 @@ classifiers = [
     "Intended Audience :: Developers",
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 packages = [
     { include = "nautobot_circuit_maintenance" },
 ]
 include = [
     # Poetry by default will exclude files that are in .gitignore
-    "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs/**/*",
+    { path = "nautobot_circuit_maintenance/static/nautobot_circuit_maintenance/docs/**/*", format = ["sdist", "wheel"] }
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.13"
+python = ">=3.10,<3.14"
 # Used for local development
-nautobot = "^2.0.0"
+nautobot = ">=3.0.0,<4.0.0"
 circuit-maintenance-parser = "^2.0.0"
 django-cryptography = "^1.1"
 exchangelib = { version = ">=5.1.0", optional = true }
@@ -39,21 +38,33 @@ google-api-python-client = "^2.9.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.5.0"
 markdown = "!=3.3.5"  # Added due an issue with Markdown 3.3.5
-nautobot-capacity-metrics = {version = ">=3.0.0", optional = true }
+nautobot-capacity-metrics = {version = ">=4.0.0,<5.0.0", optional = true }
 pydantic = ">=1.10.4,<3"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "*"
-django-debug-toolbar = "*"
+# Currently pinned to <6.0.0 due to https://github.com/django-commons/django-debug-toolbar/issues/2168
+django-debug-toolbar = "<6.0.0"
 invoke = "*"
 ipython = "*"
 pylint = "*"
-pylint-django = "*"
-pylint-nautobot = "*"
+pylint-django = ">=2.5.4"
+pylint-nautobot = ">=0.3.1"
 ruff = "0.5.5"
 yamllint = "*"
 toml = "*"
+# Python implementation of markdownlint
+pymarkdownlnt = "~0.9.30"
 Markdown = "*"
+parameterized = "*"
+towncrier = ">=23.6.0,<=24.8.0"
+to-json-schema = "*"
+jsonschema = "*"
+djlint = ">=1.36.4,<2.0.0"
+djhtml = ">=3.0.8,<4.0.0"
+tomli = { version = "*", markers = "python_version < '3.11'" }  # tomli is included in the stdlib as of Python 3.11
+
+[tool.poetry.group.docs.dependencies]
 # Render custom markdown for version added/changed/remove notes
 markdown-version-annotations = "1.0.1"
 # Rendering docs to HTML
@@ -65,10 +76,6 @@ mkdocstrings = "0.25.2"
 mkdocstrings-python = "1.10.8"
 mkdocs-autorefs = "1.2.0"
 griffe = "1.1.1"
-parameterized = "*"
-towncrier = "~23.6.0"
-to-json-schema = "*"
-jsonschema = "*"
 
 [tool.poetry.extras]
 ews = [
@@ -97,7 +104,11 @@ disable = """,
     duplicate-code,
     line-too-long,
     too-few-public-methods,
-    too-many-ancestors
+    too-many-ancestors,
+    too-many-positional-arguments,
+    nb-warn-dunder-filter-field,
+    nb-no-search-function,
+    nb-no-char-filter-q,
 """
 
 [tool.pylint.miscellaneous]
@@ -107,14 +118,9 @@ notes = """,
     XXX,
     """
 
-[tool.pylint-nautobot]
-supported_nautobot_versions = [
-    "2.0.0"
-]
-
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = [
@@ -154,17 +160,39 @@ convention = "google"
     "S"
 ]
 
+[tool.coverage.run]
+disable_warnings = ["already-imported"]
+relative_files = true
+omit = [
+    # Skip Tests
+    "*/tests/*",
+]
+include = [
+    "nautobot_circuit_maintenance/*",
+]
+
+[tool.pymarkdown]
+plugins.selectively_enable_rules = true
+plugins.blanks-around-lists.enabled = true
+plugins.list-anchored-indent.enabled = true
+extensions.front-matter.enabled = true
+
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.towncrier]
 package = "nautobot_circuit_maintenance"
 directory = "changes"
-filename = "docs/admin/release_notes/version_2.3.md"
+filename = "docs/admin/release_notes/version_3.0.md"
 template = "development/towncrier_template.j2"
 start_string = "<!-- towncrier release notes start -->"
 issue_format = "[#{issue}](https://github.com/nautobot/nautobot-app-circuit-maintenance/issues/{issue})"
+
+[[tool.towncrier.type]]
+directory = "breaking"
+name = "Breaking Changes"
+showcontent = true
 
 [[tool.towncrier.type]]
 directory = "security"
@@ -210,3 +238,8 @@ showcontent = true
 directory = "housekeeping"
 name = "Housekeeping"
 showcontent = true
+
+[tool.djlint]
+ignore = "H005,H006,H008,H011,H012,H013,H014,H015,H016,H019,H020,H021,H022,H023,H025,H026,H030,H031,H037"
+profile="django"
+extend_exclude = "docs/,nautobot_circuit_maintenance/static/"

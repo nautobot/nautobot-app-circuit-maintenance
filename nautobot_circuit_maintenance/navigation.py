@@ -1,14 +1,18 @@
 """Navigation for Circuit Maintenance."""
 
-from nautobot.apps.ui import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab
-
-# TODO: NavMenuButton is not part of the new 2.0 UI, this should be replaced
-from nautobot.core.apps import NavMenuButton
-from nautobot.core.choices import ButtonColorChoices
+from nautobot.apps.ui import (
+    NavigationIconChoices,
+    NavigationWeightChoices,
+    NavMenuGroup,
+    NavMenuItem,
+    NavMenuTab,
+)
 
 menu_items = (
     NavMenuTab(
         name="Circuits",
+        icon=NavigationIconChoices.CIRCUITS,
+        weight=NavigationWeightChoices.CIRCUITS,
         groups=(
             NavMenuGroup(
                 name="Circuit Maintenance App",
@@ -17,35 +21,25 @@ menu_items = (
                     NavMenuItem(
                         link="plugins:nautobot_circuit_maintenance:circuitmaintenance_overview",
                         name="Dashboard",
+                        weight=100,
                         permissions=["nautobot_circuit_maintenance.view_circuitmaintenance"],
                     ),
                     NavMenuItem(
                         link="plugins:nautobot_circuit_maintenance:circuitmaintenance_list",
                         name="Circuit Maintenances",
+                        weight=200,
                         permissions=["nautobot_circuit_maintenance.view_circuitmaintenance"],
-                        buttons=(
-                            NavMenuAddButton(
-                                link="plugins:nautobot_circuit_maintenance:circuitmaintenance_add",
-                                title="Add Circuit Maintenance",
-                                permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],
-                            ),
-                            NavMenuButton(
-                                link="plugins:nautobot_circuit_maintenance:circuitmaintenance_job",
-                                title="Job to update Circuit Maintenance",
-                                icon_class="mdi mdi-language-python",
-                                button_class=ButtonColorChoices.BLUE,
-                                permissions=["nautobot_circuit_maintenance.add_circuitmaintenance"],
-                            ),
-                        ),
                     ),
                     NavMenuItem(
                         link="plugins:nautobot_circuit_maintenance:rawnotification_list",
                         name="Notifications",
+                        weight=300,
                         permissions=["nautobot_circuit_maintenance.view_circuitmaintenance"],
                     ),
                     NavMenuItem(
                         link="plugins:nautobot_circuit_maintenance:notificationsource_list",
                         name="Notification Sources",
+                        weight=400,
                         permissions=["nautobot_circuit_maintenance.view_notificationsource"],
                     ),
                 ),

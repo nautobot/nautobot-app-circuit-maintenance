@@ -1,19 +1,19 @@
-{% extends 'generic/object_detail.html' %}
+{% extends "generic/object_retrieve.html" %}
 
 {% block masthead %}
     <h1>{{ object.title }}</h1>
 {% endblock masthead %}
 
 {% block content_left_page %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
+    <div class="card">
+        <div class="card-header">
             <strong>Info</strong>
         </div>
-        <table class="table table-hover panel-body attr-table">
+        <table class="table table-hover card-body attr-table">
             <tr>
                 <td>Title</td>
                 <td>
-                    <span class="">{{ object.title }}</span>
+                    <span>{{ object.title }}</span>
                 </td>
             </tr>
             <tr>
@@ -38,4 +38,4 @@
             </tr>
         </table>
     </div>
-{% endblock %}
+{% endblock content_left_page %}

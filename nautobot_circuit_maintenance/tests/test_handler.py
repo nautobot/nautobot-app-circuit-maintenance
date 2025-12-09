@@ -123,11 +123,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data = get_base_notification_data()
         test_notification = generate_email_notification(notification_data, self.source)
 
-        with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
-        ) as mock_get_notifications, patch(
-            "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
-        ) as mock_tag_message:
+        with (
+            patch(
+                "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+            ) as mock_get_notifications,
+            patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message,
+        ):
             mock_get_notifications.return_value = [test_notification]
             processed_notifications = self.job.run()
 
@@ -148,11 +149,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data["circuitimpacts"].append({"cid": fake_cid, "impact": "NO-IMPACT"})
         test_notification = generate_email_notification(notification_data, self.source)
 
-        with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
-        ) as mock_get_notifications, patch(
-            "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
-        ) as mock_tag_message:
+        with (
+            patch(
+                "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+            ) as mock_get_notifications,
+            patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message,
+        ):
             mock_get_notifications.return_value = [test_notification]
             processed_notifications = self.job.run()
 
@@ -215,11 +217,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         notification_data["status"] = "Non valid status"
         test_notification = generate_email_notification(notification_data, self.source)
 
-        with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
-        ) as mock_get_notifications, patch(
-            "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
-        ) as mock_tag_message:
+        with (
+            patch(
+                "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+            ) as mock_get_notifications,
+            patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message,
+        ):
             mock_get_notifications.return_value = [test_notification]
             self.job.run()
 
@@ -483,11 +486,12 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification_newer = generate_email_notification(notification_data, self.source)
 
         provider = Provider.objects.get(name=test_notification_older.provider_type)
-        with patch(
-            "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
-        ) as mock_get_notifications, patch(
-            "nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message"
-        ) as mock_tag_message:
+        with (
+            patch(
+                "nautobot_circuit_maintenance.handle_notifications.handler.get_notifications"
+            ) as mock_get_notifications,
+            patch("nautobot_circuit_maintenance.handle_notifications.sources.Source.tag_message") as mock_tag_message,
+        ):
             # We simulate that the newer notifications are retrieved first, so processed first
             mock_get_notifications.return_value = [
                 test_notification_newer,
