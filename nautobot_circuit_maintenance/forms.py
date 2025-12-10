@@ -20,7 +20,6 @@ from nautobot.apps.forms import (
 )
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
-from nautobot.extras.forms import TagsBulkEditFormMixin
 
 from .choices import CircuitMaintenanceStatusChoices
 from .models import (
@@ -45,7 +44,7 @@ class CircuitImpactForm(NautobotModelForm):
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class CircuitImpactBulkEditForm(NautobotBulkEditForm, BootstrapMixin, TagsBulkEditFormMixin, CustomFieldModelBulkEditFormMixin):
+class CircuitImpactBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Circuit Impact."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitImpact.objects.all(), widget=forms.MultipleHiddenInput)
@@ -106,7 +105,7 @@ class CircuitMaintenanceFilterForm(NautobotFilterForm):
     end_time = forms.DateTimeField(label="End time before", required=False, widget=DateTimePicker())
 
 
-class CircuitMaintenanceBulkEditForm(BootstrapMixin, TagsBulkEditFormMixin, CustomFieldModelBulkEditFormMixin, NautobotBulkEditForm):
+class CircuitMaintenanceBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Circuit Maintenances."""
 
     pk = forms.ModelMultipleChoiceField(queryset=CircuitMaintenance.objects.all(), widget=forms.MultipleHiddenInput)
@@ -131,7 +130,7 @@ class NoteForm(NautobotModelForm):
         widgets = {"maintenance": forms.HiddenInput()}
 
 
-class NoteBulkEditForm(BootstrapMixin, TagsBulkEditFormMixin, CustomFieldModelBulkEditFormMixin, NautobotBulkEditForm):
+class NoteBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Notes."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
@@ -183,7 +182,7 @@ class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
         fields = ["providers"]
 
 
-class NotificationSourceBulkEditForm(NautobotBulkEditForm, BootstrapMixin, TagsBulkEditFormMixin, CustomFieldModelBulkEditFormMixin):
+class NotificationSourceBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing NotificationSources."""
 
     pk = forms.ModelMultipleChoiceField(queryset=NotificationSource.objects.all(), widget=forms.MultipleHiddenInput)

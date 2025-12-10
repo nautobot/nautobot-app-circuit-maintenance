@@ -23,13 +23,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
+from nautobot_circuit_maintenance.api import serializers
 from nautobot_circuit_maintenance.handle_notifications.sources import (
     RedirectAuthorize,
     init_source,
 )
-from nautobot_circuit_maintenance.models import CircuitMaintenance
-from nautobot_circuit_maintenance.api import serializers
-from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 
 logger = logging.getLogger(__name__)
 
@@ -332,19 +330,12 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
 
     def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for NotificationSource."""
-        source = init_source(name=instance.name)
-        return {
-            "providers": Provider.objects.filter(pk__in=[provider.pk for provider in instance.providers.all()]),
-            "account": source.get_account_id(),
-            "source_type": source.__class__.__name__,
-        }
-
         context = super().get_extra_context(request, instance)
 
         if self.action == "retrieve":
             providers_qs = instance.providers.all()
             try:
-                source = Source.init(name=instance.name)
+                source = init_source(name=instance.name)
                 context.update(
                     {
                         "providers": providers_qs,
@@ -381,7 +372,7 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         return_url = request.GET.get("return_url")
 
         try:
-            source = Source.init(name=instance.name)
+            source = init_source(name=instance.name)
         except ValueError as exc:
             message = f"FAILED: {exc}"
             if return_url:
