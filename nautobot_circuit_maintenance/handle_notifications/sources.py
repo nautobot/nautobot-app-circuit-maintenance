@@ -19,12 +19,18 @@ try:
 except ImportError:
     EXCHANGELIB_PRESENT = False
 from django.conf import settings
-from google.auth.exceptions import RefreshError
-from google.auth.transport.requests import Request
-from google.oauth2 import service_account
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import Resource, build
-from googleapiclient.errors import HttpError
+
+try:
+    from google.auth.exceptions import RefreshError
+    from google.auth.transport.requests import Request
+    from google.oauth2 import service_account
+    from google.oauth2.credentials import Credentials
+    from googleapiclient.discovery import Resource, build
+    from googleapiclient.errors import HttpError
+
+    GMAIL_CLIENT_PRESENT = True
+except ImportError:
+    GMAIL_CLIENT_PRESENT = False
 from nautobot.circuits.models import Provider
 from nautobot.extras.jobs import Job
 from pydantic import BaseModel, Field, ValidationError
@@ -148,6 +154,11 @@ class Source(BaseModel):
                 server=url_components.netloc.split(":")[0],
             )
         if scheme == "https" and url_components.netloc.split(":")[0] == "accounts.google.com":
+            if not GMAIL_CLIENT_PRESENT:
+                raise ValueError(
+                    "You must install 'google-api-python-client', 'google-auth-httplib2' and 'google-auth-oauthlib' "
+                    "to use the 'gmail' scheme."
+                )
             creds_filename = config.get("credentials_file")
             if not creds_filename:
                 raise ValueError(f"Credentials_file for {name} not found in PLUGINS_CONFIG.")

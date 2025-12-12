@@ -21,9 +21,15 @@ You will need access to an email account that receives provider maintenance noti
 
 The app is available as a Python package via PyPI and can be installed with `pip`:
 
-```shell
 pip install nautobot-circuit-maintenance
 ```
+
+If you plan to use specific Notification Sources that require additional libraries (like Gmail API or MS Exchange), you can install them as extras:
+
+```shell
+pip install nautobot-circuit-maintenance[gmail]
+pip install nautobot-circuit-maintenance[ews]
+pip install nautobot-circuit-maintenance[all]
 
 To ensure Circuit Maintenance is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-circuit-maintenance` package:
 

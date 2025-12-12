@@ -3,7 +3,10 @@
 import datetime
 import logging
 
-import google_auth_oauthlib
+try:
+    import google_auth_oauthlib
+except ImportError:
+    google_auth_oauthlib = None
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect
@@ -416,6 +419,14 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
 
 def google_authorize(request, name):
     """View to start the Google OAuth authorization flow."""
+    if not google_auth_oauthlib:
+        messages.warning(request, "Google OAuth library not installed.")
+        return redirect(
+            reverse(
+                "plugins:nautobot_circuit_maintenance:notificationsource_validate",
+                kwargs={"name": name},
+            )
+        )
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     notification_source = models.NotificationSource.objects.get(name=name)
     source = Source.init(name=notification_source.name)
@@ -459,6 +470,11 @@ def google_authorize(request, name):
 
 def google_oauth2callback(request):
     """View to receive the callback from Google OAuth authorization flow."""
+    if not google_auth_oauthlib:
+        messages.warning(request, "Google OAuth library not installed.")
+        # Not easy to determine the source_name here without session, but usually session persists.
+        # Fallback to list view or just fail.
+        return redirect(reverse("plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"))
     # Specify the state when creating the flow in the callback so that it can
     # verified in the authorization server response.
     state = request.session.get("state")
