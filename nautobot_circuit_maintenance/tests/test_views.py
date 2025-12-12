@@ -616,6 +616,18 @@ class DashboardTest(ModelViewTestCase):
 
         self.assertEqual(expected_result, result)
 
+    @patch("importlib.metadata.version")
+    def test_extra_context_contains_parser_version(self, mock_version):
+        """Test that the parser version is in the extra context."""
+        mock_version.return_value = "1.2.3"
+        test_object = CircuitMaintenanceOverview()
+        # Mocking the queryset as we are not testing the database interaction here and it may fail if not properly set up
+        test_object.queryset = CircuitMaintenance.objects.none()
+
+        context = test_object.extra_context()
+        self.assertIn("circuit_maintenance_parser_version", context)
+        self.assertEqual(context["circuit_maintenance_parser_version"], "1.2.3")
+
 
 class DashboardTestZeroMaintenances(ModelViewTestCase):
     """View tests for CircuitMaintenance Dashboard."""

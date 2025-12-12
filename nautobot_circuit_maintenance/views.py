@@ -1,6 +1,7 @@
 """Views for Circuit Maintenance."""
 
 import datetime
+import importlib.metadata
 import logging
 
 import google_auth_oauthlib
@@ -104,6 +105,7 @@ class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-lo
             "upcoming_maintenances": maintenance_in_upcoming_days,
             "circuit_maint_metric_data": metric_values,
             "n_days": n_days,
+            "circuit_maintenance_parser_version": importlib.metadata.version("circuit-maintenance-parser"),
         }
 
         return self.extra_content
