@@ -245,7 +245,8 @@ Attributes:
 - Notes: list of internal notes linked to this maintenance.
 - Notifications: list of all the parsed notifications that have been processed for this maintenance.
 
-![Circuit Maintenance Job](../images/circuit_maintenance.png)
+![Circuit Maintenance Job](../images/s-circuit_maintenance_dark.png#only-dark)
+![Circuit Maintenance Job](../images/s-circuit_maintenance_light.png#only-light)
 
 ### Circuit Overlap Job
 
