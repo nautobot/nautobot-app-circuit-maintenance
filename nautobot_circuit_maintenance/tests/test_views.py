@@ -354,7 +354,7 @@ class NotificationSourceTest(
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
-    def test_custom_actions(self, mock_test_authentication):
+    def test_custom_actions(self, mock_test_authentication):  # pylint: disable=arguments-differ
         """Overload core test and mock the test_authentication function so we don't have to wait for it to time out."""
         mock_test_authentication.return_value = True, "Test OK"
         return super().test_custom_actions()
