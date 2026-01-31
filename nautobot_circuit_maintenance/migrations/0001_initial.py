@@ -5,7 +5,6 @@ import uuid
 import django.core.serializers.json
 import django.db.models.deletion
 import django.utils.timezone
-import django_cryptography.fields
 import taggit.managers
 from django.db import connection, migrations, models
 
@@ -130,7 +129,7 @@ class Migration(migrations.Migration):
                     "_custom_field_data",
                     models.JSONField(blank=True, default=dict, encoder=django.core.serializers.json.DjangoJSONEncoder),
                 ),
-                ("_password", django_cryptography.fields.encrypt(models.CharField(max_length=100))),
+                ("_password", models.CharField(max_length=100)),
                 ("source_id", models.EmailField(max_length=100, unique=True)),
                 ("url", models.CharField(max_length=200)),
                 ("source_type", models.CharField(blank=True, default="unknown", max_length=50, null=True)),
