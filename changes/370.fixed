@@ -1,0 +1,1 @@
+Fixed upstream testing for django 5.2 by removing django-cryptography dependency and fixing migration that depended on it.
