@@ -31,7 +31,7 @@ class CircuitMaintenanceBulkEditForm(TagsBulkEditFormMixin, NautobotBulkEditForm
         ]
 
 
-class CircuitMaintenanceFilterForm(NautobotFilterForm):
+class CircuitMaintenanceFilterForm(NautobotFilterForm):  # pylint: disable=too-many-ancestors
     """Filter form to filter searches."""
 
     model = models.CircuitMaintenance

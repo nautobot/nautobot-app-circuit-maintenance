@@ -6,7 +6,7 @@ from nautobot_circuit_maintenance import filters, models
 from nautobot_circuit_maintenance.tests import fixtures
 
 
-class CircuitMaintenanceFilterTestCase(FilterTestCases.FilterTestCase):
+class CircuitMaintenanceFilterTestCase(FilterTestCases.FilterTestCase):  # pylint: disable=too-many-ancestors
     """CircuitMaintenance Filter Test Case."""
 
     queryset = models.CircuitMaintenance.objects.all()
