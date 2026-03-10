@@ -7,9 +7,14 @@ This document provides an overview of the App including critical information and
 
 ## Description
 
+<<<<<<< HEAD
 A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circuit Maintenance events related to Circuits in Nautobot.
 
 `nautobot-circuit-maintenance` lets you handle provider maintenances for your Circuits based on notifications received by email through leveraging [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser), a maintenance notification parser library for multiple network service providers that exposes structured data following a recommendation defined in this [draft NANOG BCOP](https://github.com/jda/maintnote-std/blob/master/standard.md), in addition to supporting text based parsing to extract maintenance dates, impacted circuits, and severity of the maintenance.
+=======
+![Main Page](../media/ss_main_page_light.png#only-light)
+![Main Page](../media/ss_main_page_dark.png#only-dark)
+>>>>>>> 3d16615 (Cookie updated targeting develop by NetworkToCode Cookie Drift Manager Tool)
 
 ## Audience (User Personas) - Who should use this App?
 

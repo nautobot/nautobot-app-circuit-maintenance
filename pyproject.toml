@@ -1,7 +1,12 @@
 [tool.poetry]
 name = "nautobot-circuit-maintenance"
+<<<<<<< HEAD
 version = "3.0.1a0"
 description = "Nautobot app to automatically handle Circuit Maintenances Notifications"
+=======
+version = "0.1.0a0"
+description = "Nautobot App that automatically manages network circuit maintenance notifications. Dynamically reads email inboxes (or APIs) and updates Nautobot mapping circuit maintenances to devices"
+>>>>>>> 3d16615 (Cookie updated targeting develop by NetworkToCode Cookie Drift Manager Tool)
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
 readme = "README.md"
@@ -17,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 packages = [
     { include = "nautobot_circuit_maintenance" },
@@ -27,7 +33,7 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.14"
+python = ">=3.10,<3.15"
 # Used for local development
 nautobot = ">=3.0.0,<4.0.0"
 circuit-maintenance-parser = "^2.0.0"
@@ -75,6 +81,7 @@ mkdocstrings = "0.25.2"
 mkdocstrings-python = "1.10.8"
 mkdocs-autorefs = "1.2.0"
 griffe = "1.1.1"
+glightbox = "3.2.0"
 
 [tool.poetry.extras]
 ews = [
