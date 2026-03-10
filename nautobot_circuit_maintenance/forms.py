@@ -82,8 +82,13 @@ class CircuitMaintenanceForm(NautobotModelForm):
         widgets = {"start_time": DateTimePicker(), "end_time": DateTimePicker()}
 
 
+<<<<<<< HEAD
 class CircuitMaintenanceFilterForm(NautobotFilterForm):
     """Form for filtering CircuitMaintenance instances."""
+=======
+class CircuitMaintenanceFilterForm(NautobotFilterForm):  # pylint: disable=too-many-ancestors
+    """Filter form to filter searches."""
+>>>>>>> 41f4a07 (Cookie updated targeting develop by NetworkToCode Cookie Drift Manager Tool)
 
     model = CircuitMaintenance
 
