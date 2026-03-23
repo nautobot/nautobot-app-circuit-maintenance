@@ -13,7 +13,7 @@ A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circ
 
 ## Audience (User Personas) - Who should use this App?
 
-This app is meant for any set of users that have to be aware of and administer Circuit Maintenance events within their remit. Both administrators and operators are aided by seeing exactly which circuits, which locations, and this which users and services will be affected by provider maintenance. 
+This app is meant for any set of users that have to be aware of and administer Circuit Maintenance events within their remit. Both administrators and operators are aided by seeing exactly which circuits, which locations, and this which users and services will be affected by provider maintenance.
 
 ## Authors and Maintainers
 
