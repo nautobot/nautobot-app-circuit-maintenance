@@ -4,8 +4,8 @@ This document describes all new features and changes in the release. The format 
 
 ## Release Overview
 
-- Major features or milestones
-- Changes to compatibility with Nautobot and/or other apps, libraries etc.
+- Removed the django-cryptography dependency and fixed Django 5.2 compatibility.
+- Documentation updated with new screenshots, alongside minor UI and maintenance improvements.
 
 <!-- towncrier release notes start -->
 
