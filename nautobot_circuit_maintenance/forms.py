@@ -82,8 +82,8 @@ class CircuitMaintenanceForm(NautobotModelForm):
         widgets = {"start_time": DateTimePicker(), "end_time": DateTimePicker()}
 
 
-class CircuitMaintenanceFilterForm(NautobotFilterForm):
-    """Form for filtering CircuitMaintenance instances."""
+class CircuitMaintenanceFilterForm(NautobotFilterForm):  # pylint: disable=too-many-ancestors
+    """Filter form to filter searches."""
 
     model = CircuitMaintenance
 
