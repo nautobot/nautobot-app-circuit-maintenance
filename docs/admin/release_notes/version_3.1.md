@@ -9,6 +9,12 @@ This document describes all new features and changes in the release. The format 
 
 <!-- towncrier release notes start -->
 
+## [v3.1.1 (2026-04-10)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v3.1.1)
+
+### Housekeeping
+
+- Rebaked from the cookie `nautobot-app-v3.1.3`.
+
 ## [v3.1.0 (2026-03-25)](https://github.com/nautobot/nautobot-app-circuit-maintenance/releases/tag/v3.1.0)
 
 ### Fixed
