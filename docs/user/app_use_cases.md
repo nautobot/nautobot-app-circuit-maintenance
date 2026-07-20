@@ -18,7 +18,10 @@ The Circuit Maintenance App provides a dashboard that gives a quick overview of 
 
 #### About Card
 
-The dashboard includes an "About" card that displays the currently installed version of the `circuit-maintenance-parser` library. This is useful for verifying which version of the parser logic is being used to process notifications.
+The dashboard includes an "About" card that displays the currently installed version of the Circuit Maintenance app and of the `circuit-maintenance-parser` library. This is useful for verifying which version of the app is deployed and which version of the parser logic is being used to process notifications.
+
+![Circuit Maintenance About card](../images/about_card_dark.png#only-dark){ .on-glb }
+![Circuit Maintenance About card](../images/about_card_light.png#only-light){ .on-glb }
 
 ### Notification Sources
 
