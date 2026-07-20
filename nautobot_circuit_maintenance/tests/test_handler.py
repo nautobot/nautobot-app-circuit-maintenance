@@ -595,10 +595,10 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         since_reference = get_since_reference(self.job, days_to_look_back=1, fetch_since=fetch_since)
         self.assertEqual(since_reference, int(fetch_since.timestamp()))
 
-    def test_run_invalid_fetch_since_returns_empty(self):
-        """An unparseable `fetch_since` value fails fast without processing notifications."""
-        result = self.job.run(fetch_since="not-a-date")
-        self.assertEqual(result, [])
+    def test_run_invalid_fetch_since_raises(self):
+        """An unparseable `fetch_since` value fails the job loudly instead of silently doing nothing."""
+        with self.assertRaises(ValueError):
+            self.job.run(fetch_since="not-a-date")
 
     def test_update_circuit_maintenance_with_duplicated_notes(self):
         """Test update_circuit_maintenance with duplicated notes."""

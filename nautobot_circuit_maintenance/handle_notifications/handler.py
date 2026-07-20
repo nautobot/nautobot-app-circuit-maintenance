@@ -392,11 +392,11 @@ def get_since_reference(
 
     overrides = []
     if days_to_look_back:
-        overrides.append(int((now - datetime.timedelta(days=days_to_look_back)).timestamp()))
+        overrides.append(now - datetime.timedelta(days=days_to_look_back))
     if fetch_since:
-        overrides.append(int(fetch_since.timestamp()))
+        overrides.append(fetch_since)
     if overrides:
-        since_reference = min(overrides)
+        since_reference = int(min(overrides).timestamp())
         job.logger.info(f"Processing notifications since {since_reference} (manual lookback override).")
         return since_reference
 
@@ -456,8 +456,9 @@ class HandleCircuitMaintenanceNotifications(Job):
             try:
                 fetch_since_dt = parser.parse(fetch_since)
             except (ValueError, OverflowError) as error:
-                self.logger.error(f"Invalid 'Fetch notifications since' value '{fetch_since}': {error}")
-                return []
+                raise ValueError(
+                    f"Invalid 'Fetch notifications since' value '{fetch_since}'. Provide an ISO 8601 date/time."
+                ) from error
             if fetch_since_dt.tzinfo is None:
                 fetch_since_dt = fetch_since_dt.replace(tzinfo=datetime.timezone.utc)
 
