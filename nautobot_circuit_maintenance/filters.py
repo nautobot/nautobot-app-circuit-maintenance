@@ -62,7 +62,6 @@ class CircuitImpactFilterSet(NautobotFilterSet):
     )
 
     circuit = NaturalKeyOrPKMultipleChoiceFilter(
-        field_name="circuit",
         queryset=Circuit.objects.all(),
         to_field_name="cid",
         label="Circuit",
