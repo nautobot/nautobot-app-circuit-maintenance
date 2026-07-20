@@ -21,11 +21,11 @@ A app for [Nautobot](https://github.com/nautobot/nautobot) to easily handle Circ
 
 More screenshots can be found in the [Using the App](https://docs.nautobot.com/projects/circuit-maintenance/en/latest/user/app_use_cases/) page in the documentation. Here's a quick overview of some of the app's added functionality:
 
-![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/dashboard.png)
+![Circuit Maintenance Dashboard](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/dashboard_dark.png)
 
-![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_maintenance.png)
+![Example Circuit Maintenance View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_maintenance_dark.png)
 
-![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_notifications.png)
+![Example Raw Notifications View](https://raw.githubusercontent.com/nautobot/nautobot-app-circuit-maintenance/develop/docs/images/circuit_notifications_dark.png)
 
 
 ## Try it out!

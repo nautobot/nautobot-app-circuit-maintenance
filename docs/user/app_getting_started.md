@@ -81,7 +81,9 @@ Attributes:
 - Notes: list of internal notes linked to this maintenance.
 - Notifications: list of all the parsed notifications that have been processed for this maintenance.
 
-![Circuit Maintenance Job](../images/circuit_maintenance.png)
+![Circuit Maintenance Job](../images/circuit_maintenance_dark.png#only-dark){ .on-glb }
+![Circuit Maintenance Job](../images/circuit_maintenance_light.png#only-light){ .on-glb }
+
 
 ## What are the next steps?
 
