@@ -1,0 +1,1 @@
+Added optional lookback window inputs (days to look back, fetch since) to the Handle Notifications job for re-fetching older notifications on demand.
