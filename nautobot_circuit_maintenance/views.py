@@ -106,6 +106,7 @@ class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-lo
             "circuit_maint_metric_data": metric_values,
             "n_days": n_days,
             "circuit_maintenance_parser_version": importlib.metadata.version("circuit-maintenance-parser"),
+            "nautobot_circuit_maintenance_version": importlib.metadata.version("nautobot-circuit-maintenance"),
         }
 
         return self.extra_content

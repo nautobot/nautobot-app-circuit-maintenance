@@ -656,6 +656,44 @@ class DashboardTest(ModelViewTestCase):
         self.assertContains(response, "Circuit Maintenance Parser Version")
         self.assertContains(response, expected_version)
 
+    @patch("importlib.metadata.version")
+    def test_extra_context_contains_app_version(self, mock_version):
+        """Test that the app version is in the extra context."""
+        mock_version.return_value = "1.2.3"
+        test_object = CircuitMaintenanceOverview()
+        # Mocking the queryset as we are not testing the database interaction here and it may fail if not properly set up
+        test_object.queryset = CircuitMaintenance.objects.none()
+
+        context = test_object.extra_context()
+        self.assertIn("nautobot_circuit_maintenance_version", context)
+        self.assertEqual(context["nautobot_circuit_maintenance_version"], "1.2.3")
+
+    def test_extra_context_resolves_real_app_package(self):
+        """The extra context must resolve the real installed nautobot-circuit-maintenance distribution."""
+        # Guards against a typo or rename of the distribution name passed to importlib.metadata.version,
+        # which a mocked call would silently mask.
+        expected_version = importlib.metadata.version("nautobot-circuit-maintenance")
+        test_object = CircuitMaintenanceOverview()
+        test_object.queryset = CircuitMaintenance.objects.none()
+
+        context = test_object.extra_context()
+        self.assertEqual(context["nautobot_circuit_maintenance_version"], expected_version)
+        self.assertNotEqual(context["nautobot_circuit_maintenance_version"], "")
+
+    def test_dashboard_renders_about_card_with_app_version(self):
+        """The dashboard response must render the About card with the app version value."""
+        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
+        obj_perm.save()
+        obj_perm.users.add(self.user)
+        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+        expected_version = importlib.metadata.version("nautobot-circuit-maintenance")
+        response = self.client.get(reverse("plugins:nautobot_circuit_maintenance:circuitmaintenance_overview"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "App Version")
+        self.assertContains(response, expected_version)
+
 
 class DashboardTestZeroMaintenances(ModelViewTestCase):
     """View tests for CircuitMaintenance Dashboard."""
