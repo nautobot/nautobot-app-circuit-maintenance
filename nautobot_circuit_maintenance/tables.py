@@ -175,3 +175,4 @@ class ParsedNotificationTable(BaseTable):
             "raw_notification_provider",
             "json",
         )
+        default_columns = fields

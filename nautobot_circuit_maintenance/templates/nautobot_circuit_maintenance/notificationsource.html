@@ -1,2 +1,8 @@
-{% extends 'generic/object_detail.html' %}
+{% extends "generic/object_detail.html" %}
 {% comment %}3.0 TODO: remove this template, which only exists for backward compatibility with 2.4 and earlier{% endcomment %}
+
+{% block content_left_page %}
+    {% if authentication_message %}
+        <div id="auth-message">{{ authentication_message }}</div>
+    {% endif %}
+{% endblock %}
