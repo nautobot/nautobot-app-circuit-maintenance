@@ -5,8 +5,10 @@ import logging
 
 import google_auth_oauthlib
 from django.conf import settings
-from django.shortcuts import redirect, render
+from django.contrib import messages
+from django.shortcuts import redirect
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from nautobot.apps.ui import Button
 from nautobot.apps.views import (
@@ -27,13 +29,11 @@ from nautobot.core.ui.object_detail import (
     ObjectFieldsPanel,
     ObjectsTablePanel,
 )
-from nautobot.core.views.utils import get_obj_from_context
-from nautobot.extras.tables import ContactAssociationTable, DynamicGroupTable, ObjectMetadataTable
 from rest_framework.decorators import action
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.api import serializers
-from nautobot_circuit_maintenance.handle_notifications.sources import Source
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize, Source
 
 logger = logging.getLogger(__name__)
 
@@ -209,26 +209,6 @@ class CircuitMaintenanceOverview(ObjectListView):  # pylint: disable=too-many-lo
         return self.queryset.count() / delta_months
 
 
-class CustomMaintenanceFieldsPanel(ObjectFieldsPanel):
-    """Panel to display maintenance details including notification provider."""
-
-    def get_data(self, context):
-        """Populate panel data with the notification provider if available."""
-        data = super().get_data(context)
-        instance = get_obj_from_context(context, self.context_object_key)
-        notification_provider = None
-        notification = getattr(instance, "parsednotification_set", None)
-        if notification:
-            first_notification = notification.first()
-            raw_notification = getattr(first_notification, "raw_notification", None) if first_notification else None
-            provider = getattr(raw_notification, "provider", None) if raw_notification else None
-            if provider:
-                notification_provider = provider
-
-        data["notification_provider"] = notification_provider
-        return data
-
-
 class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     """UIViewSet for CircuitMaintenance."""
 
@@ -243,7 +223,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
 
     object_detail_content = ObjectDetailContent(
         panels=(
-            CustomMaintenanceFieldsPanel(
+            ObjectFieldsPanel(
                 weight=100,
                 section=SectionChoices.LEFT_HALF,
                 fields="__all__",
@@ -406,9 +386,6 @@ class RawNotificationUIViewSet(
             ),
         )
     )
-    serializer_class = serializers.RawNotificationSerializer
-    table_class = tables.RawNotificationTable
-    action_buttons = ("export",)
 
     def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for RawNotification."""
@@ -444,18 +421,24 @@ class NotificationObjectFieldsPanel(ObjectFieldsPanel):
     def get_data(self, context):
         """Render providers as a list of hyperlinks."""
         instance = context.get("object") or context.get(self.context_object_key)
+        # `account`, `source_type`, and `providers_display` are not model fields; they are attached to the
+        # instance here so the panel can surface source metadata that only exists at runtime via Source.init().
         try:
             source = Source.init(name=instance.name)
             setattr(instance, "account", source.get_account_id())
             setattr(instance, "source_type", source.__class__.__name__)
-        except (AttributeError, TypeError, ValueError):
+        except ValueError as exc:
+            logger.warning(
+                "Failed to initialize notification source %s: %s",
+                instance.name,
+                exc,
+                exc_info=True,
+                extra={"object": instance},
+            )
             setattr(instance, "account", None)
             setattr(instance, "source_type", None)
 
-        try:
-            setattr(instance, "providers_display", instance.providers.all())
-        except (AttributeError, TypeError):
-            setattr(instance, "providers_display", [])
+        setattr(instance, "providers_display", instance.providers.all())
 
         if not hasattr(instance, "authentication_message"):
             setattr(instance, "authentication_message", None)
@@ -525,32 +508,38 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_additional_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
     )
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """Validate NotificationSource authentication and render result directly for tests."""
+        """Validate NotificationSource authentication and redirect back to the detail view with the result."""
         instance = self.get_object()
-        source = None
         try:
             source = Source.init(name=instance.name)
             is_authenticated, mess_auth = source.test_authentication()
-            message = "SUCCESS: " + mess_auth if is_authenticated else "FAILED: " + mess_auth
-        except (AttributeError, TypeError, ValueError) as exc:
+            message = f"SUCCESS: {mess_auth}" if is_authenticated else f"FAILED: {mess_auth}"
+        except RedirectAuthorize as exc:
+            # OAuth sources (e.g. Gmail) raise this to send the user through the provider consent flow.
+            try:
+                return redirect(
+                    reverse(
+                        f"plugins:nautobot_circuit_maintenance:{exc.url_name}",
+                        kwargs={"name": exc.source_name},
+                    )
+                )
+            except NoReverseMatch:
+                message = "FAILED: Redirect required but target URL could not be resolved."
+        except ValueError as exc:
+            logger.warning(
+                "Failed to validate authentication for notification source %s: %s",
+                instance.name,
+                exc,
+                exc_info=True,
+                extra={"object": instance},
+            )
             message = f"FAILED: {exc}"
 
-        context = {
-            "object": instance,
-            "authentication_message": message,
-            "providers": instance.providers.all(),
-            "account": source.get_account_id() if source else None,
-            "source_type": source.__class__.__name__ if source else None,
-            "active_tab": "main",
-        }
-        context["verbose_name"] = (
-            instance._meta.verbose_name.title() if hasattr(instance._meta, "verbose_name") else "Notification Source"
-        )
-        context["associated_contacts_table"] = ContactAssociationTable([])
-        context["associated_dynamic_groups_table"] = DynamicGroupTable([])
-        context["associated_object_metadata_table"] = ObjectMetadataTable([])
-
-        return render(request, "nautobot_circuit_maintenance/notificationsource.html", context)
+        if message.startswith("SUCCESS"):
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect(instance.get_absolute_url())
 
 
 def google_authorize(request, name):
