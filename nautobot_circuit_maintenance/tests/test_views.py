@@ -8,12 +8,14 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.urls import reverse
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.core.testing import ModelViewTestCase, ViewTestCases
 from nautobot.extras.models import Status
 from nautobot.users.models import ObjectPermission
 
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -311,16 +313,19 @@ class NotificationSourceTest(
         settings.PLUGINS_CONFIG = {"nautobot_circuit_maintenance": {"notification_sources": [cls.SOURCE_1.copy()]}}
         NotificationSource.objects.create(name=cls.SOURCE_1["name"])
 
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
-    def test_validate_view_ok(self, mock_test_authentication):
-        """Test for custom NotificationSourceValidate view."""
-        mock_test_authentication.return_value = True, "Test OK"
-
-        # Adding test to user to run Validate
+    def _grant_view_permission(self):
+        """Give the test user permission to view NotificationSource so the Validate action is reachable."""
         obj_perm = ObjectPermission(name="Test permission", actions=["view"])
         obj_perm.save()
         obj_perm.users.add(self.user)
         obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ok(self, mock_test_authentication):
+        """A successful validation redirects to the detail view with a success message."""
+        mock_test_authentication.return_value = True, "Test OK"
+
+        self._grant_view_permission()
         source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
         response = self.client.get(
             reverse(
@@ -328,36 +333,48 @@ class NotificationSourceTest(
                 kwargs={"pk": source.pk},
             )
         )
-        self.assertContains(response, "SUCCESS: Test OK", status_code=200)
+        self.assertRedirects(response, source.get_absolute_url(), fetch_redirect_response=False)
+        self.assertIn("SUCCESS: Test OK", [str(message) for message in get_messages(response.wsgi_request)])
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
     def test_validate_view_ko(self, mock_test_authentication):
-        """Test for custom NotificationSourceValidate view."""
+        """A failed validation redirects to the detail view with an error message."""
         mock_test_authentication.return_value = False, "Some error"
 
-        # Adding test to user to run Validate
-        obj_perm = ObjectPermission(name="Test permission", actions=["view"])
-        obj_perm.save()
-        obj_perm.users.add(self.user)
-        obj_perm.object_types.add(ContentType.objects.get_for_model(self.model))
+        self._grant_view_permission()
         source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
-
         response = self.client.get(
             reverse(
                 "plugins:nautobot_circuit_maintenance:notificationsource_validate",
                 kwargs={"pk": source.pk},
             )
         )
-        self.assertContains(response, "FAILED: Some error", status_code=200)
+        self.assertRedirects(response, source.get_absolute_url(), fetch_redirect_response=False)
+        self.assertIn("FAILED: Some error", [str(message) for message in get_messages(response.wsgi_request)])
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_redirect_authorize(self, mock_test_authentication):
+        """A source needing (re)authorization redirects to the OAuth flow instead of raising (regression for #350)."""
+        mock_test_authentication.side_effect = RedirectAuthorize(
+            url_name="google_authorize", source_name=self.SOURCE_1["name"]
+        )
+
+        self._grant_view_permission()
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        response = self.client.get(
+            reverse(
+                "plugins:nautobot_circuit_maintenance:notificationsource_validate",
+                kwargs={"pk": source.pk},
+            )
+        )
+        expected_url = reverse(
+            "plugins:nautobot_circuit_maintenance:google_authorize",
+            kwargs={"name": self.SOURCE_1["name"]},
+        )
+        self.assertRedirects(response, expected_url, fetch_redirect_response=False)
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
-
-    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
-    def test_custom_actions(self, mock_test_authentication):  # pylint: disable=arguments-differ
-        """Overload core test and mock the test_authentication function so we don't have to wait for it to time out."""
-        mock_test_authentication.return_value = True, "Test OK"
-        return super().test_custom_actions()
 
 
 class RawNotificationTest(
@@ -425,12 +442,6 @@ class RawNotificationTest(
 
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
-        pass
-
-    @skip(
-        "TODO: This test is failing due to the detail view not having any buttons. We should add the relevant buttons when changing to NautobotUIViewSet views."
-    )
-    def test_has_timestamps_and_buttons(self):
         pass
 
 
