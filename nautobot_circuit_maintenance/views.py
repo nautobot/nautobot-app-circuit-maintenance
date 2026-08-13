@@ -9,6 +9,14 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils.html import format_html, format_html_join
+from nautobot.apps.ui import (
+    Button,
+    ObjectDetailContent,
+    ObjectFieldsPanel,
+    ObjectsTablePanel,
+    SectionChoices,
+)
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -19,8 +27,9 @@ from nautobot.apps.views import (
     ObjectView,
 )
 from nautobot.circuits.models import Circuit
+from nautobot.core.choices import ButtonActionColorChoices
+from nautobot.core.templatetags import helpers
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.api import serializers
@@ -212,22 +221,49 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
     table_class = tables.CircuitMaintenanceTable
     action_buttons = ("add", "export")
 
-    def get_extra_context(self, request, instance=None):
-        """Extend content of detailed view for Circuit Maintenance."""
-        if instance is None:
-            return {}
-
-        maintenance_note = models.Note.objects.filter(maintenance=instance)
-        circuits = models.CircuitImpact.objects.filter(maintenance=instance)
-        parsednotification = models.ParsedNotification.objects.filter(maintenance=instance).order_by(
-            "-raw_notification__stamp"
-        )
-
-        return {
-            "circuits": circuits,
-            "maintenance_note": maintenance_note,
-            "parsednotification": parsednotification,
-        }
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+            ObjectsTablePanel(
+                weight=200,
+                section=SectionChoices.FULL_WIDTH,
+                table_class=tables.CircuitImpactTable,
+                table_attribute="circuitimpact_set",
+                related_field_name="maintenance",
+                table_title="Circuits",
+                exclude_columns=["actions", "dynamic_groups"],
+                paginate=None,
+                show_table_config_button=None,
+            ),
+            ObjectsTablePanel(
+                weight=300,
+                section=SectionChoices.FULL_WIDTH,
+                table_class=tables.NoteTable,
+                table_attribute="note_set",
+                related_field_name="maintenance",
+                exclude_columns=["actions", "dynamic_groups"],
+                paginate=None,
+                show_table_config_button=None,
+            ),
+            ObjectsTablePanel(
+                section=SectionChoices.FULL_WIDTH,
+                weight=400,
+                table_class=tables.ParsedNotificationTable,
+                table_filter="maintenance",
+                select_related_fields=["raw_notification", "maintenance"],
+                order_by_fields=["-raw_notification__stamp"],
+                table_title="Notifications",
+                show_table_config_button=None,
+                paginate=None,
+                # ParsedNotification is detail-only (no list view), so there is no list URL to link a badge to.
+                enable_related_link=False,
+            ),
+        ),
+    )
 
     @action(detail=False, methods=["get"], url_path="job", url_name="job")
     def run_job(self, request):
@@ -254,6 +290,16 @@ class CircuitImpactUIViewSet(NautobotUIViewSet):
     table_class = tables.CircuitImpactTable
     action_buttons = ("add", "export")
 
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+        )
+    )
+
 
 class NoteUIViewSet(NautobotUIViewSet):
     """UIViewSet for Note."""
@@ -266,6 +312,44 @@ class NoteUIViewSet(NautobotUIViewSet):
     serializer_class = serializers.NoteSerializer
     table_class = tables.NoteTable
     action_buttons = ("add", "export")
+
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields="__all__",
+            ),
+        )
+    )
+
+
+class RawObjectFieldsPanel(ObjectFieldsPanel):
+    """Panel for displaying decoded raw binary fields."""
+
+    def render_value(self, key, value, context):
+        """Render raw field as preformatted text."""
+        if key != "raw":
+            return super().render_value(key, value, context)
+        # Normalize to bytes
+        if isinstance(value, memoryview):
+            value = value.tobytes()
+        elif not isinstance(value, (bytes, bytearray)):
+            try:
+                value = bytes(value or b"")
+            except (TypeError, ValueError):
+                value = b""
+
+        text = ""
+        if value:
+            try:
+                text = value.decode("utf-8", "strict")
+            except UnicodeDecodeError as exc:
+                # Log warning as requested
+                logger.warning("Raw content was not able to be decoded with utf-8: %s", exc)
+                text = value.decode("utf-8", "replace")
+
+        return helpers.pre_tag(text)
 
 
 class RawNotificationUIViewSet(
@@ -284,6 +368,26 @@ class RawNotificationUIViewSet(
     serializer_class = serializers.RawNotificationSerializer
     table_class = tables.RawNotificationTable
     action_buttons = ("export",)
+
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            RawObjectFieldsPanel(
+                section=SectionChoices.LEFT_HALF,
+                label="Raw Notification",
+                weight=100,
+                fields=(
+                    "subject",
+                    "provider",
+                    "sender",
+                    "source",
+                    "parsed",
+                    "stamp",
+                    "last_updated",
+                    "raw",
+                ),
+            ),
+        )
+    )
 
     def get_extra_context(self, request, instance=None):
         """Extend content of detailed view for RawNotification."""
@@ -313,6 +417,52 @@ class ParsedNotificationView(ObjectView):
     queryset = models.ParsedNotification.objects.all()
 
 
+class NotificationObjectFieldsPanel(ObjectFieldsPanel):
+    """Panel for displaying notification source fields."""
+
+    def get_data(self, context):
+        """Render providers as a list of hyperlinks."""
+        instance = context.get("object") or context.get(self.context_object_key)
+        # `account`, `source_type`, and `providers_display` are not model fields; they are attached to the
+        # instance here so the panel can surface source metadata that only exists at runtime via Source.init().
+        try:
+            source = Source.init(name=instance.name)
+            setattr(instance, "account", source.get_account_id())
+            setattr(instance, "source_type", source.__class__.__name__)
+        except ValueError as exc:
+            logger.warning(
+                "Failed to initialize notification source %s: %s",
+                instance.name,
+                exc,
+                exc_info=True,
+                extra={"object": instance},
+            )
+            setattr(instance, "account", None)
+            setattr(instance, "source_type", None)
+
+        setattr(instance, "providers_display", instance.providers.all())
+
+        if not hasattr(instance, "authentication_message"):
+            setattr(instance, "authentication_message", None)
+        return super().get_data(context)
+
+    def render_value(self, key, value, context):
+        """Add dynamic fields for account and providers."""
+        if key == "providers_display":
+            if not value:
+                return helpers.HTML_NONE
+            items = []
+            for val in value:
+                items.append(helpers.hyperlinked_object(val))
+            if not items:
+                return helpers.HTML_NONE
+            return format_html(
+                "<ul>{}</ul>",
+                format_html_join("", "<li>{}</li>", ((item,) for item in items)),
+            )
+        return super().render_value(key, value, context)
+
+
 class NotificationSourceUIViewSet(NautobotUIViewSet):
     """UIViewSet for NotificationSource."""
 
@@ -325,35 +475,31 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
     table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
-    def get_extra_context(self, request, instance=None):
-        """Extend content of detailed view for NotificationSource."""
-        context = super().get_extra_context(request, instance)
-
-        if self.action == "retrieve":
-            providers_qs = instance.providers.all()
-            try:
-                source = Source.init(name=instance.name)
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": source.get_account_id(),
-                        "source_type": source.__class__.__name__,
-                        "authentication_message": None,
-                    }
-                )
-
-            except ValueError as exc:
-                msg = f"Failed to initialize source: {exc}"
-                logger.warning(msg, exc_info=True, extra={"object": instance})
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": None,
-                        "source_type": None,
-                        "authentication_message": msg,
-                    }
-                )
-        return context
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            NotificationObjectFieldsPanel(
+                section=SectionChoices.LEFT_HALF,
+                label="Info",
+                weight=100,
+                fields=(
+                    "name",
+                    "account",
+                    "source_type",
+                    "providers_display",
+                    "attach_all_providers",
+                    "authentication_message",
+                ),
+            ),
+        ),
+        extra_buttons=[
+            Button(
+                weight=100,
+                label="Validate Authentication",
+                color=ButtonActionColorChoices.SUBMIT,
+                link_name="plugins:nautobot_circuit_maintenance:notificationsource_validate",
+            ),
+        ],
+    )
 
     @action(
         detail=True,
@@ -363,55 +509,38 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_base_action="view",
     )
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """Validate NotificationSource authentication."""
+        """Validate NotificationSource authentication and redirect back to the detail view with the result."""
         instance = self.get_object()
-        context = super().get_extra_context(request, instance)
-        return_url = request.GET.get("return_url")
-
         try:
             source = Source.init(name=instance.name)
-        except ValueError as exc:
-            message = f"FAILED: {exc}"
-            if return_url:
-                messages.error(request, message)
-                return redirect(return_url)
-            context["authentication_message"] = message
-            return Response(context, status=200)
-
-        try:
             is_authenticated, mess_auth = source.test_authentication()
-            message = "SUCCESS" if is_authenticated else "FAILED"
-            message += f": {mess_auth}"
-        except ValueError as exc:
-            message = f"FAILED: {exc}"
+            message = f"SUCCESS: {mess_auth}" if is_authenticated else f"FAILED: {mess_auth}"
         except RedirectAuthorize as exc:
+            # OAuth sources (e.g. Gmail) raise this to send the user through the provider consent flow.
             try:
                 return redirect(
                     reverse(
-                        f"plugins:nautobot_circuit_maintenance:{str(exc.url_name)}",
+                        f"plugins:nautobot_circuit_maintenance:{exc.url_name}",
                         kwargs={"name": exc.source_name},
                     )
                 )
             except NoReverseMatch:
                 message = "FAILED: Redirect required but target URL could not be resolved."
+        except ValueError as exc:
+            logger.warning(
+                "Failed to validate authentication for notification source %s: %s",
+                instance.name,
+                exc,
+                exc_info=True,
+                extra={"object": instance},
+            )
+            message = f"FAILED: {exc}"
 
-        if return_url:
-            if message.startswith("SUCCESS"):
-                messages.success(request, message)
-            else:
-                messages.error(request, message)
-            return redirect(return_url)
-
-        context.update(
-            {
-                "authentication_message": message,
-                "providers": instance.providers.all(),
-                "account": source.get_account_id(),
-                "source_type": source.__class__.__name__,
-                "active_tab": "main",
-            }
-        )
-        return Response(context, status=200)
+        if message.startswith("SUCCESS"):
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect(instance.get_absolute_url())
 
 
 def google_authorize(request, name):
