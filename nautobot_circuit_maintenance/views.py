@@ -10,6 +10,8 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
+from nautobot.apps.choices import ButtonActionColorChoices
+from nautobot.apps.templatetags import hyperlinked_object, placeholder, pre_tag
 from nautobot.apps.ui import (
     Button,
     ObjectDetailContent,
@@ -27,8 +29,6 @@ from nautobot.apps.views import (
     ObjectView,
 )
 from nautobot.circuits.models import Circuit
-from nautobot.core.choices import ButtonActionColorChoices
-from nautobot.core.templatetags import helpers
 from rest_framework.decorators import action
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
@@ -235,7 +235,7 @@ class CircuitMaintenanceUIViewSet(NautobotUIViewSet):
                 table_attribute="circuitimpact_set",
                 related_field_name="maintenance",
                 table_title="Circuits",
-                exclude_columns=["actions", "dynamic_groups"],
+                exclude_columns=["actions", "dynamic_groups", "maintenance"],
                 paginate=None,
                 show_table_config_button=None,
             ),
@@ -334,6 +334,8 @@ class RawObjectFieldsPanel(ObjectFieldsPanel):
         # Normalize to bytes
         if isinstance(value, memoryview):
             value = value.tobytes()
+        elif isinstance(value, str):
+            value = value.encode("utf-8")
         elif not isinstance(value, (bytes, bytearray)):
             try:
                 value = bytes(value or b"")
@@ -349,7 +351,7 @@ class RawObjectFieldsPanel(ObjectFieldsPanel):
                 logger.warning("Raw content was not able to be decoded with utf-8: %s", exc)
                 text = value.decode("utf-8", "replace")
 
-        return helpers.pre_tag(text)
+        return pre_tag(text)
 
 
 class RawNotificationUIViewSet(
@@ -427,8 +429,8 @@ class NotificationObjectFieldsPanel(ObjectFieldsPanel):
         # instance here so the panel can surface source metadata that only exists at runtime via Source.init().
         try:
             source = Source.init(name=instance.name)
-            setattr(instance, "account", source.get_account_id())
-            setattr(instance, "source_type", source.__class__.__name__)
+            instance.account = source.get_account_id()
+            instance.source_type = source.__class__.__name__
         except ValueError as exc:
             logger.warning(
                 "Failed to initialize notification source %s: %s",
@@ -437,28 +439,23 @@ class NotificationObjectFieldsPanel(ObjectFieldsPanel):
                 exc_info=True,
                 extra={"object": instance},
             )
-            setattr(instance, "account", None)
-            setattr(instance, "source_type", None)
+            instance.account = None
+            instance.source_type = None
 
-        setattr(instance, "providers_display", instance.providers.all())
+        instance.providers_display = instance.providers.all()
 
         if not hasattr(instance, "authentication_message"):
-            setattr(instance, "authentication_message", None)
+            instance.authentication_message = None
         return super().get_data(context)
 
     def render_value(self, key, value, context):
         """Add dynamic fields for account and providers."""
         if key == "providers_display":
             if not value:
-                return helpers.HTML_NONE
-            items = []
-            for val in value:
-                items.append(helpers.hyperlinked_object(val))
-            if not items:
-                return helpers.HTML_NONE
+                return placeholder(value)
             return format_html(
                 "<ul>{}</ul>",
-                format_html_join("", "<li>{}</li>", ((item,) for item in items)),
+                format_html_join("", "<li>{}</li>", ((hyperlinked_object(provider),) for provider in value)),
             )
         return super().render_value(key, value, context)
 

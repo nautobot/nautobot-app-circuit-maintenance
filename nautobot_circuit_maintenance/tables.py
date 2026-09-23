@@ -73,32 +73,35 @@ class CircuitImpactTable(BaseTable):
 
     pk = ToggleColumn()
     maintenance = tables.Column(linkify=True)
-    circuit = tables.Column(linkify=True)
     impact = tables.Column(linkify=True)
 
-    cid = tables.Column(accessor="circuit.cid", verbose_name="ID", linkify=True)
-    provider = tables.Column(accessor="circuit.provider", verbose_name="Provider", linkify=True)
-    circuit_type = tables.Column(accessor="circuit.circuit_type", verbose_name="Type", linkify=True)
-    status = tables.Column(accessor="circuit.status", verbose_name="Status")
+    cid = tables.Column(
+        accessor="circuit__cid", verbose_name="ID", linkify=lambda record: record.circuit.get_absolute_url()
+    )
+    provider = tables.Column(accessor="circuit__provider", verbose_name="Provider", linkify=True)
+    circuit_type = tables.Column(accessor="circuit__circuit_type", verbose_name="Type", linkify=True)
+    status = tables.Column(accessor="circuit__status", verbose_name="Status")
     circuit_termination_a = tables.TemplateColumn(
         template_code=CIRCUIT_TERMINATION_PARENT,
-        accessor="circuit.circuit_termination_a",
+        accessor="circuit__circuit_termination_a",
         orderable=False,
         verbose_name="A Side",
     )
     circuit_termination_z = tables.TemplateColumn(
         template_code=CIRCUIT_TERMINATION_PARENT,
-        accessor="circuit.circuit_termination_z",
+        accessor="circuit__circuit_termination_z",
         orderable=False,
         verbose_name="Z Side",
     )
-    description = tables.Column(accessor="circuit.description", verbose_name="Description")
+    description = tables.Column(accessor="circuit__description", verbose_name="Description")
 
     class Meta(BaseTable.Meta):
         """Table to display CircuitImpact model."""
 
         model = CircuitImpact
-        fields = (
+        fields = (  # pylint:disable=nb-use-fields-all
+            "pk",
+            "maintenance",
             "cid",
             "impact",
             "provider",
@@ -129,7 +132,7 @@ class NoteTable(BaseTable):
             "title",
             "last_updated",
             "comment",
-        )  # pylint:disable=nb-use-fields-all
+        )
         default_columns = (
             "pk",
             "level",
@@ -158,11 +161,10 @@ class ParsedNotificationTable(BaseTable):
 
     pk = ToggleColumn()
     raw_notification_subject = tables.Column(
-        accessor="raw_notification.subject", verbose_name="Raw Subject", linkify=True
+        accessor="raw_notification__subject", verbose_name="Raw Subject", linkify=True
     )
-    raw_notification_provider = tables.Column(accessor="raw_notification.provider", verbose_name="Provider")
-    raw_notification_source = tables.Column(accessor="raw_notification.source", verbose_name="Source")
-    stamp = tables.Column(accessor="raw_notification.stamp", verbose_name="Received")
+    raw_notification_provider = tables.Column(accessor="raw_notification__provider", verbose_name="Provider")
+    stamp = tables.Column(accessor="raw_notification__stamp", verbose_name="Received")
     json = tables.Column()
 
     class Meta(BaseTable.Meta):
@@ -173,6 +175,7 @@ class ParsedNotificationTable(BaseTable):
             "pk",
             "raw_notification_subject",
             "raw_notification_provider",
+            "stamp",
             "json",
         )
         default_columns = fields

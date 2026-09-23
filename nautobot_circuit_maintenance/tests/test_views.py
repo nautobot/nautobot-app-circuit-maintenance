@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.urls import reverse
+from nautobot.apps.testing import TestCase
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.core.testing import ModelViewTestCase, ViewTestCases
 from nautobot.extras.models import Status
@@ -24,7 +25,11 @@ from nautobot_circuit_maintenance.models import (
     ParsedNotification,
     RawNotification,
 )
-from nautobot_circuit_maintenance.views import CircuitMaintenanceOverview
+from nautobot_circuit_maintenance.views import (
+    CircuitMaintenanceOverview,
+    NotificationObjectFieldsPanel,
+    RawObjectFieldsPanel,
+)
 
 
 class CircuitMaintenanceTest(ViewTestCases.PrimaryObjectViewTestCase):
@@ -159,6 +164,8 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
             )
         )
 
+        cls.maintenance = maintenances[0]
+        cls.circuit = circuits[0]
         CircuitImpact.objects.bulk_create(
             (
                 CircuitImpact(maintenance=maintenances[0], circuit=circuits[0]),
@@ -183,6 +190,22 @@ class CircuitImpactTest(ViewTestCases.OrganizationalObjectViewTestCase):
         cls.bulk_edit_data = {
             "impact": "OUTAGE",
         }
+
+    def test_maintenance_detail_links_circuits(self):
+        """The Circuits panel on a maintenance links each circuit ID to the circuit itself."""
+        self.add_permissions(
+            "nautobot_circuit_maintenance.view_circuitmaintenance",
+            "nautobot_circuit_maintenance.view_circuitimpact",
+            "circuits.view_circuit",
+        )
+        response = self.client.get(self.maintenance.get_absolute_url())
+        self.assertContains(response, f'<a href="{self.circuit.get_absolute_url()}">{self.circuit.cid}</a>', html=True)
+
+    def test_list_objects_shows_maintenance(self):
+        """The Circuit Impact list view includes the maintenance each impact belongs to."""
+        self.add_permissions("nautobot_circuit_maintenance.view_circuitimpact")
+        response = self.client.get(self._get_url("list"))
+        self.assertContains(response, self.maintenance.get_absolute_url())
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
@@ -373,8 +396,54 @@ class NotificationSourceTest(
         )
         self.assertRedirects(response, expected_url, fetch_redirect_response=False)
 
+    def test_get_object_with_unconfigured_source(self):
+        """A source missing from PLUGINS_CONFIG still renders its detail view, with a warning logged."""
+        self._grant_view_permission()
+        source = NotificationSource.objects.get(name="whatever 1")
+        with self.assertLogs("nautobot_circuit_maintenance.views", level="WARNING") as logs:
+            response = self.client.get(source.get_absolute_url())
+        self.assertHttpStatus(response, 200)
+        self.assertIn("Failed to initialize notification source whatever 1", logs.output[0])
+
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
+
+
+class NotificationObjectFieldsPanelTest(TestCase):
+    """Tests for rendering the providers of a NotificationSource."""
+
+    def test_render_providers_display(self):
+        provider = Provider.objects.create(name="Provider Panel")
+        panel = NotificationObjectFieldsPanel(weight=100, fields=("providers_display",))
+
+        self.assertIn("&mdash;", panel.render_value("providers_display", Provider.objects.none(), {}))
+        rendered = panel.render_value("providers_display", Provider.objects.filter(pk=provider.pk), {})
+        self.assertIn(f'<li><a href="{provider.get_absolute_url()}"', rendered)
+        self.assertTrue(rendered.startswith("<ul>"))
+
+
+class RawObjectFieldsPanelTest(TestCase):
+    """Tests for rendering the raw content of a RawNotification."""
+
+    def test_render_raw(self):
+        panel = RawObjectFieldsPanel(weight=100, fields=("raw",))
+        cases = (
+            ("bytes", b"hello", "<pre>hello</pre>"),
+            ("memoryview", memoryview(b"hello"), "<pre>hello</pre>"),
+            ("str", "hello", "<pre>hello</pre>"),
+            ("None", None, "<pre></pre>"),
+            ("unconvertible", object(), "<pre></pre>"),
+        )
+        for label, value, expected in cases:
+            with self.subTest(label):
+                self.assertEqual(panel.render_value("raw", value, {}), expected)
+
+    def test_render_raw_invalid_utf8(self):
+        """Undecodable content is rendered with replacement characters and a warning is logged."""
+        panel = RawObjectFieldsPanel(weight=100, fields=("raw",))
+        with self.assertLogs("nautobot_circuit_maintenance.views", level="WARNING"):
+            rendered = panel.render_value("raw", b"caf\xe9", {})
+        self.assertEqual(rendered, "<pre>caf\ufffd</pre>")
 
 
 class RawNotificationTest(
@@ -489,6 +558,7 @@ class ParsedNotificationTest(
             name="UT-TEST-1", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
         )
         ParsedNotification.objects.create(maintenance=circuit_maintenance, raw_notification=raw_notification, json="{}")
+        cls.circuit_maintenance = circuit_maintenance
 
         raw_notification_2 = RawNotification.objects.create(
             subject="whatever subject 2",
@@ -512,6 +582,16 @@ class ParsedNotificationTest(
     @skip("Not implemented yet.")
     def test_get_object_anonymous(self):
         pass
+
+    def test_maintenance_detail_shows_notification_received(self):
+        """The Notifications panel on a maintenance shows when each notification was received."""
+        self.add_permissions(
+            "nautobot_circuit_maintenance.view_circuitmaintenance",
+            "nautobot_circuit_maintenance.view_parsednotification",
+        )
+        response = self.client.get(self.circuit_maintenance.get_absolute_url())
+        self.assertContains(response, "Received")
+        self.assertContains(response, "whatever subject 1")
 
 
 class DashboardTest(ModelViewTestCase):
