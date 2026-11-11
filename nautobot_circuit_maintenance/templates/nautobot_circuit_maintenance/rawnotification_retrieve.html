@@ -1,4 +1,5 @@
 {% extends "generic/object_retrieve.html" %}
+{% load helpers %}
 
 {% block buttons %}{% endblock buttons %}
 
@@ -16,7 +17,7 @@
             </tr>
             <tr>
                 <td>Provider</td>
-                <td><a href="{{ object.provider.get_absolute_url }}">{{ object.provider }}</a></td>
+                <td>{{ object.provider|hyperlinked_object }}</td>
             </tr>
             <tr>
                 <td>Sender</td>

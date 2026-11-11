@@ -427,6 +427,22 @@ class RawNotificationTest(
     def test_get_object_anonymous(self):
         pass
 
+    def test_get_object_without_provider(self):
+        """A RawNotification whose Provider was deleted renders a placeholder instead of a broken link (#157)."""
+        raw_notification = RawNotification.objects.create(
+            subject="orphaned",
+            provider=None,
+            source=NotificationSource.objects.first(),
+            raw=b"orphaned",
+            stamp=datetime.now(timezone.utc),
+        )
+        self.add_permissions("nautobot_circuit_maintenance.view_rawnotification")
+
+        response = self.client.get(raw_notification.get_absolute_url())
+
+        self.assertHttpStatus(response, 200)
+        self.assertNotIn('<a href="">None</a>', response.content.decode(response.charset))
+
     @skip(
         "TODO: This test is failing due to the detail view not having any buttons. We should add the relevant buttons when changing to NautobotUIViewSet views."
     )

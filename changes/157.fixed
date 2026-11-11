@@ -1,0 +1,1 @@
+Fixed deleting a Provider also deleting its Raw Notifications and Parsed Notifications; their provider is now cleared instead.
