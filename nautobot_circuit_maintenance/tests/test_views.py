@@ -331,6 +331,30 @@ class NotificationSourceTest(
         self.assertContains(response, "SUCCESS: Test OK", status_code=200)
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ignores_unsafe_return_url(self, mock_test_authentication):
+        """An off-site `return_url` must not be followed; the validate view renders the page instead."""
+        mock_test_authentication.return_value = True, "Test OK"
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+
+        for unsafe_url in ("https://evil.example.com/", "//evil.example.com/"):
+            with self.subTest(return_url=unsafe_url):
+                response = self.client.get(url, {"return_url": unsafe_url})
+                self.assertContains(response, "SUCCESS: Test OK", status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_follows_safe_return_url(self, mock_test_authentication):
+        """A same-site `return_url` is still followed."""
+        mock_test_authentication.return_value = True, "Test OK"
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+
+        response = self.client.get(url, {"return_url": source.get_absolute_url()})
+        self.assertRedirects(response, source.get_absolute_url(), fetch_redirect_response=False)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
     def test_validate_view_ko(self, mock_test_authentication):
         """Test for custom NotificationSourceValidate view."""
         mock_test_authentication.return_value = False, "Some error"
