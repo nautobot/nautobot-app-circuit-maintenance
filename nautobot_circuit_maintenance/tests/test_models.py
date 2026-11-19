@@ -7,7 +7,13 @@ from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.extras.models import Status
 
 from nautobot_circuit_maintenance.choices import CircuitImpactChoices
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, NotificationSource, RawNotification
+from nautobot_circuit_maintenance.models import (
+    CircuitImpact,
+    CircuitMaintenance,
+    NotificationSource,
+    ParsedNotification,
+    RawNotification,
+)
 
 
 class CircuitMaintenanceModelTestCase(TestCase):
@@ -88,3 +94,27 @@ class RawNotificationModelTestCase(TestCase):
                 f"WARNING:nautobot_circuit_maintenance.models:Stamp time {stamp} is not consistent, it's in the future.",
                 log_res.output,
             )
+
+    def test_provider_delete_preserves_notifications(self):
+        """Deleting a Provider keeps its RawNotifications and ParsedNotifications, with the provider nulled (#157)."""
+        raw_notification = RawNotification.objects.create(
+            raw=b"raw content",
+            subject="maintenance",
+            provider=self.provider,
+            source=self.source,
+            stamp=datetime.datetime(2021, 1, 1, tzinfo=datetime.timezone.utc),
+        )
+        maintenance = CircuitMaintenance.objects.create(
+            name="UT-TEST-1",
+            start_time="2021-01-01 00:00:00Z",
+            end_time="2021-01-02 00:00:00Z",
+        )
+        parsed_notification = ParsedNotification.objects.create(
+            maintenance=maintenance, raw_notification=raw_notification, json={}
+        )
+
+        self.provider.delete()
+
+        raw_notification.refresh_from_db()
+        self.assertIsNone(raw_notification.provider)
+        self.assertTrue(ParsedNotification.objects.filter(pk=parsed_notification.pk).exists())

@@ -226,7 +226,7 @@ class RawNotification(OrganizationalModel):
 
     raw = models.BinaryField(max_length=MAX_NOTIFICATION_TOTAL_LENGTH)
     subject = models.CharField(max_length=MAX_NOTIFICATION_SUBJECT_LENGTH)
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, default=None)
+    provider = models.ForeignKey(Provider, on_delete=models.SET_NULL, null=True, blank=True, default=None)
     sender = models.CharField(max_length=MAX_NOTIFICATION_SENDER_LENGTH, default="", blank=True)
     source = models.ForeignKey(NotificationSource, on_delete=models.SET_NULL, null=True)
     parsed = models.BooleanField(default=False)
