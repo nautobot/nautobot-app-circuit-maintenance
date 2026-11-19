@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from nautobot.circuits.models import Circuit, Provider
-from nautobot.extras.jobs import DryRunVar, Job
+from nautobot.extras.jobs import DryRunVar, IntegerVar, Job, StringVar
 
 from nautobot_circuit_maintenance.choices import CircuitMaintenanceStatusChoices
 from nautobot_circuit_maintenance.enum import MessageProcessingStatus
@@ -373,17 +373,41 @@ def process_raw_notification(job: Job, notification: MaintenanceNotification) ->
     return raw_entry.id
 
 
-def get_since_reference(job: Job) -> int:
-    """Get the timestamp from the latest processed RawNotification or a reference from config `raw_notification_initial_days_since`."""
+def get_since_reference(
+    job: Job,
+    days_to_look_back: Optional[int] = None,
+    fetch_since: Optional[datetime.datetime] = None,
+) -> int:
+    """Get the timestamp used to limit how far back notifications are retrieved.
+
+    When either `days_to_look_back` or `fetch_since` is provided, the value overrides the normal
+    incremental window: the earliest of the requested start times is used so the two together mean
+    "look back at least this far". This lets an operator re-fetch older notifications on demand.
+
+    Otherwise the normal incremental behavior applies: the timestamp of the latest processed
+    `RawNotification`, or, on the first run, `now` minus the configured
+    `raw_notification_initial_days_since`.
+    """
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    overrides = []
+    if days_to_look_back:
+        overrides.append(now - datetime.timedelta(days=days_to_look_back))
+    if fetch_since:
+        overrides.append(fetch_since)
+    if overrides:
+        since_reference = int(min(overrides).timestamp())
+        job.logger.info(f"Processing notifications since {since_reference} (manual lookback override).")
+        return since_reference
+
     # Latest retrieved notification will limit the scope of notifications to retrieve
     last_raw_notification = RawNotification.objects.last()
     if last_raw_notification:
-        since_reference = last_raw_notification.last_updated.timestamp()
+        since_reference = int(last_raw_notification.last_updated.timestamp())
     else:
-        since_reference = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
-            days=PLUGIN_SETTINGS.get("raw_notification_initial_days_since")
+        since_reference = int(
+            (now - datetime.timedelta(days=PLUGIN_SETTINGS.get("raw_notification_initial_days_since"))).timestamp()
         )
-        since_reference = int(since_reference.timestamp())
     job.logger.info(f"Processing notifications since {since_reference}", extra={"object": last_raw_notification})
     return since_reference
 
@@ -396,6 +420,24 @@ class HandleCircuitMaintenanceNotifications(Job):
     """Job to handle external circuit maintenance notifications and turn them into Circuit Maintenances."""
 
     dryrun = DryRunVar()
+    days_to_look_back = IntegerVar(
+        required=False,
+        min_value=1,
+        label="Days to look back",
+        description=(
+            "Re-fetch notifications from the last N days, overriding the normal incremental window. "
+            "Leave blank for normal incremental processing."
+        ),
+    )
+    fetch_since = StringVar(
+        required=False,
+        label="Fetch notifications since",
+        description=(
+            "Fetch notifications with a timestamp on or after this date/time (ISO 8601, e.g. "
+            "2026-01-31 or 2026-01-31T00:00:00Z), overriding the normal incremental window. "
+            "Assumed UTC if no timezone is given. Leave blank for normal incremental processing."
+        ),
+    )
 
     class Meta:
         """Meta object boilerplate for HandleParsedNotifications."""
@@ -405,9 +447,20 @@ class HandleCircuitMaintenanceNotifications(Job):
         description = "Fetch Circuit Maintenance Notifications from Sources and create or update Circuit Maintenances accordingly."
 
     # pylint: disable=arguments-differ
-    def run(self, dryrun=False) -> List[uuid.UUID]:
+    def run(self, dryrun=False, days_to_look_back=None, fetch_since=None) -> List[uuid.UUID]:
         """Fetch notifications, process them and update Circuit Maintenance accordingly."""
         self.logger.debug("Starting Handle Notifications job.")
+
+        fetch_since_dt = None
+        if fetch_since:
+            try:
+                fetch_since_dt = parser.parse(fetch_since)
+            except (ValueError, OverflowError) as error:
+                raise ValueError(
+                    f"Invalid 'Fetch notifications since' value '{fetch_since}'. Provide an ISO 8601 date/time."
+                ) from error
+            if fetch_since_dt.tzinfo is None:
+                fetch_since_dt = fetch_since_dt.replace(tzinfo=datetime.timezone.utc)
 
         notification_sources = NotificationSource.objects.all()
         if not notification_sources:
@@ -418,7 +471,7 @@ class HandleCircuitMaintenanceNotifications(Job):
             notifications = get_notifications(
                 job=self,
                 notification_sources=notification_sources,
-                since=get_since_reference(self),
+                since=get_since_reference(self, days_to_look_back, fetch_since_dt),
             )
         except Exception:
             self.logger.error(

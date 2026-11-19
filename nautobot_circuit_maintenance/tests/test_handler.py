@@ -1,7 +1,7 @@
 """Tests for Handle Notifications methods."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from email.utils import format_datetime
 from unittest.mock import ANY, Mock, patch
@@ -13,6 +13,7 @@ from jinja2 import Template
 from nautobot.circuits.models import Circuit, Provider
 
 from nautobot_circuit_maintenance.handle_notifications.handler import (
+    PLUGIN_SETTINGS,
     HandleCircuitMaintenanceNotifications,
     create_circuit_maintenance,
     get_maintenances_from_notification,
@@ -560,7 +561,44 @@ class TestHandleNotificationsJob(TestCase):  # pylint: disable=too-many-public-m
         test_notification = generate_email_notification(notification_data, self.source)
         raw_id = process_raw_notification(self.job, test_notification)
         since_reference = get_since_reference(self.job)
-        self.assertEqual(since_reference, RawNotification.objects.get(id=raw_id).last_updated.timestamp())
+        self.assertEqual(since_reference, int(RawNotification.objects.get(id=raw_id).last_updated.timestamp()))
+
+    def test_get_since_first_run_uses_configured_default(self):
+        """Without prior notifications or overrides, the initial-days-since default is used."""
+        expected = int(
+            (
+                datetime.now(timezone.utc) - timedelta(days=PLUGIN_SETTINGS["raw_notification_initial_days_since"])
+            ).timestamp()
+        )
+        since_reference = get_since_reference(self.job)
+        # Allow a small delta for the seconds elapsed during the test run.
+        self.assertAlmostEqual(since_reference, expected, delta=30)
+
+    def test_get_since_days_to_look_back_override(self):
+        """`days_to_look_back` overrides the watermark with `now - N days`, ignoring prior notifications."""
+        process_raw_notification(self.job, generate_email_notification(get_base_notification_data(), self.source))
+        expected = int((datetime.now(timezone.utc) - timedelta(days=45)).timestamp())
+        since_reference = get_since_reference(self.job, days_to_look_back=45)
+        self.assertAlmostEqual(since_reference, expected, delta=30)
+
+    def test_get_since_fetch_since_override(self):
+        """`fetch_since` overrides the watermark with the supplied datetime."""
+        process_raw_notification(self.job, generate_email_notification(get_base_notification_data(), self.source))
+        fetch_since = datetime(2021, 1, 1, tzinfo=timezone.utc)
+        since_reference = get_since_reference(self.job, fetch_since=fetch_since)
+        self.assertEqual(since_reference, int(fetch_since.timestamp()))
+
+    def test_get_since_both_overrides_use_earliest(self):
+        """When both overrides are set, the earliest (furthest-back) start time wins."""
+        fetch_since = datetime(2021, 1, 1, tzinfo=timezone.utc)  # far in the past
+        # days_to_look_back=1 is much more recent than 2021, so fetch_since should win.
+        since_reference = get_since_reference(self.job, days_to_look_back=1, fetch_since=fetch_since)
+        self.assertEqual(since_reference, int(fetch_since.timestamp()))
+
+    def test_run_invalid_fetch_since_raises(self):
+        """An unparseable `fetch_since` value fails the job loudly instead of silently doing nothing."""
+        with self.assertRaises(ValueError):
+            self.job.run(fetch_since="not-a-date")
 
     def test_update_circuit_maintenance_with_duplicated_notes(self):
         """Test update_circuit_maintenance with duplicated notes."""
