@@ -21,7 +21,7 @@ from nautobot.apps.forms import (
 from nautobot.circuits.models import Circuit, Provider
 from nautobot.core.forms.constants import BOOLEAN_WITH_BLANK_CHOICES
 
-from .choices import CircuitMaintenanceStatusChoices
+from .choices import CircuitImpactChoices, CircuitMaintenanceStatusChoices, NoteLevelChoices
 from .models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -68,7 +68,7 @@ class CircuitImpactFilterForm(NautobotFilterForm):
         to_field_name="pk",
         required=False,
     )
-    impact = forms.CharField(max_length=50)
+    impact = forms.MultipleChoiceField(choices=CircuitImpactChoices, required=False, widget=StaticSelect2Multiple())
 
 
 class CircuitMaintenanceForm(NautobotModelForm):
@@ -152,9 +152,9 @@ class NoteFilterForm(NautobotFilterForm):
         to_field_name="pk",
         required=False,
     )
-    title = forms.CharField(max_length=200)
-    level = forms.CharField(max_length=50, required=False)
-    comment = forms.CharField(max_length=200)
+    title = forms.CharField(max_length=200, required=False)
+    level = forms.MultipleChoiceField(choices=NoteLevelChoices, required=False, widget=StaticSelect2Multiple())
+    comment = forms.CharField(max_length=200, required=False)
 
 
 class RawNotificationFilterForm(NautobotFilterForm):
