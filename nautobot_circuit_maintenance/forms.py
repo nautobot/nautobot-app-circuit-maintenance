@@ -172,14 +172,19 @@ class RawNotificationFilterForm(NautobotFilterForm):
     since = forms.DateTimeField(required=False, widget=DateTimePicker())
 
 
-class NotificationSourceForm(BootstrapMixin, forms.ModelForm):
+class NotificationSourceForm(NautobotModelForm):
     """Form for creating new NotificationSource."""
+
+    providers = DynamicModelMultipleChoiceField(queryset=Provider.objects.all(), required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         """Metaclass attributes for NotificationSourceForm."""
 
         model = NotificationSource
-        fields = ["providers"]
+        # `name` and `attach_all_providers` are owned by PLUGINS_CONFIG and re-applied on every
+        # post_migrate by import_notification_sources(), which also deletes any Notification Source
+        # whose name is absent from the config. `providers` is the only safely user-editable field.
+        fields = ["providers"]  # pylint:disable=nb-use-fields-all
 
 
 class NotificationSourceBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
