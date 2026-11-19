@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils.http import url_has_allowed_host_and_scheme
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -368,6 +369,11 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         instance = self.get_object()
         context = super().get_extra_context(request, instance)
         return_url = request.GET.get("return_url")
+        # Only follow same-site URLs; an off-site `return_url` would make this action an open redirect.
+        if return_url and not url_has_allowed_host_and_scheme(
+            url=return_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return_url = None
 
         try:
             source = Source.init(name=instance.name)
