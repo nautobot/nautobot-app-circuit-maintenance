@@ -15,7 +15,7 @@ menu_items = (
         weight=NavigationWeightChoices.CIRCUITS,
         groups=(
             NavMenuGroup(
-                name="Circuit Maintenance App",
+                name="Circuit Maintenances",
                 weight=250,
                 items=(
                     NavMenuItem(
@@ -26,7 +26,7 @@ menu_items = (
                     ),
                     NavMenuItem(
                         link="plugins:nautobot_circuit_maintenance:circuitmaintenance_list",
-                        name="Circuit Maintenances",
+                        name="Maintenances",
                         weight=200,
                         permissions=["nautobot_circuit_maintenance.view_circuitmaintenance"],
                     ),
