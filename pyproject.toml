@@ -77,6 +77,8 @@ mkdocs-autorefs = "1.2.0"
 griffe = "1.1.1"
 # Image lightboxing in mkdocs
 mkdocs-glightbox = "~0.5.2"
+# Keep below 11: mkdocstrings 0.25.2 (cookie pin) is incompatible with pymdown-extensions >=11 (Highlight requires `md`)
+pymdown-extensions = "^10.21.2"
 
 [tool.poetry.extras]
 ews = [
