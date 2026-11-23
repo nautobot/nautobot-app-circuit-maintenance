@@ -1,1 +1,0 @@
-Fixed an open redirect in the Notification Source "Validate Authentication" action, which followed any `return_url` query parameter without validation; off-site URLs are now ignored and the action redirects to the Notification Source detail page.
