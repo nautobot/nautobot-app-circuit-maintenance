@@ -69,7 +69,7 @@ markdown-version-annotations = "1.0.1"
 # Rendering docs to HTML
 mkdocs = "1.6.0"
 # Material for MkDocs theme
-mkdocs-material = "9.5.32"
+mkdocs-material = "9.7.7"
 # Automatic documentation from sources, for MkDocs
 mkdocstrings = "0.25.2"
 mkdocstrings-python = "1.10.8"
@@ -77,6 +77,8 @@ mkdocs-autorefs = "1.2.0"
 griffe = "1.1.1"
 # Image lightboxing in mkdocs
 mkdocs-glightbox = "~0.5.2"
+# Keep below 11: mkdocstrings 0.25.2 (cookie pin) is incompatible with pymdown-extensions >=11 (Highlight requires `md`)
+pymdown-extensions = "^10.21.2"
 
 [tool.poetry.extras]
 ews = [
