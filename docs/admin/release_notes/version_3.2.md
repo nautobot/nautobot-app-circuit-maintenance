@@ -4,8 +4,10 @@ This document describes all new features and changes in the release. The format 
 
 ## Release Overview
 
-- Major features or milestones
-- Changes to compatibility with Nautobot and/or other apps, libraries etc.
+- The Notification Source detail page now uses the Nautobot UI Component Framework, which restores compatibility with Nautobot 3.2.9 and later.
+- Fixed an open redirect in the Notification Source "Validate Authentication" action.
+- The minimum supported Nautobot version is now 3.1.0; Nautobot 3.0.x is no longer supported.
+- Updated development and documentation dependencies to address open Dependabot security alerts.
 
 <!-- towncrier release notes start -->
 
