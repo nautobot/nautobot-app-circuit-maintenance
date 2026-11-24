@@ -9,12 +9,14 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import ERROR, SUCCESS, get_messages
 from django.urls import reverse
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.core.testing import ModelViewTestCase, ViewTestCases
 from nautobot.extras.models import Status
 from nautobot.users.models import ObjectPermission
 
+from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
     CircuitMaintenance,
@@ -327,8 +329,10 @@ class NotificationSourceTest(
             reverse(
                 "plugins:nautobot_circuit_maintenance:notificationsource_validate",
                 kwargs={"pk": source.pk},
-            )
+            ),
+            follow=True,
         )
+        self.assertRedirects(response, source.get_absolute_url())
         self.assertContains(response, "SUCCESS: Test OK", status_code=200)
 
     @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
@@ -347,9 +351,131 @@ class NotificationSourceTest(
             reverse(
                 "plugins:nautobot_circuit_maintenance:notificationsource_validate",
                 kwargs={"pk": source.pk},
-            )
+            ),
+            follow=True,
         )
+        self.assertRedirects(response, source.get_absolute_url())
         self.assertContains(response, "FAILED: Some error", status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_ignores_unsafe_return_url(self, mock_test_authentication):
+        """An off-site `return_url` must not be followed; the validate view falls back to the detail page."""
+        mock_test_authentication.return_value = True, "Test OK"
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+
+        url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+        for unsafe_url in ("https://evil.example.com/", "//evil.example.com/", "/\\evil.example.com"):
+            with self.subTest(return_url=unsafe_url):
+                response = self.client.get(url, {"return_url": unsafe_url})
+                self.assertRedirects(response, source.get_absolute_url(), fetch_redirect_response=False)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_follows_safe_return_url(self, mock_test_authentication):
+        """A same-host `return_url` is followed, and the result is queued as a flash message."""
+        mock_test_authentication.return_value = True, "Test OK"
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        list_url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_list")
+
+        url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+        response = self.client.get(url, {"return_url": list_url})
+        self.assertRedirects(response, list_url, fetch_redirect_response=False)
+        # Asserted on the message store rather than the rendered page: list views deliver flash messages
+        # through a follow-up htmx table request, which the test client does not make.
+        self.assertIn(
+            (SUCCESS, "SUCCESS: Test OK"),
+            [(message.level, str(message)) for message in get_messages(response.wsgi_request)],
+        )
+
+    def test_validate_view_unconfigured_source(self):
+        """A source missing from the plugin configuration reports a FAILED message on the detail page."""
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name="whatever 1")
+        url = reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+        expected_message = "FAILED: Name whatever 1 not found in PLUGINS_CONFIG."
+
+        response = self.client.get(url)
+        self.assertRedirects(response, source.get_absolute_url(), fetch_redirect_response=False)
+        self.assertIn(
+            (ERROR, expected_message),
+            [(message.level, str(message)) for message in get_messages(response.wsgi_request)],
+        )
+
+        response = self.client.get(url, follow=True)
+        self.assertContains(response, expected_message, status_code=200)
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_redirect_authorize(self, mock_test_authentication):
+        """A source that raises `RedirectAuthorize` is redirected to the named OAuth authorization view."""
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        mock_test_authentication.side_effect = RedirectAuthorize(url_name="google_authorize", source_name=source.name)
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+
+        response = self.client.get(
+            reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk})
+        )
+        self.assertRedirects(
+            response,
+            reverse("plugins:nautobot_circuit_maintenance:google_authorize", kwargs={"name": source.name}),
+            fetch_redirect_response=False,
+        )
+
+    @patch("nautobot_circuit_maintenance.handle_notifications.sources.IMAP.test_authentication")
+    def test_validate_view_redirect_authorize_unresolvable(self, mock_test_authentication):
+        """A `RedirectAuthorize` naming an unknown URL reports a FAILED message instead of erroring."""
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        mock_test_authentication.side_effect = RedirectAuthorize(url_name="no_such_view", source_name=source.name)
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+
+        response = self.client.get(
+            reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk}),
+            follow=True,
+        )
+        self.assertRedirects(response, source.get_absolute_url())
+        self.assertContains(
+            response, "FAILED: Redirect required but target URL could not be resolved.", status_code=200
+        )
+
+    def test_detail_view_renders_source_details(self):
+        """The detail view shows the source type, account and providers, plus the Validate Authentication button."""
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name=self.SOURCE_1["name"])
+        source.providers.set(Provider.objects.filter(name="Provider 3"))
+
+        # Providers are permission-restricted: without `circuits.view_provider` they are not listed.
+        response = self.client.get(source.get_absolute_url())
+        self.assertHttpStatus(response, 200)
+        self.assertBodyContains(response, "No providers found")
+        self.assertNotIn("Provider 3", response.content.decode(response.charset))
+
+        self.add_permissions("circuits.view_provider")
+        response = self.client.get(source.get_absolute_url())
+        self.assertHttpStatus(response, 200)
+        self.assertIsNotNone(response.context.get("object_detail_content"))
+        self.assertEqual(
+            response.context["source_details"],
+            {"Type": "IMAP", "Account ID": self.SOURCE_1["account"], "Authentication Status": None},
+        )
+        # `hide_if_unset` drops the row entirely when the source initialized cleanly.
+        self.assertNotIn("Authentication Status", response.content.decode(response.charset))
+        self.assertBodyContains(response, self.SOURCE_1["account"])
+        self.assertBodyContains(response, "Provider 3")
+        self.assertBodyContains(response, "Validate Authentication")
+        self.assertBodyContains(
+            response,
+            reverse("plugins:nautobot_circuit_maintenance:notificationsource_validate", kwargs={"pk": source.pk}),
+        )
+
+    def test_detail_view_reports_unconfigured_source(self):
+        """A NotificationSource missing from the plugin configuration shows why it couldn't be initialized."""
+        self.add_permissions("nautobot_circuit_maintenance.view_notificationsource")
+        source = NotificationSource.objects.get(name="whatever 1")
+
+        response = self.client.get(source.get_absolute_url())
+        self.assertHttpStatus(response, 200)
+        self.assertIn("Failed to initialize source", response.context["source_details"]["Authentication Status"])
+        self.assertBodyContains(response, "Failed to initialize source")
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""

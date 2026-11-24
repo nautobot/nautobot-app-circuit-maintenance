@@ -1,0 +1,1 @@
+Migrated the Notification Source detail view to the UI Component Framework so its "Validate Authentication" action no longer renders the legacy detail template, fixing compatibility with upcoming Nautobot releases.
