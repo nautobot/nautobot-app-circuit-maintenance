@@ -125,7 +125,7 @@ class ParsedNotificationFilterSet(NautobotFilterSet):
     """Filter capabilities for Notification Source."""
 
     q = SearchFilter(
-        filter_predicates={"raw_notification": "icontains"},
+        filter_predicates={"raw_notification__subject": "icontains"},
     )
 
     maintenance = NaturalKeyOrPKMultipleChoiceFilter(

@@ -4,10 +4,11 @@ from datetime import datetime, timedelta, timezone
 
 from django.urls import reverse
 from nautobot.circuits.models import Circuit, CircuitType, Provider
-from nautobot.core.testing import APIViewTestCases
+from nautobot.core.testing import APITestCase, APIViewTestCases
 from nautobot.extras.models import Status
 
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance
+from nautobot_circuit_maintenance.choices import NoteLevelChoices
+from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note
 
 
 class CircuitMaintenanceTest(APIViewTestCases.CreateObjectViewTestCase):
@@ -116,3 +117,26 @@ class CircuitImpactTest(APIViewTestCases.CreateObjectViewTestCase):
             maintenance=CircuitMaintenance.objects.first(),
             circuit=Circuit.objects.first(),
         )[0]
+
+
+class NoteAPIFilterTest(APITestCase):
+    """The Note REST API applies `NoteFilterSet` query parameters."""
+
+    model = Note
+
+    @classmethod
+    def setUpTestData(cls):
+        maintenance = CircuitMaintenance.objects.create(
+            name="UT-NOTE-API", start_time="2020-10-04 10:00:00Z", end_time="2020-10-04 12:00:00Z"
+        )
+        Note.objects.create(maintenance=maintenance, title="Info", level=NoteLevelChoices.INFO, comment="info")
+        cls.warning = Note.objects.create(
+            maintenance=maintenance, title="Warning", level=NoteLevelChoices.WARNING, comment="warning"
+        )
+
+    def test_list_filtered_by_level(self):
+        self.add_permissions("nautobot_circuit_maintenance.view_note")
+        url = reverse("plugins-api:nautobot_circuit_maintenance-api:note-list")
+        response = self.client.get(f"{url}?level={NoteLevelChoices.WARNING}", **self.header)
+        self.assertHttpStatus(response, 200)
+        self.assertEqual([result["id"] for result in response.data["results"]], [str(self.warning.pk)])

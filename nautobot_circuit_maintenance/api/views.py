@@ -37,6 +37,7 @@ class MaintenanceNoteTaskView(CustomFieldModelViewSet):
 
     queryset = Note.objects.prefetch_related()
     serializer_class = NoteSerializer
+    filterset_class = filters.NoteFilterSet
 
 
 class MaintenanceCircuitImpactTaskView(CustomFieldModelViewSet):

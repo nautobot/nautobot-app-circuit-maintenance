@@ -1,0 +1,1 @@
+Fixed the Note REST API ignoring filter parameters, ParsedNotification search returning a server error, and Note bulk edit requiring a title and comment.
