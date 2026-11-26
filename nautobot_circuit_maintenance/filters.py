@@ -19,15 +19,16 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
     )
 
     provider = NaturalKeyOrPKMultipleChoiceFilter(
-        field_name="provider",
+        field_name="circuitimpact__circuit__provider",
         queryset=Provider.objects.all(),
         to_field_name="name",
         label="Provider",
     )
 
     circuit = NaturalKeyOrPKMultipleChoiceFilter(
-        field_name="circuit",
+        field_name="circuitimpact__circuit",
         queryset=Circuit.objects.all(),
+        to_field_name="cid",
         label="Circuit",
     )
 
@@ -44,6 +45,13 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
 class CircuitImpactFilterSet(NautobotFilterSet):
     """Filter capabilities for CircuitImpact instances."""
 
+    q = SearchFilter(
+        filter_predicates={
+            "circuit__cid": "icontains",
+            "maintenance__name": "icontains",
+        },
+    )
+
     maintenance = NaturalKeyOrPKMultipleChoiceFilter(
         field_name="maintenance",
         queryset=CircuitMaintenance.objects.all(),
@@ -52,8 +60,8 @@ class CircuitImpactFilterSet(NautobotFilterSet):
     )
 
     circuit = NaturalKeyOrPKMultipleChoiceFilter(
-        field_name="circuit",
         queryset=Circuit.objects.all(),
+        to_field_name="cid",
         label="Circuit",
     )
 
