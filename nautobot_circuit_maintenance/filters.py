@@ -23,7 +23,6 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         queryset=Provider.objects.all(),
         to_field_name="name",
         label="Provider",
-        distinct=True,
     )
 
     circuit = NaturalKeyOrPKMultipleChoiceFilter(
@@ -31,7 +30,6 @@ class CircuitMaintenanceFilterSet(NautobotFilterSet):
         queryset=Circuit.objects.all(),
         to_field_name="cid",
         label="Circuit",
-        distinct=True,
     )
 
     start_time = django_filters.DateTimeFilter(field_name="start_time", lookup_expr="gte")

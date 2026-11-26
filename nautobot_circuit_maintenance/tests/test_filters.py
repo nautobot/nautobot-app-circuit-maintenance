@@ -1,10 +1,10 @@
-"""Tests for Circuit Maintenance filtersets, filter forms, and list-view sorting.
+"""Tests for Circuit Maintenance filtersets and filter forms.
 
-Regression coverage for issue #377 (incorrect filters and sort columns on list views).
+Regression coverage for issue #377 (incorrect filters on list views).
 """
 
 from django import forms
-from nautobot.apps.testing import TestCase
+from nautobot.apps.testing import FilterTestCases, TestCase
 from nautobot.circuits.models import Circuit, CircuitType, Provider
 from nautobot.extras.models import Status
 
@@ -21,124 +21,107 @@ from nautobot_circuit_maintenance.forms import (
 from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note
 
 
+def _create_maintenances(count):
+    """Create `count` maintenances with distinct names and start times."""
+    return [
+        CircuitMaintenance.objects.create(
+            name=f"FLT-MAINT-{i}",
+            start_time=f"2021-10-0{i}T10:00:00Z",
+            end_time=f"2021-10-0{i}T12:00:00Z",
+        )
+        for i in range(1, count + 1)
+    ]
+
+
 def _build_circuit_fixtures():
-    """Create providers, circuits, maintenances, and impacts shared across filter tests."""
-    provider_1 = Provider.objects.create(name="Filter Provider 1")
-    provider_2 = Provider.objects.create(name="Filter Provider 2")
+    """Create providers, circuits, maintenances, and impacts shared across filter tests.
+
+    Provider 1 owns two circuits that are both impacted by the first maintenance, so filtering maintenances by
+    that provider traverses two `CircuitImpact` rows for the same maintenance.
+    """
+    providers = [Provider.objects.create(name=f"Filter Provider {i}") for i in range(1, 4)]
     circuit_type = CircuitType.objects.create(name="Filter Circuit Type")
     status = Status.objects.get(name="Active")
-
-    circuit_1 = Circuit.objects.create(
-        cid="FILTER-CID-1", provider=provider_1, circuit_type=circuit_type, status=status
-    )
-    circuit_2 = Circuit.objects.create(
-        cid="FILTER-CID-2", provider=provider_2, circuit_type=circuit_type, status=status
-    )
-
-    maintenance_1 = CircuitMaintenance.objects.create(
-        name="FLT-MAINT-1", start_time="2021-10-04T10:00:00Z", end_time="2021-10-04T12:00:00Z"
-    )
-    maintenance_2 = CircuitMaintenance.objects.create(
-        name="FLT-MAINT-2", start_time="2021-10-05T10:00:00Z", end_time="2021-10-05T12:00:00Z"
-    )
-
-    impact_1 = CircuitImpact.objects.create(
-        maintenance=maintenance_1, circuit=circuit_1, impact=CircuitImpactChoices.OUTAGE
-    )
-    impact_2 = CircuitImpact.objects.create(
-        maintenance=maintenance_2, circuit=circuit_2, impact=CircuitImpactChoices.NO_IMPACT
-    )
-
-    return {
-        "provider_1": provider_1,
-        "provider_2": provider_2,
-        "circuit_1": circuit_1,
-        "circuit_2": circuit_2,
-        "maintenance_1": maintenance_1,
-        "maintenance_2": maintenance_2,
-        "impact_1": impact_1,
-        "impact_2": impact_2,
-    }
+    circuits = [
+        Circuit.objects.create(cid=f"FILTER-CID-{i}", provider=provider, circuit_type=circuit_type, status=status)
+        for i, provider in enumerate([providers[0], providers[0], providers[1], providers[2]], start=1)
+    ]
+    maintenances = _create_maintenances(4)
+    for maintenance, circuit, impact in [
+        (maintenances[0], circuits[0], CircuitImpactChoices.OUTAGE),
+        (maintenances[0], circuits[1], CircuitImpactChoices.DEGRADED),
+        (maintenances[1], circuits[2], CircuitImpactChoices.NO_IMPACT),
+        (maintenances[2], circuits[3], CircuitImpactChoices.REDUCED_REDUNDANCY),
+        (maintenances[3], circuits[0], CircuitImpactChoices.OUTAGE),
+    ]:
+        CircuitImpact.objects.create(maintenance=maintenance, circuit=circuit, impact=impact)
 
 
-class CircuitMaintenanceFilterSetTestCase(TestCase):
+class CircuitMaintenanceFilterSetTestCase(FilterTestCases.FilterTestCase):
     """Filter tests for CircuitMaintenanceFilterSet."""
 
     queryset = CircuitMaintenance.objects.all()
     filterset = CircuitMaintenanceFilterSet
+    generic_filter_tests = (
+        ["circuit", "circuitimpact__circuit__cid"],
+        ["circuit", "circuitimpact__circuit__id"],
+        ["provider", "circuitimpact__circuit__provider__name"],
+        ["provider", "circuitimpact__circuit__provider__id"],
+    )
 
     @classmethod
     def setUpTestData(cls):
-        cls.data = _build_circuit_fixtures()
-
-    def test_provider_filter(self):
-        """Filtering maintenances by the related circuit's provider (natural key) resolves and is scoped."""
-        params = {"provider": [self.data["provider_1"].name]}
-        result = self.filterset(params, self.queryset).qs
-        self.assertIn(self.data["maintenance_1"], result)
-        self.assertNotIn(self.data["maintenance_2"], result)
-
-    def test_circuit_filter(self):
-        """Filtering maintenances by related circuit (cid natural key) resolves and is scoped."""
-        params = {"circuit": [self.data["circuit_1"].cid]}
-        result = self.filterset(params, self.queryset).qs
-        self.assertIn(self.data["maintenance_1"], result)
-        self.assertNotIn(self.data["maintenance_2"], result)
+        _build_circuit_fixtures()
 
 
-class CircuitImpactFilterSetTestCase(TestCase):
+class CircuitImpactFilterSetTestCase(FilterTestCases.FilterTestCase):
     """Filter tests for CircuitImpactFilterSet."""
 
     queryset = CircuitImpact.objects.all()
     filterset = CircuitImpactFilterSet
+    generic_filter_tests = (
+        ["circuit", "circuit__cid"],
+        ["circuit", "circuit__id"],
+        ["maintenance", "maintenance__name"],
+        ["maintenance", "maintenance__id"],
+        ["impact"],
+    )
 
     @classmethod
     def setUpTestData(cls):
-        cls.data = _build_circuit_fixtures()
-
-    def test_search_filter_present(self):
-        """CircuitImpactFilterSet exposes a `q` search filter matching its filter form."""
-        self.assertIn("q", self.filterset().filters)
-
-    def test_circuit_filter(self):
-        """Filtering impacts by circuit (cid natural key) resolves and is scoped."""
-        params = {"circuit": [self.data["circuit_1"].cid]}
-        result = self.filterset(params, self.queryset).qs
-        self.assertIn(self.data["impact_1"], result)
-        self.assertNotIn(self.data["impact_2"], result)
-
-    def test_impact_filter(self):
-        """Filtering impacts by impact choice resolves and is scoped."""
-        params = {"impact": [CircuitImpactChoices.OUTAGE]}
-        result = self.filterset(params, self.queryset).qs
-        self.assertIn(self.data["impact_1"], result)
-        self.assertNotIn(self.data["impact_2"], result)
+        _build_circuit_fixtures()
 
 
-class NoteFilterSetTestCase(TestCase):
+class NoteFilterSetTestCase(FilterTestCases.FilterTestCase):
     """Filter tests for NoteFilterSet."""
 
     queryset = Note.objects.all()
     filterset = NoteFilterSet
+    generic_filter_tests = (
+        ["maintenance", "maintenance__name"],
+        ["maintenance", "maintenance__id"],
+    )
 
     @classmethod
     def setUpTestData(cls):
-        maintenance = CircuitMaintenance.objects.create(
-            name="FLT-NOTE-MAINT", start_time="2021-10-04T10:00:00Z", end_time="2021-10-04T12:00:00Z"
-        )
-        cls.note_info = Note.objects.create(
-            maintenance=maintenance, title="Note Info", level=NoteLevelChoices.INFO, comment="info"
-        )
-        cls.note_warning = Note.objects.create(
-            maintenance=maintenance, title="Note Warning", level=NoteLevelChoices.WARNING, comment="warning"
-        )
+        maintenances = _create_maintenances(3)
+        for maintenance, title, level in [
+            (maintenances[0], "Note Info", NoteLevelChoices.INFO),
+            (maintenances[1], "Note Warning", NoteLevelChoices.WARNING),
+            (maintenances[2], "Note Info 2", NoteLevelChoices.INFO),
+        ]:
+            Note.objects.create(maintenance=maintenance, title=title, level=level, comment=title.lower())
 
     def test_level_filter(self):
-        """Filtering notes by level choice resolves and is scoped."""
+        """Filtering notes by level choice resolves and is scoped.
+
+        `NoteLevelChoices` has only two values, too few for `generic_filter_tests`, which needs a subset of at
+        least two values that still leaves a row unmatched.
+        """
         params = {"level": [NoteLevelChoices.WARNING]}
-        result = self.filterset(params, self.queryset).qs
-        self.assertIn(self.note_warning, result)
-        self.assertNotIn(self.note_info, result)
+        self.assertQuerySetEqualAndNotEmpty(
+            self.filterset(params, self.queryset).qs, self.queryset.filter(level=NoteLevelChoices.WARNING)
+        )
 
 
 class FilterFormTestCase(TestCase):
