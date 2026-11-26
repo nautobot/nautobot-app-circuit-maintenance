@@ -9,6 +9,15 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from nautobot.apps.ui import (
+    Button,
+    ButtonColorChoices,
+    KeyValueTablePanel,
+    ObjectDetailContent,
+    ObjectFieldsPanel,
+    ObjectsTablePanel,
+    SectionChoices,
+)
 from nautobot.apps.views import (
     NautobotUIViewSet,
     ObjectBulkDestroyViewMixin,
@@ -19,8 +28,8 @@ from nautobot.apps.views import (
     ObjectView,
 )
 from nautobot.circuits.models import Circuit
+from nautobot.circuits.tables import ProviderTable
 from rest_framework.decorators import action
-from rest_framework.response import Response
 
 from nautobot_circuit_maintenance import filters, forms, models, tables
 from nautobot_circuit_maintenance.api import serializers
@@ -325,34 +334,65 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
     table_class = tables.NotificationSourceTable
     action_buttons = ("edit", "export")
 
+    object_detail_content = ObjectDetailContent(
+        panels=(
+            ObjectFieldsPanel(
+                weight=100,
+                section=SectionChoices.LEFT_HALF,
+                fields=["name", "attach_all_providers"],
+            ),
+            KeyValueTablePanel(
+                weight=200,
+                section=SectionChoices.LEFT_HALF,
+                label="Source Details",
+                context_data_key="source_details",
+                hide_if_unset=["Authentication Status"],
+            ),
+            ObjectsTablePanel(
+                weight=100,
+                section=SectionChoices.RIGHT_HALF,
+                table_class=ProviderTable,
+                table_attribute="providers",
+                related_field_name="notificationsource",
+                table_title="Providers",
+                exclude_columns=["pk"],
+                add_button_route=None,
+                enable_related_link=False,
+            ),
+        ),
+        extra_buttons=(
+            Button(
+                weight=100,
+                label="Validate Authentication",
+                icon="mdi-shield-check",
+                color=ButtonColorChoices.BLUE,
+                link_name="plugins:nautobot_circuit_maintenance:notificationsource_validate",
+                required_permissions=["nautobot_circuit_maintenance.view_notificationsource"],
+            ),
+        ),
+    )
+
     def get_extra_context(self, request, instance=None):
-        """Extend content of detailed view for NotificationSource."""
+        """Add the source details computed from the plugin configuration to the detail view."""
         context = super().get_extra_context(request, instance)
 
         if self.action == "retrieve":
-            providers_qs = instance.providers.all()
             try:
                 source = Source.init(name=instance.name)
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": source.get_account_id(),
-                        "source_type": source.__class__.__name__,
-                        "authentication_message": None,
-                    }
-                )
-
+                source_details = {
+                    "Type": source.__class__.__name__,
+                    "Account ID": source.get_account_id(),
+                    "Authentication Status": None,
+                }
             except ValueError as exc:
                 msg = f"Failed to initialize source: {exc}"
                 logger.warning(msg, exc_info=True, extra={"object": instance})
-                context.update(
-                    {
-                        "providers": providers_qs,
-                        "account": None,
-                        "source_type": None,
-                        "authentication_message": msg,
-                    }
-                )
+                source_details = {
+                    "Type": None,
+                    "Account ID": None,
+                    "Authentication Status": msg,
+                }
+            context["source_details"] = source_details
         return context
 
     @action(
@@ -363,25 +403,14 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
         custom_view_base_action="view",
     )
     def validate_source(self, request, pk=None):  # pylint: disable=unused-argument
-        """Validate NotificationSource authentication."""
+        """Validate NotificationSource authentication and report the result as a message on the return page."""
         instance = self.get_object()
-        context = super().get_extra_context(request, instance)
-        return_url = request.GET.get("return_url")
+        return_url = self.get_return_url(request, instance)
 
         try:
             source = Source.init(name=instance.name)
-        except ValueError as exc:
-            message = f"FAILED: {exc}"
-            if return_url:
-                messages.error(request, message)
-                return redirect(return_url)
-            context["authentication_message"] = message
-            return Response(context, status=200)
-
-        try:
             is_authenticated, mess_auth = source.test_authentication()
-            message = "SUCCESS" if is_authenticated else "FAILED"
-            message += f": {mess_auth}"
+            message = f"{'SUCCESS' if is_authenticated else 'FAILED'}: {mess_auth}"
         except ValueError as exc:
             message = f"FAILED: {exc}"
         except RedirectAuthorize as exc:
@@ -395,23 +424,11 @@ class NotificationSourceUIViewSet(NautobotUIViewSet):
             except NoReverseMatch:
                 message = "FAILED: Redirect required but target URL could not be resolved."
 
-        if return_url:
-            if message.startswith("SUCCESS"):
-                messages.success(request, message)
-            else:
-                messages.error(request, message)
-            return redirect(return_url)
-
-        context.update(
-            {
-                "authentication_message": message,
-                "providers": instance.providers.all(),
-                "account": source.get_account_id(),
-                "source_type": source.__class__.__name__,
-                "active_tab": "main",
-            }
-        )
-        return Response(context, status=200)
+        if message.startswith("SUCCESS"):
+            messages.success(request, message)
+        else:
+            messages.error(request, message)
+        return redirect(return_url)
 
 
 def google_authorize(request, name):
