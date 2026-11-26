@@ -1,6 +1,6 @@
 """Tests for Circuit Maintenance filtersets and filter forms.
 
-Regression coverage for issue #377 (incorrect filters on list views).
+Regression coverage for issues #377 (incorrect filters on list views) and #426 (filters outside the list views).
 """
 
 from django import forms
@@ -13,12 +13,22 @@ from nautobot_circuit_maintenance.filters import (
     CircuitImpactFilterSet,
     CircuitMaintenanceFilterSet,
     NoteFilterSet,
+    NotificationSourceFilterSet,
+    ParsedNotificationFilterSet,
+    RawNotificationFilterSet,
 )
 from nautobot_circuit_maintenance.forms import (
     CircuitImpactFilterForm,
     NoteFilterForm,
 )
-from nautobot_circuit_maintenance.models import CircuitImpact, CircuitMaintenance, Note
+from nautobot_circuit_maintenance.models import (
+    CircuitImpact,
+    CircuitMaintenance,
+    Note,
+    NotificationSource,
+    ParsedNotification,
+    RawNotification,
+)
 
 
 def _create_maintenances(count):
@@ -122,6 +132,80 @@ class NoteFilterSetTestCase(FilterTestCases.FilterTestCase):
         self.assertQuerySetEqualAndNotEmpty(
             self.filterset(params, self.queryset).qs, self.queryset.filter(level=NoteLevelChoices.WARNING)
         )
+
+
+def _build_notification_fixtures():
+    """Create notification sources, raw notifications, and parsed notifications shared across filter tests."""
+    providers = [Provider.objects.create(name=f"Notification Provider {i}") for i in range(1, 4)]
+    sources = [NotificationSource.objects.create(name=f"notification-source-{i}") for i in range(1, 4)]
+    maintenances = _create_maintenances(3)
+    for i, (provider, source, maintenance) in enumerate(zip(providers, sources, maintenances), start=1):
+        raw_notification = RawNotification.objects.create(
+            raw=b"raw",
+            subject=f"Maintenance notice {i}",
+            provider=provider,
+            sender=f"noc{i}@example.com",
+            source=source,
+            stamp=f"2021-10-0{i}T09:00:00Z",
+        )
+        ParsedNotification.objects.create(maintenance=maintenance, raw_notification=raw_notification, json={})
+
+
+class RawNotificationFilterSetTestCase(FilterTestCases.FilterTestCase):
+    """Filter tests for RawNotificationFilterSet."""
+
+    queryset = RawNotification.objects.all()
+    filterset = RawNotificationFilterSet
+    generic_filter_tests = (
+        ["provider", "provider__name"],
+        ["provider", "provider__id"],
+        ["source", "source__name"],
+        ["source", "source__id"],
+        ["sender"],
+    )
+
+    @classmethod
+    def setUpTestData(cls):
+        _build_notification_fixtures()
+
+
+class ParsedNotificationFilterSetTestCase(FilterTestCases.FilterTestCase):
+    """Filter tests for ParsedNotificationFilterSet."""
+
+    queryset = ParsedNotification.objects.all()
+    filterset = ParsedNotificationFilterSet
+    generic_filter_tests = (
+        ["maintenance", "maintenance__name"],
+        ["maintenance", "maintenance__id"],
+    )
+
+    @classmethod
+    def setUpTestData(cls):
+        _build_notification_fixtures()
+
+    def test_q_searches_raw_notification_subject(self):
+        """`q` matches the related raw notification's subject.
+
+        The inherited `test_q_filter_valid` skips predicates that aren't `CharField`/`TextField` lookups, so it
+        cannot catch a predicate that targets a ForeignKey directly.
+        """
+        params = {"q": "notice 2"}
+        self.assertQuerySetEqualAndNotEmpty(
+            self.filterset(params, self.queryset).qs,
+            self.queryset.filter(raw_notification__subject__icontains="notice 2"),
+        )
+
+
+class NotificationSourceFilterSetTestCase(FilterTestCases.FilterTestCase):
+    """Filter tests for NotificationSourceFilterSet."""
+
+    queryset = NotificationSource.objects.all()
+    filterset = NotificationSourceFilterSet
+    generic_filter_tests = (["name"],)
+
+    @classmethod
+    def setUpTestData(cls):
+        _build_notification_fixtures()
 
 
 class FilterFormTestCase(TestCase):

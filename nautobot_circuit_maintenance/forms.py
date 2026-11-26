@@ -134,9 +134,9 @@ class NoteBulkEditForm(NautobotBulkEditForm, TagsBulkEditFormMixin):
     """Form for bulk editing Notes."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Note.objects.all(), widget=forms.MultipleHiddenInput)
-    title = forms.CharField(max_length=200)
-    level = forms.CharField(max_length=50, required=False)
-    comment = forms.CharField(max_length=200)
+    title = forms.CharField(max_length=200, required=False)
+    level = forms.ChoiceField(choices=add_blank_choice(NoteLevelChoices), required=False, widget=StaticSelect2)
+    comment = forms.CharField(max_length=200, required=False)
 
     class Meta:  # noqa: D106 "Missing docstring in public nested class"
         nullable_fields = ["level"]

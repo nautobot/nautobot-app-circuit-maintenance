@@ -15,6 +15,8 @@ from nautobot.core.testing import ModelViewTestCase, ViewTestCases
 from nautobot.extras.models import Status
 from nautobot.users.models import ObjectPermission
 
+from nautobot_circuit_maintenance.choices import NoteLevelChoices
+from nautobot_circuit_maintenance.forms import NoteBulkEditForm
 from nautobot_circuit_maintenance.handle_notifications.sources import RedirectAuthorize
 from nautobot_circuit_maintenance.models import (
     CircuitImpact,
@@ -247,6 +249,19 @@ class NoteTest(ViewTestCases.OrganizationalObjectViewTestCase):
 
     def test_list_objects_with_constrained_permission(self):
         """TODO: fix because it's checking the get_absolute_url() in a wrong page."""
+
+    def test_bulk_edit_form_accepts_level_only(self):
+        """Bulk editing only `level` validates without supplying `title` or `comment`."""
+        data = {"pk": list(Note.objects.values_list("pk", flat=True)), "level": NoteLevelChoices.WARNING}
+        form = NoteBulkEditForm(Note, data)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_bulk_edit_form_level_is_choice(self):
+        """The bulk-edit `level` field only accepts `NoteLevelChoices` values."""
+        data = {"pk": list(Note.objects.values_list("pk", flat=True)), "level": "NOT-A-LEVEL"}
+        form = NoteBulkEditForm(Note, data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("level", form.errors)
 
 
 class NotificationSourceTest(
