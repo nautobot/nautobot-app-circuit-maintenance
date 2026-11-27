@@ -217,7 +217,21 @@ PLUGINS_CONFIG = {
 
 There is an asynchronous task defined as a **Nautobot Job**, **Handle Circuit Maintenance Notifications** that will connect to the email sources defined under the Notification Sources section (step above), and will fetch new notifications received since the last notification was fetched.
 
+By default the job runs **incrementally**: it only fetches notifications newer than the most recent `RawNotification` already stored. On the very first run (when no notifications exist yet) it looks back `raw_notification_initial_days_since` days instead (7 by default, see [the install guide](../admin/install.md)).
+
 Each notification will be parsed using the [circuit-maintenance-parser](https://github.com/networktocode/circuit-maintenance-parser) library, and if a valid parsing is executed, a new **Circuit Maintenance** will be created, or if it was already created, it will updated with the new data.
+
+#### Re-fetching older notifications (lookback window)
+
+The job exposes two optional inputs that override the normal incremental window when you need to pull in older notifications, for example to import notices that predate your first run:
+
+- **Days to look back** — an integer `N`; fetch notifications from the last `N` days (`now - N days`).
+- **Fetch notifications since** — an ISO 8601 date/time (for example `2026-01-31` or `2026-01-31T00:00:00Z`); fetch notifications with a timestamp on or after that instant. Assumed UTC when no timezone is given.
+
+Either input replaces the normal watermark. If you set both, the job uses the **earlier** of the two start times, so together they mean "look back at least this far." Leave both blank for normal incremental processing.
+
+!!! note "Re-processing already-stored notifications"
+    A lookback window widens the range of notifications the job *fetches*, but Nautobot deduplicates `RawNotification` records by subject, provider, and timestamp. A notification that was already fetched is therefore skipped even when it falls inside the lookback window. To **re-parse** notifications that were stored but failed to parse (for instance after upgrading `circuit-maintenance-parser`), delete their `RawNotification` records first, then run the job with a lookback window that covers them.
 
 So, for each email notification received, several objects will be created:
 
